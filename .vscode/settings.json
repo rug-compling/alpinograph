@@ -1,0 +1,8 @@
+{
+    "files.exclude": {
+        "index.html": true,
+        "mkMenu": true,
+        "bin/alpg": true,
+    },
+    "editor.tabSize": 8
+}

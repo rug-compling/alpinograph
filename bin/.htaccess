@@ -1,0 +1,3 @@
+Options +ExecCGI
+SetHandler cgi-script
+SetEnv no-gzip dont-vary

@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>AlpinoGraph</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="main.css">
+  <link rel="icon" href="../favicon.ico" type="image/ico">
+  <script type="text/javascript" src="../jquery.js"></script>
+  <script type="text/javascript"><!--
+    var qs = {};
+    qs['tut-uitdr-advduivel'] = "-- Tutorial | Uitdrukkingen en gezegdes | advocaat van de duivel\n\nmatch (w1:word{lemma: 'advocaat'}),\n      (w2:word{sentid: w1.sentid, lemma: 'duivel'})\nreturn w1, w2\n\n";
+qs['tut-uitdr-kalfput'] = "-- Tutorial | Uitdrukkingen en gezegdes | als het kalf verdronken is dempt men de put\n\nmatch (w1:word{lemma: 'kalf'}),\n      (w2:word{sentid: w1.sentid, lemma: 'put'})\nreturn w1, w2\n\n";
+qs['tut-uitdr-voorzover'] = "-- Tutorial | Uitdrukkingen en gezegdes | voor zover mogelijk\n\nmatch (w1:node{lemma: 'voor zover'}), -- multi-word units zitten op een node\n      (w2:word{sentid: w1.sentid, lemma: 'mogelijk'})\nwhere w1.end <= w2.begin    -- 'mogelijk' moet achter 'voor zover' staan\n  and w2.begin - w1.end <= 4 -- maximaal vier woorden ertussen\nreturn w1, w2\n\n";
+qs['tut-ud-eten-zin'] = "-- Tutorial | Universal Dependencies | wat eten en drinken we? | zinnen\n\nmatch p = (w:word)-[:ud{main:'obj'}]->(:word{upos:'NOUN'})\nwhere w.lemma in ['eten','op_eten','drinken','op_drinken']\nreturn p\n\n";
+qs['tut-ud-eten-tel'] = "-- Tutorial | Universal Dependencies | wat eten en drinken we? | telling van woorden\n\nmatch (w:word)-[:ud{main:'obj'}]->(w2:word{upos:'NOUN'})\nwhere w.lemma in ['eten','op_eten','drinken','op_drinken']\nreturn w2.lemma as woord, count(w2.lemma) as aantal\norder by aantal desc, woord\n\n";
+qs['tut-ud-pos'] = "-- Tutorial | Universal Dependencies | possessieven\n\nmatch p = (:word)-[:ud{rel:'nmod:poss'}]->(:word)\nreturn p\n\n";
+qs['spod-pos'] = "-- SPOD | Attributen | pos\n\nmatch (w:word)\nreturn w.pos as pos, count(w.pos) as aantal\norder by pos\n\n";
+qs['spod-postag'] = "-- SPOD | Attributen | postag\n\nmatch (w:word)\nreturn w.postag as postag, count(w.postag) as aantal\norder by postag\n\n";
+qs['spod-pt'] = "-- SPOD | Attributen | pt\n\nmatch (w:word)\nreturn w.pt as pt, count(w.pt) as aantal\norder by pt\n\n";
+qs['spod-smain-zin'] = "-- SPOD | Hoofdzinnen | mededelende hoofdzinnen | zinnen\n\nmatch p = (:node{cat: 'smain'})\nreturn p\n\n";
+qs['spod-smain-tel'] = "-- SPOD | Hoofdzinnen | mededelende hoofdzinnen | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'smain'})\n  return n.sentid, n.id\n) as foo\n\n";
+qs['spod-whq-zin'] = "-- SPOD | Hoofdzinnen | vraagzinnen (wh) | zinnen\n\nmatch p = (:node{cat: 'whq'})\nreturn p\n\n";
+qs['spod-whq-tel'] = "-- SPOD | Hoofdzinnen | vraagzinnen (wh) | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'whq'})\n  return n.sentid, n.id\n) as foo\n\n";
+qs['spod-janee-zin'] = "-- SPOD | Hoofdzinnen | ja/nee vragen | zinnen\n\nmatch (w:word{word: '?'}) ,\n      (n:node{sentid:w.sentid,cat: 'sv1'})<-[r:rel]-()\noptional match (n)-[:rel{rel: 'hd'}]->(n1)\nwith w, r, n, n1\nwhere not r.rel = 'body'\n  and n.end < w.end\n  and (n1 is null or n1.stype is null or n1.stype = 'ynquestion')\nreturn n.sentid, n.id\n\n";
+qs['spod-janee-tel'] = "-- SPOD | Hoofdzinnen | ja/nee vragen | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word{word: '?'}) ,\n        (n:node{sentid:w.sentid,cat: 'sv1'})<-[r:rel]-()\n  optional match (n)-[:rel{rel: 'hd'}]->(n1)\n  with w, r, n, n1\n  where not r.rel = 'body'\n    and n.end < w.end\n    and (n1 is null or n1.stype is null or n1.stype = 'ynquestion')\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-imp-zin'] = "-- SPOD | Hoofdzinnen | imperatieven | zinnen\n\nmatch (n:node{cat: 'sv1'})\n  optional match (n)-[:rel{rel: 'su'}]->(x1)\n  optional match (n)-[:rel{rel: 'hd'}]->(x2)\nwith n, x1, x2\nwhere x1 is null\n  and not (x2.stype        is not null and not x2.stype = 'imparative')\n  and not ((x2.tense        is not null and x2.tense = 'past') or\n           (x2.pvagr        is not null and x2.pvagr in ['mv','met-t']) or\n           (x2.pvtijd is not null and x2.pvtijd = 'verl') or\n           (x2.lemma        is not null and x2.lemma in ['zijn','kunnen','willen','moeten','mogen','zullen','denken','geloven','vinden','hebben']) )\nreturn n.sentid, n.id\n\n";
+qs['spod-imp-tel'] = "-- SPOD | Hoofdzinnen | imperatieven | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'sv1'})\n    optional match (n)-[:rel{rel: 'su'}]->(x1)\n    optional match (n)-[:rel{rel: 'hd'}]->(x2)\n  with n, x1, x2\n  where x1 is null\n    and not (x2.stype          is not null and not x2.stype = 'imparative')\n    and not ((x2.tense  is not null and x2.tense = 'past') or\n             (x2.pvagr  is not null and x2.pvagr in ['mv','met-t']) or\n             (x2.pvtijd is not null and x2.pvtijd = 'verl') or\n             (x2.lemma  is not null and x2.lemma in ['zijn','kunnen','willen','moeten','mogen','zullen','denken','geloven','vinden','hebben']) )\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-whsub-zin'] = "-- SPOD | Bijzinnen | ingebedde vraagzinnen | zinnen\n\nmatch (n:node{cat: 'whsub'})-[:rel*1..2]->(n2:node{cat: 'ssub'})\nwhere exists ((n)-[:rel{rel: 'body'}]->(n2))\n   or exists ((n)-[:rel{rel: 'body'}]->(:node{cat: 'conj'})-[:rel{rel: 'cnj'}]->(n2))\n   or exists ((n)-[:rel{rel: 'body'}]->(:node{cat: 'du'})-[:rel]->(n2))\nreturn n.sentid, n.id, n2.id\n\n";
+qs['spod-whsub-tel'] = "-- SPOD | Bijzinnen | ingebedde vraagzinnen | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'whsub'})-[:rel*1..2]->(n2:node{cat: 'ssub'})\n  where exists ((n)-[:rel{rel: 'body'}]->(n2))\n     or exists ((n)-[:rel{rel: 'body'}]->(:node{cat: 'conj'})-[:rel{rel: 'cnj'}]->(n2))\n     or exists ((n)-[:rel{rel: 'body'}]->(:node{cat: 'du'})-[:rel]->(n2))\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-ssub-zin'] = "-- SPOD | Bijzinnen | finiete bijzinnen | zinnen\n\nmatch (n:node{cat: 'cp'})-[:rel{rel: 'body'}]->(n2:node{cat: 'ssub'})\nreturn n.sentid, n.id, n2.id\n\n";
+qs['spod-ssub-tel'] = "-- SPOD | Bijzinnen | finiete bijzinnen | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'cp'})-[:rel{rel: 'body'}]->(:node{cat: 'ssub'})\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-ssubdat-zin'] = "-- SPOD | Bijzinnen | finiete bijzinnen met \"dat\" | zinnen\n\nmatch (n1:word{lemma: 'dat'})<-[:rel{rel: 'cmp'}]-(n:node{cat: 'cp'})-[:rel{rel: 'body'}]->(n2:node{cat: 'ssub'})\nreturn n.sentid, n.id, n1.id, n2.id\n\n";
+qs['spod-ssubdat-tel'] = "-- SPOD | Bijzinnen | finiete bijzinnen met \"dat\" | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (:word{lemma: 'dat'})<-[:rel{rel: 'cmp'}]-(n:node{cat: 'cp'})-[:rel{rel: 'body'}]->(:node{cat: 'ssub'})\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-ssubof-zin'] = "-- SPOD | Bijzinnen | finiete bijzinnen met \"of\" | zinnen\n\nmatch (w:word{lemma: 'of'})<-[:rel{rel: 'cmp'}]-(n:node{cat: 'cp'})-[:rel{rel: 'body'}]->(n2:node{cat: 'ssub'})\nreturn n.sentid, n.id, w.id, n2.id\n\n";
+qs['spod-ssubof-tel'] = "-- SPOD | Bijzinnen | finiete bijzinnen met \"of\" | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (:word{lemma: 'of'})<-[:rel{rel: 'cmp'}]-(n:node{cat: 'cp'})-[:rel{rel: 'body'}]->(:node{cat: 'ssub'})\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-ssubcmp-zin'] = "-- SPOD | Bijzinnen | finiete bijzinnen met andere voegwoorden | zinnen\n\nmatch (w:nw)<-[:rel{rel: 'cmp'}]-(n:node{cat: 'cp'})-[:rel{rel: 'body'}]->(n2:node{cat: 'ssub'})\nwhere not (w.lemma is not null and w.lemma in ['of','dat'])\nreturn n.sentid, n.id, w.id, n2.id\n\n";
+qs['spod-ssubcmp-tel'] = "-- SPOD | Bijzinnen | finiete bijzinnen met andere voegwoorden | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:nw)<-[:rel{rel: 'cmp'}]-(n:node{cat: 'cp'})-[:rel{rel: 'body'}]->(:node{cat: 'ssub'})\n  where not (w.lemma is not null and w.lemma in ['of','dat'])\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-oti-zin'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met \"om\" | zinnen\n\nmatch p = (:node{cat: 'oti'})\nreturn p\n\n";
+qs['spod-oti-tel'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met \"om\" | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'oti'})\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-otivc-zin'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met \"om\" die als complement optreden | zinnen\n\nmatch (n:node{cat: 'oti'})<-[:rel{rel: 'vc'}]-(n2:node)\nreturn n.sentid, n.id, n2.id\n\n";
+qs['spod-otivc-tel'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met \"om\" die als complement optreden | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'oti'})<-[:rel{rel: 'vc'}]-(:node)\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-otimod-zin'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met \"om\" die als bepaling optreden | zinnen\n\nmatch (n:node{cat: 'oti'})<-[:rel{rel: 'mod'}]-(n2)\nreturn n.sentid, n.id, n2.id\n\n";
+qs['spod-otimod-tel'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met \"om\" die als bepaling optreden | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\n  from (\n  match (n:node{cat: 'oti'})<-[:rel{rel: 'mod'}]-()\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-otiww-zin'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met \"om\" die als bepaling bij een werkwoord optreden | zinnen\n\nmatch (n:node{cat: 'oti'})<-[:rel]-()-[:rel{rel: 'hd'}]->(w:word{pt: 'ww'})\nreturn n.sentid, n.id, w.id\n\n";
+qs['spod-otiww-tel'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met \"om\" die als bepaling bij een werkwoord optreden | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'oti'})<-[:rel]-()-[:rel{rel: 'hd'}]->(:word{pt: 'ww'})\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-otin-zin'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met \"om\" die als bepaling bij een zelfstandig naamwoord optreden | zinnen\n\nmatch (n:node{cat: 'oti'})<-[:rel]-()-[:rel{rel: 'hd'}]->(w:word)\nwhere w.pt in ['n','vnw']\nreturn n.sentid, n.id, w.id\n\n";
+qs['spod-otin-tel'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met \"om\" die als bepaling bij een zelfstandig naamwoord optreden | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'oti'})<-[:rel]-()-[:rel{rel: 'hd'}]->(w:word)\n  where w.pt in ['n','vnw']\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-otisu-zin'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met \"om\" die als onderwerp fungeren | zinnen\n\nmatch (n:node{cat: 'oti'})<-[:rel{rel: 'su'}]-(n2)\nreturn n.sentid, n.id, n2.id\n\n";
+qs['spod-otisu-tel'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met \"om\" die als onderwerp fungeren | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'oti'})<-[:rel{rel: 'su'}]-()\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-otipred-zin'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met \"om\" die als predicaat fungeren | zinnen\n\nmatch (n:node{cat: 'oti'})<-[:rel{rel: 'predc'}]-(n2)\nreturn n.sentid, n.id, n2.id\n\n";
+qs['spod-otipred-tel'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met \"om\" die als predicaat fungeren | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'oti'})<-[:rel{rel: 'predc'}]-()\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-otiobc-zin'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met \"om\" die optreden met combinaties zoals \"te ADJ; zo ADJ; genoeg ADJ; voldoende N\" | zinnen\n\nmatch (n:node{cat: 'oti'})<-[:rel{rel: 'obcomp'}]-(n2)\nreturn n.sentid, n.id, n2.id\n\n";
+qs['spod-otiobc-tel'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met \"om\" die optreden met combinaties zoals \"te ADJ; zo ADJ; genoeg ADJ; voldoende N\" | telling\n\n  select count(distinct(sentid)) as zinnen, count(sentid) as items\n  from (\n  match (n:node{cat: 'oti'})<-[:rel{rel: 'obcomp'}]-()\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-tite-zin'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met alleen \"te\" | zinnen\n\nmatch (n:node{cat: 'ti'})<-[:rel]-(n2:node)\nwhere not n2.cat in ['oti','cp']\nreturn n.sentid, n.id, n2.id\n\n";
+qs['spod-tite-tel'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met alleen \"te\" | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'ti'})<-[:rel]-(n2:node)\n  where not n2.cat in ['oti','cp']\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-ti-zin'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met ander voorzetsel | zinnen\n\nmatch (n:node{cat: 'cp'})-[:rel{rel: 'body'}]->(n2:node{cat: 'ti'})\nreturn n.sentid, n.id, n2.id\n\n";
+qs['spod-ti-tel'] = "-- SPOD | Bijzinnen | infiniete bijzinnen met ander voorzetsel | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'cp'})-[:rel{rel: 'body'}]->(:node{cat: 'ti'})\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-relssub-zin'] = "-- SPOD | Bijzinnen | relatieve bijzinnen | zinnen\n\nmatch (n:node{cat: 'rel'})-[:rel{rel: 'body'}]->(n1:node)-[r:rel*0..1]->(n2:node{cat: 'ssub'})\nwhere n1 = n2\n   or n1.cat = 'conj' and r[0].rel = 'cnj'\n   or n1.cat = 'du'\nreturn n.sentid, n.id, n2.id\n\n";
+qs['spod-relssub-tel'] = "-- SPOD | Bijzinnen | relatieve bijzinnen | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'rel'})-[:rel{rel: 'body'}]->(n1:node)-[r:rel*0..1]->(n2:node{cat: 'ssub'})\n  where n1 = n2\n     or n1.cat = 'conj' and r[0].rel = 'cnj'\n     or n1.cat = 'du'\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-whrel-zin'] = "-- SPOD | Bijzinnen | free relatives | zinnen\n\nmatch (n:node{cat: 'whrel'})-[:rel{rel: 'body'}]->(n2:node)\nwhere n2.cat = 'ssub'\n   or n2.cat = 'conj' and exists( (n2)-[:rel{rel: 'cnj'}]->(:node{cat: 'ssub'}) )\n   or n2.cat = 'du' and exists( (n2)-[:rel]->(:node{cat: 'ssub'}) )\nreturn n.sentid, n.id, n2.id\n\n";
+qs['spod-whrel-tel'] = "-- SPOD | Bijzinnen | free relatives | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'whrel'})-[:rel{rel: 'body'}]->(n2:node)\n  where n2.cat = 'ssub'\n     or n2.cat = 'conj' and exists( (n2)-[:rel{rel: 'cnj'}]->(:node{cat: 'ssub'}) )\n     or n2.cat = 'du' and exists( (n2)-[:rel]->(:node{cat: 'ssub'}) )\n    return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-corc-zin'] = "-- SPOD | Correlatieve comparatieven | zinnen\n\nmatch (n1:node{_deste: true})<-[:rel*0..]-(n0:node)<-[:rel*0..]-(n:node{cat: 'du'}),\n      (n0)-[:rel*0..]->(n2:node{_deste: true})\nmatch (n0)<-[:rel*0..]-(n)\noptional match p = (n0)<-[:rel*0..]-(:node{cat:'du'})<-[:rel*1..]-(n)\nwith n, n1, n2, p\nwhere n1.id < n2.id\n  and p is null\nreturn n.sentid, n.id\n\n";
+qs['spod-corc-tel'] = "-- SPOD | Correlatieve comparatieven | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n1:node{_deste: true})<-[:rel*0..]-(n0:node)<-[:rel*0..]-(n:node{cat: 'du'}),\n        (n0)-[:rel*0..]->(n2:node{_deste: true})\n  match (n0)<-[:rel*0..]-(n)\n  optional match p = (n0)<-[:rel*0..]-(:node{cat:'du'})<-[:rel*1..]-(n)\n  with n, n1, n2, p\n  where n1.id < n2.id\n    and p is null\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-cc-zin'] = "-- SPOD | Woorden met een comparatief complement | totaal | zinnen\n\nmatch (n:nw)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->(n2)\nreturn n.sentid, n.id, n2.id\n\n";
+qs['spod-cc-tel'] = "-- SPOD | Woorden met een comparatief complement | totaal | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:nw)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-cczo-zin'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"zo\" | zinnen\n\nmatch (w:word{lemma: 'zo'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->(n2)\nreturn w.sentid, w.id, n2.id\n\n";
+qs['spod-cczo-tel'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"zo\" | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word{lemma: 'zo'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-cceven-zin'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"even\" | zinnen\n\nmatch (w:word{lemma: 'even'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->(n2)\nreturn distinct w.sentid, w.id, n2.id\n\n";
+qs['spod-cceven-tel'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"even\" | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word{lemma: 'even'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-ccca-zin'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd comparatief adjectief | zinnen\n\nmatch (n:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->(n2)\nreturn n.sentid, n.id, n2.id\n\n";
+qs['spod-ccca-tel'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd comparatief adjectief | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-ccdannp-zin'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd comparatief adjectief, gevolgd door NP | zinnen\n\nmatch (w:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->(n2)-[:rel{rel: 'body'}]->(x{_np:true})\nreturn w.sentid, w.id, n2.id, x.id\n\n";
+qs['spod-ccdannp-tel'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd comparatief adjectief, gevolgd door NP | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x{_np:true})\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-ccdanvs-zin'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd comparatief adjectief, gevolgd door VP of S | zinnen\n\nmatch (w:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-(n2)-[:rel{rel: 'obcomp'}]->()-[:rel]->(x:nw)\nwhere (x.cat is not null and x.cat in ['inf','ti','ssub','oti','ppart','smain','sv1','cp'])\n   or (x.pt is not null and x.pt = 'ww')\nreturn distinct w.sentid, w.id, n2.id, x.id\n\n";
+qs['spod-ccdanvs-tel'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd comparatief adjectief, gevolgd door VP of S | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel]->(x:nw)\n  where (x.cat is not null and x.cat in ['inf','ti','ssub','oti','ppart','smain','sv1','cp'])\n     or (x.pt is not null and x.pt = 'ww')\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-ccdanpp-zin'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd comparatief adjectief, gevolgd door PP | zinnen\n\nmatch (w:word{pt: 'adj',graad: 'comp'})<-[:rel{rel: 'hd'}]-(:node)-[:rel{rel: 'obcomp'}]->(:node)-[:rel{rel: 'body'}]->(n2:node{cat: 'pp'})\nreturn w.sentid, w.id, n2.id\n\n";
+qs['spod-ccdanpp-tel'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd comparatief adjectief, gevolgd door PP | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word{pt: 'adj',graad: 'comp'})<-[:rel{rel: 'hd'}]-(:node)-[:rel{rel: 'obcomp'}]->(:node)-[:rel{rel: 'body'}]->(:node{cat: 'pp'})\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-ccdanav-zin'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd comparatief adjectief, gevolgd door A of ADV | zinnen\n\nmatch (w:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)\nwhere (x.cat is not null and x.cat in ['advp','ap'])\n   or (x.pt is not null and x.pt in ['adj','bw'])\nreturn w.sentid, w.id, x.id\n\n";
+qs['spod-ccdanav-tel'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd comparatief adjectief, gevolgd door A of ADV | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)\n  where (x.cat is not null and x.cat in ['advp','ap'])\n     or (x.pt is not null and x.pt in ['adj','bw'])\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-ccmm-zin'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"meer\", \"minder\" | zinnen\n\nmatch (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->(n2)\nwhere w.lemma in ['veel','minder','weinig']\nreturn w.sentid, w.id, n2.id\n\n";
+qs['spod-ccmm-tel'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"meer\", \"minder\" | telling\n\n  select count(distinct(sentid)) as zinnen, count(sentid) as items\n  from (\n    match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()\n    where w.lemma in ['veel','minder','weinig']\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-ccmdnp-zin'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"meer\", \"minder\", gevolgd door NP | zinnen\n\nmatch (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw{_np: true})\nwhere w.lemma in ['veel', 'minder', 'weinig']\nreturn w.sentid, w.id, x.id\n\n";
+qs['spod-ccmdnp-tel'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"meer\", \"minder\", gevolgd door NP | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(:nw{_np: true})\n  where w.lemma in ['veel', 'minder', 'weinig']\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-ccmdvs-zin'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"meer\", \"minder\", gevolgd door VP of S | zinnen\n\nmatch (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)\nwhere w.lemma in ['veel', 'minder', 'weinig']\n  and (x.cat in ['inf','ti','ssub','oti','ppart','smain','sv1','cp'] or x.pt = 'ww')\nreturn w.sentid, w.id, x.id\n\n";
+qs['spod-ccmdvs-tel'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"meer\", \"minder\", gevolgd door VP of S | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)\n  where w.lemma in ['veel', 'minder', 'weinig']\n    and (x.cat in ['inf','ti','ssub','oti','ppart','smain','sv1','cp'] or x.pt = 'ww')\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-ccmdpp-zin'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"meer\", \"minder\", gevolgd door PP | zinnen\n\nmatch (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(n2:node{cat: 'pp'})\nwhere w.lemma in ['veel', 'minder', 'weinig']\nreturn distinct w.sentid, w.id, n2.id\n\n";
+qs['spod-ccmdpp-tel'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"meer\", \"minder\", gevolgd door PP | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(:node{cat: 'pp'})\n  where w.lemma in ['veel', 'minder', 'weinig']\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-ccmdav-zin'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"meer\", \"minder\", gevolgd door A of ADV | zinnen\n\nmatch (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)\nwhere w.lemma in ['veel', 'minder', 'weinig']\n  and (x.cat in ['advp', 'ap'] or x.pt in ['adj', 'bw'])\nreturn distinct w.sentid, w.id, x.id\n\n";
+qs['spod-ccmdav-tel'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"meer\", \"minder\", gevolgd door A of ADV | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)\n  where w.lemma in ['veel', 'minder', 'weinig']\n  and (x.cat in ['advp', 'ap'] or x.pt in ['adj', 'bw'])\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-ccnn-zin'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"niet\", \"niets\", \"ander\", \"anders\" | zinnen\n\nmatch (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->(n2)\nwhere w.lemma in ['niet', 'niets', 'ander', 'anders']\nreturn w.sentid, w.id, n2.id\n\n";
+qs['spod-ccnn-tel'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"niet\", \"niets\", \"ander\", \"anders\" | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()\n  where w.lemma in ['niet', 'niets', 'ander', 'anders']\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-ccndnp-zin'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"niet\", \"niets\", \"ander\", \"anders\", gevolgd door NP | zinnen\n\nmatch (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(n2:nw{_np: true})\nwhere w.lemma in ['niet', 'niets', 'ander', 'anders']\nreturn w.sentid, w.id, n2.id\n\n";
+qs['spod-ccndnp-tel'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"niet\", \"niets\", \"ander\", \"anders\", gevolgd door NP | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(:nw{_np: true})\n  where w.lemma in ['niet', 'niets', 'ander', 'anders']\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-ccndvs-zin'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"niet\", \"niets\", \"ander\", \"anders\", gevolgd door VP of S | zinnen\n\nmatch (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)\nwhere w.lemma in ['niet', 'niets', 'ander', 'anders']\n  and (x.cat in ['inf','ti','ssub','oti','ppart','smain','sv1','cp'] or x.pt = 'ww')\nreturn distinct w.sentid, w.id, x.id\n\n";
+qs['spod-ccndvs-tel'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"niet\", \"niets\", \"ander\", \"anders\", gevolgd door VP of S | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)\n  where w.lemma in ['niet', 'niets', 'ander', 'anders']\n    and (x.cat in ['inf','ti','ssub','oti','ppart','smain','sv1','cp'] or x.pt = 'ww')\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-ccndpp-zin'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"niet\", \"niets\", \"ander\", \"anders\", gevolgd door PP | zinnen\n\nmatch (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(n2:node{cat: 'pp'})\nwhere w.lemma in ['niet', 'niets', 'ander', 'anders']\nreturn w.sentid, w.id, n2.id\n\n";
+qs['spod-ccndpp-tel'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"niet\", \"niets\", \"ander\", \"anders\", gevolgd door PP | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(:node{cat: 'pp'})\n  where w.lemma in ['niet', 'niets', 'ander', 'anders']\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-ccndav-zin'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"niet\", \"niets\", \"ander\", \"anders\", gevolgd door A of ADV | zinnen\n\nmatch (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)\nwhere w.lemma in ['niet', 'niets', 'ander', 'anders']\n  and (x.cat in ['advp', 'ap'] or x.pt in ['adj', 'bw'])\nreturn w.sentid, w.id, x.id\n\n";
+qs['spod-ccndav-tel'] = "-- SPOD | Woorden met een comparatief complement | met als hoofd \"niet\", \"niets\", \"ander\", \"anders\", gevolgd door A of ADV | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)\n  where w.lemma in ['niet', 'niets', 'ander', 'anders']\n    and (x.cat in ['advp', 'ap'] or x.pt in ['adj', 'bw'])\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-conj-zin'] = "-- SPOD | Nevenschikkingen | alle nevenschikkingen | zinnen\n\nmatch p = (:node{cat: 'conj'})\nreturn p\n\n";
+qs['spod-conj-tel'] = "-- SPOD | Nevenschikkingen | alle nevenschikkingen | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'conj'})\n  return n.sentid, n.id\n) as foo\n\n";
+qs['spod-crdcount'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met aantal coördinatoren (minimaal 1)\n\nselect crd, count(crd) as aantal\nfrom (\n  match (n:node{cat: 'conj'})-[r:rel{rel: 'crd'}]->()\n  with n, count(r) as crd\n  return crd\n) as foo\ngroup by crd\norder by crd\n\n";
+qs['spod-crd0-zin'] = "-- SPOD | Nevenschikkingen | nevenschikkingen zonder coördinator | zinnen\n\nmatch (n:node{cat: 'conj'})\noptional match (n)-[r:rel{rel: 'crd'}]->()\nwith n, r\nwhere r is null\nreturn n.sentid, n.id\n\n";
+qs['spod-crd0-tel'] = "-- SPOD | Nevenschikkingen | nevenschikkingen zonder coördinator | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'conj'})\n  optional match (n)-[r:rel{rel: 'crd'}]->()\n  with n, r\n  where r is null\n  return distinct n.sentid, n.id\n) as foo;\n\n";
+qs['spod-crd1-zin'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 1 coördinator | zinnen\n\nmatch p = (:node{cat: 'conj'})-[r:rel{rel: 'crd'}]->()\nwith p, count(r) as cnt\nwhere cnt = 1\nreturn p\n\n";
+qs['spod-crd1-tel'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 1 coördinator | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'conj'})-[r:rel{rel: 'crd'}]->()\n  with n, count(r) as cnt\n  where cnt = 1\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-crd1en-zin'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 1 coördinator, en dat is \"en\" | zinnen\n\nmatch (n:node{cat: 'conj'})-[r:rel{rel: 'crd'}]->()\noptional match (n)-[:rel{rel: 'crd'}]->(w:word{lemma: 'en'})\nwith n, w, count(r) as cnt\nwhere cnt = 1 and w is not null\nreturn n.sentid, n.id, w.id\n\n";
+qs['spod-crd1en-tel'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 1 coördinator, en dat is \"en\" | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'conj'})-[r:rel{rel: 'crd'}]->()\n  optional match (n)-[:rel{rel: 'crd'}]->(w:word{lemma: 'en'})\n  with n, w, count(r) as cnt\n  where cnt = 1 and w is not null\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-crd1of-zin'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 1 coördinator, en dat is \"of\" | zinnen\n\nmatch (n:node{cat: 'conj'})-[r:rel{rel: 'crd'}]->()\noptional match (n)-[:rel{rel: 'crd'}]->(w:word{lemma: 'of'})\nwith n, w, count(r) as cnt\nwhere cnt = 1 and w is not null\nreturn n.sentid, n.id, w.id\n\n";
+qs['spod-crd1of-tel'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 1 coördinator, en dat is \"of\" | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'conj'})-[r:rel{rel: 'crd'}]->()\n  optional match (n)-[:rel{rel: 'crd'}]->(w:word{lemma: 'of'})\n  with n, w, count(r) as cnt\n  where cnt = 1 and w is not null\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-crd1maar-zin'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 1 coördinator, en dat is \"maar\" | zinnen\n\nmatch (n:node{cat: 'conj'})-[r:rel{rel: 'crd'}]->()\noptional match (n)-[:rel{rel: 'crd'}]->(w:word{lemma: 'maar'})\nwith n, w, count(r) as cnt\nwhere cnt = 1 and w is not null\nreturn n.sentid, n.id, w.id\n\n";
+qs['spod-crd1maar-tel'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 1 coördinator, en dat is \"maar\" | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'conj'})-[r:rel{rel: 'crd'}]->()\n  optional match (n)-[:rel{rel: 'crd'}]->(w:word{lemma: 'maar'})\n  with n, w, count(r) as cnt\n  where cnt = 1 and w is not null\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-crd1enz-zin'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 1 coördinator, en de coordinator sluit de nevenschikking af (\"enzovoorts\") | zinnen\n\nmatch (n:node{cat: 'conj'})-[r:rel{rel: 'crd'}]->()\noptional match (n)-[:rel{rel: 'crd'}]->(x:nw)\nwith n, x, count(r) as cnt\nwhere cnt = 1 and x.end = n.end\nreturn n.sentid, n.id, x.id\n\n";
+qs['spod-crd1enz-tel'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 1 coördinator, en de coordinator sluit de nevenschikking af (\"enzovoorts\") | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'conj'})-[r:rel{rel: 'crd'}]->()\n  optional match (n)-[:rel{rel: 'crd'}]->(x:nw)\n  with n, x, count(r) as cnt\n  where cnt = 1 and x.end = n.end\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-crd2-zin'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 2 coördinatoren | zinnen\n\nmatch (n:node{cat: 'conj'})-[r:rel{rel: 'crd'}]->()\nwith n, count(r) as cnt\nwhere cnt = 2\nreturn n.sentid, n.id\n\n";
+qs['spod-crd2-tel'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 2 coördinatoren | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'conj'})-[r:rel{rel: 'crd'}]->()\n  with n, count(r) as cnt\n  where cnt = 2\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-crd2p-zin'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met meer dan 2 coördinatoren | zinnen\n\nmatch (n:node{cat: 'conj'})-[r:rel{rel: 'crd'}]->()\nwith n, count(r) as cnt\nwhere cnt > 2\nreturn n.sentid, n.id\n\n";
+qs['spod-crd2p-tel'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met meer dan 2 coördinatoren | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'conj'})-[r:rel{rel: 'crd'}]->()\n  with n, count(r) as cnt\n  where cnt > 2\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-cnjcount'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met aantal conjuncten (minimaal 1)\n\nselect cnj, count(cnj) as aantal\nfrom (\n  match (n:node{cat: 'conj'})-[r:rel{rel: 'cnj'}]->()\n  with n, count(r) as cnj\n  return cnj\n) as foo\ngroup by cnj\norder by cnj\n\n";
+qs['spod-cnj1-zin'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met slechts 1 conjunct | zinnen\n\nmatch (n:node{cat: 'conj'})-[r:rel{rel: 'cnj'}]->()\nwith n, count(r) as cnt\nwhere cnt = 1\nreturn n.sentid, n.id\n\n";
+qs['spod-cnj1-tel'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met slechts 1 conjunct | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'conj'})-[r:rel{rel: 'cnj'}]->()\n  with n, count(r) as cnt\n  where cnt = 1\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-cnj2-zin'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 2 conjuncten | zinnen\n\nmatch (n:node{cat: 'conj'})-[r:rel{rel: 'cnj'}]->()\nwith n, count(r) as cnt\nwhere cnt = 2\nreturn n.sentid, n.id\n\n";
+qs['spod-cnj2-tel'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 2 conjuncten | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'conj'})-[r:rel{rel: 'cnj'}]->()\n  with n, count(r) as cnt\n  where cnt = 2\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-cnj3-zin'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 3 conjuncten | zinnen\n\nmatch (n:node{cat: 'conj'})-[r:rel{rel: 'cnj'}]->()\nwith n, count(r) as cnt\nwhere cnt = 3\nreturn n.sentid, n.id\n\n";
+qs['spod-cnj3-tel'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 3 conjuncten | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'conj'})-[r:rel{rel: 'cnj'}]->()\n  with n, count(r) as cnt\n  where cnt = 3\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-cnj4-zin'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 4 conjuncten | zinnen\n\nmatch (n:node{cat: 'conj'})-[r:rel{rel: 'cnj'}]->()\nwith n, count(r) as cnt\nwhere cnt = 4\nreturn n.sentid, n.id\n\n";
+qs['spod-cnj4-tel'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 4 conjuncten | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'conj'})-[r:rel{rel: 'cnj'}]->()\n  with n, count(r) as cnt\n  where cnt = 4\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-cnj5-zin'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 5 conjuncten | zinnen\n\nmatch (n:node{cat: 'conj'})-[r:rel{rel: 'cnj'}]->()\nwith n, count(r) as cnt\nwhere cnt = 5\nreturn n.sentid, n.id\n\n";
+qs['spod-cnj5-tel'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 5 conjuncten | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'conj'})-[r:rel{rel: 'cnj'}]->()\n  with n, count(r) as cnt\n  where cnt = 5\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-cnj6-zin'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 6 conjuncten | zinnen\n\nmatch (n:node{cat: 'conj'})-[r:rel{rel: 'cnj'}]->()\nwith n, count(r) as cnt\nwhere cnt = 6\nreturn n.sentid, n.id\n\n";
+qs['spod-cnj6-tel'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met 6 conjuncten | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'conj'})-[r:rel{rel: 'cnj'}]->()\n  with n, count(r) as cnt\n  where cnt = 6\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-cnj6p-zin'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met meer dan 6 conjuncten | zinnen\n\nmatch (n:node{cat: 'conj'})-[r:rel{rel: 'cnj'}]->()\nwith n, count(r) as cnt\nwhere cnt > 6\nreturn n.sentid, n.id\n\n";
+qs['spod-cnj6p-tel'] = "-- SPOD | Nevenschikkingen | nevenschikkingen met meer dan 6 conjuncten | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'conj'})-[r:rel{rel: 'cnj'}]->()\n  with n, count(r) as cnt\n  where cnt > 6\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-np-zin'] = "-- SPOD | Woordgroepen | np | zinnen\n\nmatch (x:nw{_np: true})\nreturn x.sentid, x.id\n\n";
+qs['spod-np-tel'] = "-- SPOD | Woordgroepen | np | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (x:nw{_np: true})\n  return distinct x.sentid, x.id\n) as foo\n\n";
+qs['spod-pp-zin'] = "-- SPOD | Woordgroepen | pp | zinnen\n\nmatch (n:node{cat: 'pp'})\nreturn n.sentid, n.id\n\n";
+qs['spod-pp-tel'] = "-- SPOD | Woordgroepen | pp | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'pp'})\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-ap-zin'] = "-- SPOD | Woordgroepen | ap | zinnen\n\nmatch (x:nw)<-[r:rel]-()\nwhere (x.cat is not null and x.cat = 'ap')\n   or (x.pt is not null and x.pt = 'adj')\n  and r.rel != 'hd'\nreturn x.sentid, x.id\n\n";
+qs['spod-ap-tel'] = "-- SPOD | Woordgroepen | ap | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (x:nw)<-[r:rel]-()\n  where (x.cat is not null and x.cat = 'ap')\n     or (x.pt is not null and x.pt = 'adj')\n    and r.rel != 'hd'\n  return distinct x.sentid, x.id\n) as foo\n\n";
+qs['spod-advp-zin'] = "-- SPOD | Woordgroepen | advp | zinnen\n\nmatch (x:nw)<-[r:rel]-()\nwhere (x.cat is not null and x.cat = 'advp')\n   or (x.pt is not null and x.pt = 'bw')\n  and r.rel != 'hd'\nreturn x.sentid, x.id\n\n";
+qs['spod-advp-tel'] = "-- SPOD | Woordgroepen | advp | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (x:nw)<-[r:rel]-()\n  where (x.cat is not null and x.cat = 'advp')\n     or (x.pt is not null and x.pt = 'bw')\n    and r.rel != 'hd'\n  return distinct x.sentid, x.id\n) as foo\n\n";
+qs['spod-ppnp-zin'] = "-- SPOD | Voorzetselgroepen | grammaticale functie, bepalingen bij zelfstandige naamwoorden | zinnen\n\nmatch (n:node{cat: 'pp'})<-[:rel{rel: 'mod'}]-(:node{cat: 'np'})\nreturn n.sentid, n.id\n\n";
+qs['spod-ppnp-tel'] = "-- SPOD | Voorzetselgroepen | grammaticale functie, bepalingen bij zelfstandige naamwoorden | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'pp'})<-[:rel{rel: 'mod'}]-(:node{cat: 'np'})\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-ppap-zin'] = "-- SPOD | Voorzetselgroepen | grammaticale functie, bepalingen bij adjectieven (en als adjectief gebruikte deelwoorden) | zinnen\n\nmatch (n:node{cat: 'pp'})<-[:rel{rel: 'mod'}]-(n2:node{cat:'ap'})\nreturn n.sentid, n.id\nunion\nmatch (n:node{cat: 'pp'})<-[:rel{rel: 'mod'}]-(n2:node)\nwhere n2.cat in ['ppart','ppres']\n  and not exists((n2)<-[:rel{rel: 'vc'}]-())\n  and not exists((n2)<-[:rel{rel: 'cnj'}]-()<-[:rel{rel: 'vc'}]-())\nreturn n.sentid, n.id\n\n";
+qs['spod-ppap-tel'] = "-- SPOD | Voorzetselgroepen | grammaticale functie, bepalingen bij adjectieven (en als adjectief gebruikte deelwoorden) | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'pp'})<-[:rel{rel: 'mod'}]-(n2:node{cat:'ap'})\n  return distinct n.sentid, n.id\n  union\n  match (n:node{cat: 'pp'})<-[:rel{rel: 'mod'}]-(n2:node)\n  where n2.cat in ['ppart','ppres']\n    and not exists((n2)<-[:rel{rel: 'vc'}]-())\n    and not exists((n2)<-[:rel{rel: 'cnj'}]-()<-[:rel{rel: 'vc'}]-())\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-pppc-zin'] = "-- SPOD | Voorzetselgroepen | grammaticale functie, voorzetselvoorwerp | zinnen\n\nmatch (n:node{cat: 'pp'})<-[:rel{rel: 'pc'}]-()\nreturn n.sentid, n.id\n\n";
+qs['spod-pppc-tel'] = "-- SPOD | Voorzetselgroepen | grammaticale functie, voorzetselvoorwerp | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'pp'})<-[:rel{rel: 'pc'}]-()\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-ppld-zin'] = "-- SPOD | Voorzetselgroepen | grammaticale functie, locatief/directioneel complement | zinnen\n\nmatch (n:node{cat: 'pp'})<-[:rel{rel: 'ld'}]-()\nreturn n.sentid, n.id\n\n";
+qs['spod-ppld-tel'] = "-- SPOD | Voorzetselgroepen | grammaticale functie, locatief/directioneel complement | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'pp'})<-[:rel{rel: 'ld'}]-()\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-pppredc-zin'] = "-- SPOD | Voorzetselgroepen | grammaticale functie, predicatief complement | zinnen\n\nmatch (n:node{cat: 'pp'})<-[:rel{rel: 'predc'}]-()\nreturn n.sentid, n.id\n\n";
+qs['spod-pppredc-tel'] = "-- SPOD | Voorzetselgroepen | grammaticale functie, predicatief complement | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'pp'})<-[:rel{rel: 'predc'}]-()\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-ppbep-zin'] = "-- SPOD | Voorzetselgroepen | grammaticale functie, bijwoordelijke bepaling | zinnen\n\nmatch (n:node{cat: 'pp'})<-[:rel{rel: 'mod'}]-(n1)<-[r:rel]-(n2)\nwhere n1.cat in ['smain','sv1','whq','ssub','inf']\n   or (\n     n1.cat = 'ppart'\n     and (\n       r.rel = 'vc'\n       or (\n         r.rel = 'cnj'\n         and exists((n2)<-[:rel{rel: 'vc'}]-())\n      )\n    )\n  )\nreturn n.sentid, n.id\n\n";
+qs['spod-ppbep-tel'] = "-- SPOD | Voorzetselgroepen | grammaticale functie, bijwoordelijke bepaling | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'pp'})<-[:rel{rel: 'mod'}]-(n1)<-[r:rel]-(n2)\n  where n1.cat in ['smain','sv1','whq','ssub','inf']\n     or (\n       n1.cat = 'ppart'\n       and (\n         r.rel = 'vc'\n         or (\n           r.rel = 'cnj'\n           and exists((n2)<-[:rel{rel: 'vc'}]-())\n        )\n      )\n    )\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-ppinp-zin'] = "-- SPOD | Voorzetselgroepen | interne structuur, P + NP | zinnen\n\nmatch (n1)<-[:rel{rel: 'hd'}]-(n:node{cat: 'pp'})-[:rel{rel: 'obj1'}]->(n2)\nwhere n1.begin = n.begin and n2.end = n.end\nreturn n.sentid, n.id\n\n";
+qs['spod-ppinp-tel'] = "-- SPOD | Voorzetselgroepen | interne structuur, P + NP | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n1)<-[:rel{rel: 'hd'}]-(n:node{cat: 'pp'})-[:rel{rel: 'obj1'}]->(n2)\n  where n1.begin = n.begin and n2.end = n.end\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-ppirp-zin'] = "-- SPOD | Voorzetselgroepen | interne structuur, +R-pronomen + P | zinnen\n\nmatch (n1)<-[:rel{rel: 'hd'}]-(n:node{cat: 'pp'})-[:rel{rel: 'obj1'}]->(w:word{pt: 'vnw'})\nwhere w.begin = n.begin and n1.end = n.end\nreturn n.sentid, n.id\n\n";
+qs['spod-ppirp-tel'] = "-- SPOD | Voorzetselgroepen | interne structuur, +R-pronomen + P | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n1)<-[:rel{rel: 'hd'}]-(n:node{cat: 'pp'})-[:rel{rel: 'obj1'}]->(w:word{pt: 'vnw'})\n  where w.begin = n.begin and n1.end = n.end\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-ppimwu-zin'] = "-- SPOD | Voorzetselgroepen | interne structuur, complex voorzetsel | zinnen\n\nmatch (:node{cat: 'mwu'})<-[:rel{rel: 'hd'}]-(n:node{cat: 'pp'})\nreturn n.sentid, n.id\n\n";
+qs['spod-ppimwu-tel'] = "-- SPOD | Voorzetselgroepen | interne structuur, complex voorzetsel | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (:node{cat: 'mwu'})<-[:rel{rel: 'hd'}]-(n:node{cat: 'pp'})\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-vwuit-zin'] = "-- SPOD | Werkwoorden | vaste werkwoordelijke uitdrukkingen | zinnen\n\nmatch (n:node)<-[:rel{rel: 'svp'}]-()\nwhere n.cat is not null\nreturn n.sentid, n.id\n\n";
+qs['spod-vwuit-tel'] = "-- SPOD | Werkwoorden | vaste werkwoordelijke uitdrukkingen | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node)<-[:rel{rel: 'svp'}]-()\n  where n.cat is not null\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-groen-zin'] = "-- SPOD | Werkwoorden | groene werkwoordsvolgorde | zinnen\n\nmatch (w:word{wvorm: 'vd'})<-[:rel{rel: 'hd'}]-(:node)<-[:rel{rel: 'vc'}]-(:node)-[:rel{rel: 'hd'}]->(x)\nwhere w.begin < x.begin\n  and not exists( (w)<-[:rel*2]-(:node{sentid: w.sentid, cat: 'smain'}) )\n  and not exists( (w)<-[:rel*2]-(:node{sentid: w.sentid, cat: 'sv1'}) )\nreturn w.sentid, w.id\n\n";
+qs['spod-groen-tel'] = "-- SPOD | Werkwoorden | groene werkwoordsvolgorde | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word{wvorm: 'vd'})<-[:rel{rel: 'hd'}]-(:node)<-[:rel{rel: 'vc'}]-(:node)-[:rel{rel: 'hd'}]->(x)\n  where w.begin < x.begin\n    and not exists( (w)<-[:rel*2]-(:node{sentid: w.sentid, cat: 'smain'}) )\n    and not exists( (w)<-[:rel*2]-(:node{sentid: w.sentid, cat: 'sv1'}) )\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-rood-zin'] = "-- SPOD | Werkwoorden | rode werkwoordsvolgorde | zinnen\n\nmatch (n:word{wvorm: 'vd'})<-[:rel{rel: 'hd'}]-()<-[:rel]-()-[:rel{rel: 'hd'}]->(w:word{pt: 'ww'})\noptional match (n)<-[:rel]-()<-[:rel]-(n2:node{cat: 'smain'})\noptional match (n)<-[:rel]-()<-[:rel]-(n3:node{cat: 'sv1'})\nwith n, n2, n3, w\nwhere n.begin > w.begin\n  and n2 is null\n  and n3 is null\nreturn n.sentid, n.id\n\n";
+qs['spod-rood-tel'] = "-- SPOD | Werkwoorden | rode werkwoordsvolgorde | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:word{wvorm: 'vd'})<-[:rel{rel: 'hd'}]-()<-[:rel]-()-[:rel{rel: 'hd'}]->(w:word{pt: 'ww'})\n  optional match (n)<-[:rel]-()<-[:rel]-(n2:node{cat: 'smain'})\n  optional match (n)<-[:rel]-()<-[:rel]-(n3:node{cat: 'sv1'})\n  with n, n2, n3, w\n  where n.begin > w.begin\n    and n2 is null\n    and n3 is null\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-wwclus-zin'] = "-- SPOD | Werkwoorden | werkwoordsclusters | zinnen\n\nmatch (n1:nw)<-[:rel]-(n:node)<-[:rel{rel: 'vc'}]-(n0:node)-[:rel{rel: 'hd'}]->(n2:word{pt: 'ww'})\nwhere n.cat in ['ti','inf','ppart']\n  and not(n0.cat in ['smain','sv1']) -- dit hoeft niet per se n0 te zijn???\n  and n1.begin < n2.begin\nreturn n.sentid, n.id\n\n";
+qs['spod-wwclus-tel'] = "-- SPOD | Werkwoorden | werkwoordsclusters | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n1:nw)<-[:rel]-(n:node)<-[:rel{rel: 'vc'}]-(n0:node)-[:rel{rel: 'hd'}]->(n2:word{pt: 'ww'})\n  where n.cat in ['ti','inf','ppart']\n    and not(n0.cat in ['smain','sv1']) -- dit hoeft niet per se n0 te zijn???\n    and n1.begin < n2.begin\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-accinf-zin'] = "-- SPOD | Werkwoorden | accusativus cum infinitivo | zinnen\n\n-- niet voor Corpus Gesproken Nederlands\n\nmatch (x)<-[:rel]-(n:node{cat: 'inf'})<-[:rel{rel: 'vc'}]-(n1)-[:rel{rel: 'hd'}]->(w:word{pt: 'ww'})\nmatch (n)-[:rel{rel: 'su'}]->()<-[:rel{rel: 'obj1'}]-(n1)\nwhere not n1.cat in ['smain','sv1']\n  and x.begin < w.begin\nreturn n.sentid, n.id\n\n";
+qs['spod-accinf-tel'] = "-- SPOD | Werkwoorden | accusativus cum infinitivo | telling\n\n-- niet voor Corpus Gesproken Nederlands\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (x)<-[:rel]-(n:node{cat: 'inf'})<-[:rel{rel: 'vc'}]-(n1)-[:rel{rel: 'hd'}]->(w:word{pt: 'ww'})\n  match (n)-[:rel{rel: 'su'}]->()<-[:rel{rel: 'obj1'}]-(n1)\n  where not n1.cat in ['smain','sv1']\n    and x.begin < w.begin\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-passive-zin'] = "-- SPOD | Werkwoorden | passief | zinnen\n\n-- niet voor Corpus Gesproken Nederlands\n\nmatch (n1:nw)<-[:rel{rel: 'obj1'}]-(ni)<-[:rel*0..1]-(n:node)<-[:rel{rel: 'vc'}]-()<-[:rel]-(n0)\nmatch (n0)-[:rel{rel: 'su'}]->(n1)\nwhere (ni = n and n.cat = 'ppart' or ni != n and n.cat = 'ti')\nreturn n.sentid, n.id\n\n";
+qs['spod-passive-tel'] = "-- SPOD | Werkwoorden | passief | telling\n\n-- niet voor Corpus Gesproken Nederlands\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n1:nw)<-[:rel{rel: 'obj1'}]-(ni)<-[:rel*0..1]-(n:node)<-[:rel{rel: 'vc'}]-()<-[:rel]-(n0)\n  match (n0)-[:rel{rel: 'su'}]->(n1)\n  where (ni = n and n.cat = 'ppart' or ni != n and n.cat = 'ti')\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-nppas-zin'] = "-- SPOD | Werkwoorden | niet-persoonlijke passief | zinnen\n\n-- niet voor Corpus Gesproken Nederlands\n\nmatch (n:nw)<-[:rel{rel: 'vc'}]-()\nmatch (n)<-[:rel]-()-[:rel{rel: 'hd'}]->(n1)\nmatch (n)<-[:rel]-(n2)\noptional match (pn:node{cat: 'sv1'})-[:rel]->(n)\noptional match (pn)-[:rel{rel: 'su'}]->(px1)\noptional match (pn)-[:rel{rel: 'hd'}]->(px2)\nwith n, n1, n2, pn, px1, px2\nwhere (n1.sc in ['passive','te_passive']\n  or (n1.pt = 'ww'\n     and (\n       ( n.cat = 'ppart'\n         and not exists ((n)-[:rel{rel: 'obj1'}]->())\n         and not exists ((n)-[:rel{rel: 'su'}]->())\n         and not exists ((n)-[:rel{rel: 'vc'}]->())\n         and not exists ((n)-[:rel{rel: 'predc'}]->()) )\n       or ( n.cat = 'ti'\n         and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'obj1'}]->())\n         and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'su'}]->())\n         and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'vc'}]->())\n         and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'predc'}]->()) )\n     ))\n  ) and (\n  -- n2 is een parent van n\n  not exists((n2)-[:rel{rel: 'su'}]->())\n  and (\n    n2.cat in ['smain','ssub']\n    or (\n      n2.cat = 'sv1'\n      and not (\n        -- imperatief\n        pn is not null\n          and px1 is null\n          and not (px2.stype   is not null and not px2.stype = 'imparative')\n          and not ((px2.tense  is not null and px2.tense = 'past') or\n                   (px2.pvagr  is not null and px2.pvagr in ['mv','met-t']) or\n                   (px2.pvtijd is not null and px2.pvtijd = 'verl') or\n                   (px2.lemma  is not null and px2.lemma in ['zijn','kunnen','willen','moeten','mogen','zullen','denken','geloven','vinden','hebben']) )\n        -- einde imperatief\n      )))\n)\nreturn n.sentid, n.id\n\n";
+qs['spod-nppas-tel'] = "-- SPOD | Werkwoorden | niet-persoonlijke passief | telling\n\n-- niet voor Corpus Gesproken Nederlands\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:nw)<-[:rel{rel: 'vc'}]-()\n  match (n)<-[:rel]-()-[:rel{rel: 'hd'}]->(n1)\n  match (n)<-[:rel]-(n2)\n  optional match (pn:node{cat: 'sv1'})-[:rel]->(n)\n  optional match (pn)-[:rel{rel: 'su'}]->(px1)\n  optional match (pn)-[:rel{rel: 'hd'}]->(px2)\n  with n, n1, n2, pn, px1, px2\n  where (n1.sc in ['passive','te_passive']\n     or (n1.pt = 'ww'\n       and (\n         ( n.cat = 'ppart'\n           and not exists ((n)-[:rel{rel: 'obj1'}]->())\n           and not exists ((n)-[:rel{rel: 'su'}]->())\n           and not exists ((n)-[:rel{rel: 'vc'}]->())\n           and not exists ((n)-[:rel{rel: 'predc'}]->()) )\n         or ( n.cat = 'ti'\n           and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'obj1'}]->())\n           and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'su'}]->())\n           and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'vc'}]->())\n           and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'predc'}]->()) )\n       ))\n  ) and (\n    -- n2 is een parent van n\n    not exists((n2)-[:rel{rel: 'su'}]->())\n    and (\n      n2.cat in ['smain','ssub']\n      or (\n        n2.cat = 'sv1'\n        and not (\n          -- imperatief\n          pn is not null\n            and px1 is null\n            and not (px2.stype   is not null and not px2.stype = 'imparative')\n            and not ((px2.tense  is not null and px2.tense = 'past') or\n                     (px2.pvagr  is not null and px2.pvagr in ['mv','met-t']) or\n                     (px2.pvtijd is not null and px2.pvtijd = 'verl') or\n                     (px2.lemma  is not null and px2.lemma in ['zijn','kunnen','willen','moeten','mogen','zullen','denken','geloven','vinden','hebben']) )\n          -- einde imperatief\n        )))\n  )\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-vpart-zin'] = "-- SPOD | Scheidbare werkwoorden | Werkwoorden met een scheidbaar partikel | zinnen\n\n-- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten\n\nmatch (w:word)\nwhere w.sc starts with 'part_'\nreturn w.sentid, w.id\n\n";
+qs['spod-vpart-tel'] = "-- SPOD | Scheidbare werkwoorden | Werkwoorden met een scheidbaar partikel | telling\n\n-- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word)\n  where w.sc starts with 'part_'\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-vpartex-zin'] = "-- SPOD | Scheidbare werkwoorden | Werkwoorden met een scheidbaar partikel, partikel gescheiden van het werkwoord | zinnen\n\n-- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten\n\nmatch (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)\nwhere w.sc starts with 'part_'\n  and w2.frame starts with 'particle'\nreturn w.sentid, w.id\n\n";
+qs['spod-vpartex-tel'] = "-- SPOD | Scheidbare werkwoorden | Werkwoorden met een scheidbaar partikel, partikel gescheiden van het werkwoord | telling\n\n-- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)\n  where w.sc starts with 'part_'\n    and w2.frame starts with 'particle'\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-vpartin-zin'] = "-- SPOD | Scheidbare werkwoorden | Werkwoorden met een scheidbaar partikel, partikel geïncorporeerd in het werkwoord | zinnen\n\n-- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten\n\nmatch (w:word)\nwhere w.sc starts with 'part_'\nreturn w.sentid, w.id\nexcept\nmatch (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)\nwhere w.sc starts with 'part_'\n  and w2.frame starts with 'particle'\nreturn w.sentid, w.id\n\n";
+qs['spod-vpartin-tel'] = "-- SPOD | Scheidbare werkwoorden | Werkwoorden met een scheidbaar partikel, partikel geïncorporeerd in het werkwoord | telling\n\n-- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word)\n  where w.sc starts with 'part_'\n  return distinct w.sentid, w.id\n  except\n  match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)\n  where w.sc starts with 'part_'\n    and w2.frame starts with 'particle'\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-vprtn-zin'] = "-- SPOD | Scheidbare werkwoorden | Niet-finiete werkwoorden met een scheidbaar partikel | zinnen\n\n-- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten\n\nmatch (w:word)\nwhere w.sc starts with 'part_'\n  and (w.wvorm is null or w.wvorm != 'pv')\nreturn w.sentid, w.id\n\n";
+qs['spod-vprtn-tel'] = "-- SPOD | Scheidbare werkwoorden | Niet-finiete werkwoorden met een scheidbaar partikel | telling\n\n-- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word)\n  where w.sc starts with 'part_'\n    and (w.wvorm is null or w.wvorm != 'pv')\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-vprtnex-zin'] = "-- SPOD | Scheidbare werkwoorden | Niet-finiete werkwoorden met een scheidbaar partikel, partikel gescheiden van het werkwoord | zinnen\n\n-- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten\n\nmatch (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)\nwhere w.sc starts with 'part_'\n  and (w.wvorm is null or w.wvorm != 'pv')\n  and w2.frame starts with 'particle'\nreturn w.sentid, w.id\n\n";
+qs['spod-vprtnex-tel'] = "-- SPOD | Scheidbare werkwoorden | Niet-finiete werkwoorden met een scheidbaar partikel, partikel gescheiden van het werkwoord | telling\n\n-- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)\n  where w.sc starts with 'part_'\n    and (w.wvorm is null or w.wvorm != 'pv')\n    and w2.frame starts with 'particle'\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-vprtnin-zin'] = "-- SPOD | Scheidbare werkwoorden | Niet-finiete werkwoorden met een scheidbaar partikel, partikel geïncorporeerd in het werkwoord | zinnen\n\n-- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten\n\nmatch (w:word)\nwhere w.sc starts with 'part_'\n  and (w.wvorm is null or w.wvorm != 'pv')\nreturn w.sentid, w.id\nexcept\nmatch (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)\nwhere w.sc starts with 'part_'\n  and (w.wvorm is null or w.wvorm != 'pv')\n  and w2.frame starts with 'particle'\nreturn w.sentid, w.id\n\n";
+qs['spod-vprtnin-tel'] = "-- SPOD | Scheidbare werkwoorden | Niet-finiete werkwoorden met een scheidbaar partikel, partikel geïncorporeerd in het werkwoord | telling\n\n-- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (w:word)\n  where w.sc starts with 'part_'\n    and (w.wvorm is null or w.wvorm != 'pv')\n  return distinct w.sentid, w.id\n  except\n  match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)\n  where w.sc starts with 'part_'\n    and (w.wvorm is null or w.wvorm != 'pv')\n    and w2.frame starts with 'particle'\n  return distinct w.sentid, w.id\n) as foo\n\n";
+qs['spod-inb-all'] = "-- SPOD | Inbedding | telling van alle niveaus\n\nmatch (n:node{_clause: true})\noptional match (n)-[:rel*1..]->(n2:node{sentid:n.sentid, _clause: true})\nwith n, n2\nwhere n2 is null\nreturn n._clause_lvl - 1 as niveau, count(n._clause_lvl) as aantal\norder by niveau\n\n";
+qs['spod-inb0'] = "-- SPOD | Inbedding | geen inbedding\n\nmatch (n:node{_clause_lvl: 1})\noptional match (n)-[:rel*1..]->(n2:node{sentid:n.sentid, _clause: true})\nwith n, n2\nwhere n2 is null\nreturn n\n\n";
+qs['spod-inb1'] = "-- SPOD | Inbedding | minstens 1 finiete zinsinbedding\n\nmatch (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})\nwhere n2._clause_lvl - n._clause_lvl = 1\nreturn distinct n\n\n";
+qs['spod-inb2'] = "-- SPOD | Inbedding | minstens 2 finiete zinsinbeddingen\n\nmatch (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})\nwhere n2._clause_lvl - n._clause_lvl = 2\nreturn distinct n\n\n";
+qs['spod-inb3'] = "-- SPOD | Inbedding | minstens 3 finiete zinsinbeddingen\n\nmatch (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})\nwhere n2._clause_lvl - n._clause_lvl = 3\nreturn distinct n\n\n";
+qs['spod-inb4'] = "-- SPOD | Inbedding | minstens 4 finiete zinsinbeddingen\n\nmatch (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})\nwhere n2._clause_lvl - n._clause_lvl = 4\nreturn distinct n\n\n";
+qs['spod-inb5'] = "-- SPOD | Inbedding | minstens 5 finiete zinsinbeddingen\n\nmatch (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})\nwhere n2._clause_lvl - n._clause_lvl = 5\nreturn distinct n\n\n";
+qs['spod-inb6'] = "-- SPOD | Inbedding | minstens 6 finiete zinsinbeddingen\n\nmatch (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})\nwhere n2._clause_lvl - n._clause_lvl = 6\nreturn distinct n\n\n";
+qs['spod-inb7'] = "-- SPOD | Inbedding | minstens 7 finiete zinsinbeddingen\n\nmatch (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})\nwhere n2._clause_lvl - n._clause_lvl = 7\nreturn distinct n\n\n";
+qs['spod-inb8'] = "-- SPOD | Inbedding | minstens 8 finiete zinsinbeddingen\n\nmatch (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})\nwhere n2._clause_lvl - n._clause_lvl = 8\nreturn distinct n\n\n";
+qs['spod-nptsub-zin'] = "-- SPOD | Topicalizatie en Extractie | np-topic is subject | zinnen\n\nmatch (n:nw{_vorfeld: true, _np: true})<-[r:rel]-()\nwhere r.rel in ['su','sup'] and r.id is null\nreturn n.sentid, n.id\n\n";
+qs['spod-nptsub-tel'] = "-- SPOD | Topicalizatie en Extractie | np-topic is subject | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:nw{_vorfeld: true, _np: true})<-[r:rel]-()\n  where r.rel in ['su','sup'] and r.id is null\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-nptnsub-zin'] = "-- SPOD | Topicalizatie en Extractie | np-topic is geen subject | zinnen\n\nmatch (n:nw{_vorfeld: true, _np: true})<-[r:rel]-()\nwhere r.id is null\nreturn n.sentid, n.id\nexcept\nmatch (n:nw{_vorfeld: true, _np: true})<-[r:rel]-()\nwhere r.id is null and r.rel in ['su','sup']\nreturn n.sentid, n.id\n\n";
+qs['spod-nptnsub-tel'] = "-- SPOD | Topicalizatie en Extractie | np-topic is geen subject | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:nw{_vorfeld: true, _np: true})<-[r:rel]-()\n  where r.id is null\n  return distinct n.sentid, n.id\n  except\n  match (n:nw{_vorfeld: true, _np: true})<-[r:rel]-()\n  where r.id is null and r.rel in ['su','sup']\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-tnonloc-zin'] = "-- SPOD | Topicalizatie en Extractie | topic is niet lokaal | zinnen\n\nmatch (n:node{cat: 'ssub'})-[r:rel]->()-[:rel*0..]->(:nw{_vorfeld: true})\nwhere r.id is null\nreturn n.sentid, n.id\nexcept\nmatch (n:node{cat: 'ssub'})-[r:rel]->()-[:rel*0..]->(:nw{_vorfeld: true})\nmatch (n)-[:rel*1..]->(n0:node{sentid: n.sentid})-[r2:rel]->()-[:rel*0..]->(:nw{sentid: n.sentid, _vorfeld: true})\nwhere r.id is null and r2.id is null and n0.cat in ['ssub','smain']\nreturn n.sentid, n.id\n\n";
+qs['spod-tnonloc-tel'] = "-- SPOD | Topicalizatie en Extractie | topic is niet lokaal | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:node{cat: 'ssub'})-[r:rel]->()-[:rel*0..]->(:nw{_vorfeld: true})\n  where r.id is null\n  return distinct n.sentid, n.id\n  except\n  match (n:node{cat: 'ssub'})-[r:rel]->()-[:rel*0..]->(:nw{_vorfeld: true})\n  match (n)-[:rel*1..]->(n0:node{sentid: n.sentid})-[r2:rel]->()-[:rel*0..]->(:nw{sentid: n.sentid, _vorfeld: true})\n  where r.id is null and r2.id is null and n0.cat in ['ssub','smain']\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-locext-zin'] = "-- SPOD | Topicalizatie en Extractie | lokale extractie | zinnen\n\nmatch (n:nw)<-[r:rel]-()\nwhere r.rel in ['whd','rhd']\nreturn n.sentid, n.id\nexcept\nmatch (n:nw)<-[r:rel]-(nn)\nmatch (nn)-[:rel*1..]->(:node{sentid:n.sentid, cat:'ssub'})-[:rel*1..]->(n0:node{sentid: n.sentid, cat: 'ssub'})-[:rel*1..]->(n)\noptional match (n0)<-[:rel]-()<-[:rel{rel: 'obcomp'}]-(n2)\nwith r, n, n0, n2\nwhere r.rel in ['whd','rhd']\n  and n2 is null\nreturn n.sentid, n.id\n\n";
+qs['spod-locext-tel'] = "-- SPOD | Topicalizatie en Extractie | lokale extractie | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:nw)<-[r:rel]-()\n  where r.rel in ['whd','rhd']\n  return distinct n.sentid, n.id\n  except\n  match (n:nw)<-[r:rel]-(nn)\n  match (nn)-[:rel*1..]->(:node{sentid:n.sentid, cat:'ssub'})-[:rel*1..]->(n0:node{sentid: n.sentid, cat: 'ssub'})-[:rel*1..]->(n)\n  optional match (n0)<-[:rel]-()<-[:rel{rel: 'obcomp'}]-(n2)\n  with r, n, n0, n2\n  where r.rel in ['whd','rhd']\n    and n2 is null\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-nlocext-zin'] = "-- SPOD | Topicalizatie en Extractie | niet-lokale extractie | zinnen\n\nmatch (n:nw)<-[r:rel]-(nn)\nmatch (nn)-[:rel*1..]->(:node{sentid:n.sentid, cat:'ssub'})-[:rel*1..]->(n0:node{sentid: n.sentid, cat: 'ssub'})-[:rel*1..]->(n)\noptional match (n0)<-[:rel]-()<-[:rel{rel: 'obcomp'}]-(n2)\nwith r, n, n0, n2\nwhere r.rel in ['whd','rhd']\n  and n2 is null\nreturn n.sentid, n.id\n\n";
+qs['spod-nlocext-tel'] = "-- SPOD | Topicalizatie en Extractie | niet-lokale extractie | telling\n\nselect count(distinct(sentid)) as zinnen, count(sentid) as items\nfrom (\n  match (n:nw)<-[r:rel]-(nn)\n  match (nn)-[:rel*1..]->(:node{sentid:n.sentid, cat:'ssub'})-[:rel*1..]->(n0:node{sentid: n.sentid, cat: 'ssub'})-[:rel*1..]->(n)\n  optional match (n0)<-[:rel]-()<-[:rel{rel: 'obcomp'}]-(n2)\n  with r, n, n0, n2\n  where r.rel in ['whd','rhd']\n    and n2 is null\n  return distinct n.sentid, n.id\n) as foo\n\n";
+qs['spod-ok-zin'] = "-- SPOD | Parser succes | volledige parse | zinnen\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence{cats:1, skips:0})\nreturn s\n\n";
+qs['spod-ok-tel'] = "-- SPOD | Parser succes | volledige parse | telling\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence{cats:1, skips:0})\nreturn count(s) as zinnen\n\n";
+qs['spod-catcount'] = "-- SPOD | Parser succes | aantal geparste delen\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence)\nwhere s.cats is not null\nreturn s.cats as delen, count(s.cats) as zinnen\norder by delen\n\n";
+qs['spod-cats0-zin'] = "-- SPOD | Parser succes | geen enkel deel is geparst | zinnen\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence{cats:0})\nreturn s\n\n";
+qs['spod-cats0-tel'] = "-- SPOD | Parser succes | geen enkel deel is geparst | telling\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence{cats:0})\nreturn count(s) as zinnen\n\n";
+qs['spod-cats1-zin'] = "-- SPOD | Parser succes | parse bestaat uit één deel | zinnen\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence{cats:1})\nreturn s\n\n";
+qs['spod-cats1-tel'] = "-- SPOD | Parser succes | parse bestaat uit één deel | telling\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence{cats:1})\nreturn count(s) as zinnen\n\n";
+qs['spod-cats2-zin'] = "-- SPOD | Parser succes | parse bestaat uit twee losse delen | zinnen\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence{cats:2})\nreturn s\n\n";
+qs['spod-cats2-tel'] = "-- SPOD | Parser succes | parse bestaat uit twee losse delen | telling\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence{cats:2})\nreturn count(s) as zinnen\n\n";
+qs['spod-cats3-zin'] = "-- SPOD | Parser succes | parse bestaat uit drie losse delen | zinnen\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence{cats:3})\nreturn s\n\n";
+qs['spod-cats3-tel'] = "-- SPOD | Parser succes | parse bestaat uit drie losse delen | telling\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence{cats:3})\nreturn count(s) as zinnen\n\n";
+qs['spod-cats4-zin'] = "-- SPOD | Parser succes | parse bestaat uit vier of meer losse delen | zinnen\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence)\nwhere s.cats > 3\nreturn s\n\n";
+qs['spod-cats4-tel'] = "-- SPOD | Parser succes | parse bestaat uit vier of meer losse delen | telling\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence)\nwhere s.cats > 3\nreturn count(s) as zinnen\n\n";
+qs['spod-skipcount'] = "-- SPOD | Parser succes | aantal overgeslagen woorden\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence)\nwhere s.skips is not null\nreturn s.skips as \"overgeslagen woorden\", count(s.skips) as zinnen\norder by \"overgeslagen woorden\"\n\n";
+qs['spod-skips0-zin'] = "-- SPOD | Parser succes | geen enkel woord is overgeslagen | zinnen\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence{skips:0})\nreturn s\n\n";
+qs['spod-skips0-tel'] = "-- SPOD | Parser succes | geen enkel woord is overgeslagen | telling\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence{skips:0})\nreturn count(s) as zinnen\n\n";
+qs['spod-skips1-zin'] = "-- SPOD | Parser succes | een van de woorden is overgeslagen | zinnen\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence{skips:1})\nreturn s\n\n";
+qs['spod-skips1-tel'] = "-- SPOD | Parser succes | een van de woorden is overgeslagen | telling\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence{skips:1})\nreturn count(s) as zinnen\n\n";
+qs['spod-skips2-zin'] = "-- SPOD | Parser succes | twee van de woorden zijn overgeslagen | zinnen\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence{skips:2})\nreturn s\n\n";
+qs['spod-skips2-tel'] = "-- SPOD | Parser succes | twee van de woorden zijn overgeslagen | telling\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence{skips:2})\nreturn count(s) as zinnen\n\n";
+qs['spod-skips3-zin'] = "-- SPOD | Parser succes | drie van de woorden zijn overgeslagen | zinnen\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence{skips:3})\nreturn s\n\n";
+qs['spod-skips3-tel'] = "-- SPOD | Parser succes | drie van de woorden zijn overgeslagen | telling\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence{skips:3})\nreturn count(s) as zinnen\n\n";
+qs['spod-skips4-zin'] = "-- SPOD | Parser succes | vier of meer van de woorden zijn overgeslagen | zinnen\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence)\nwhere s.skips > 3\nreturn s\n\n";
+qs['spod-skips4-tel'] = "-- SPOD | Parser succes | vier of meer van de woorden zijn overgeslagen | telling\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (s:sentence)\nwhere s.skips > 3\nreturn count(s) as zinnen\n\n";
+qs['spod-his-zin'] = "-- SPOD | Onbekende woorden | \"alle\" woorden (nodes met attribuut @his) | woorden\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (w:nw)\nwhere w.his is not null\nreturn w\n\n";
+qs['spod-his-tel'] = "-- SPOD | Onbekende woorden | \"alle\" woorden (nodes met attribuut @his) | telling\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (w:nw)\nwhere w.his is not null\nreturn count(w) as woorden\n\n";
+qs['spod-normal-zin'] = "-- SPOD | Onbekende woorden | woorden uit het woordenboek of de namenlijst | woorden\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (w:nw{his: 'normal'})\nreturn w\n\n";
+qs['spod-normal-tel'] = "-- SPOD | Onbekende woorden | woorden uit het woordenboek of de namenlijst | telling\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (w:nw{his: 'normal'})\nreturn count(w) as woorden\n\n";
+qs['spod-onbeken-zin'] = "-- SPOD | Onbekende woorden | woorden niet direct uit het woordenboek | woorden\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (w:nw)\nwhere w.his is not null\n  and not (w.his in ['normal','robust_skip','skip'])\nreturn w\n\n";
+qs['spod-onbeken-tel'] = "-- SPOD | Onbekende woorden | woorden niet direct uit het woordenboek | telling\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (w:nw)\nwhere w.his is not null\n  and not (w.his in ['normal','robust_skip','skip'])\nreturn count(w) as woorden\n\n";
+qs['spod-compoun-zin'] = "-- SPOD | Onbekende woorden | woorden herkend als samenstelling | woorden\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (w:nw{his: 'compound'})\nreturn w\n\n";
+qs['spod-compoun-tel'] = "-- SPOD | Onbekende woorden | woorden herkend als samenstelling | telling\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (w:nw{his: 'compound'})\nreturn count(w) as woorden\n\n";
+qs['spod-name-zin'] = "-- SPOD | Onbekende woorden | woorden herkend als naam (maar niet uit namenlijst) | woorden\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (w:nw{his: 'name'})\nreturn w\n\n";
+qs['spod-name-tel'] = "-- SPOD | Onbekende woorden | woorden herkend als naam (maar niet uit namenlijst) | telling\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (w:nw{his: 'name'})\nreturn count(w) as woorden\n\n";
+qs['spod-noun-zin'] = "-- SPOD | Onbekende woorden | onbekende woorden die niet als samenstelling of naam werden herkend | woorden\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (w:nw)\nwhere w.his is not null\n  and not (w.his in ['normal','compound','name','robust_skip','skip'])\nreturn w\n\n";
+qs['spod-noun-tel'] = "-- SPOD | Onbekende woorden | onbekende woorden die niet als samenstelling of naam werden herkend | telling\n\n-- alleen voor het Eindhoven-corpus\n\nmatch (w:nw)\nwhere w.his is not null\n  and not (w.his in ['normal','compound','name','robust_skip','skip'])\nreturn count(w) as woorden\n\n";
+
+    var dbname = '';
+    var started = false;
+    var head = {};
+    var istable = false;
+
+    window._fn = {
+      reset: function () {
+        $('#error').text('').addClass('hide');
+        $('#time').text('').addClass('hide');
+        $('#output').text('');
+        $('#wait').removeClass('hide');
+        started = false;
+      },
+      db: function (name) {
+        dbname = name;
+      },
+      header: function (h) {
+        head = h;
+      },
+      row: function (r) {
+        if (!started) {
+          started = true;
+          if (r.sentid) {
+            istable = false;
+          } else {
+            istable = true;
+          }
+          if (istable) {
+            $('#output').html('<table id="tab"></table>');
+            var tr = $('<tr></tr>');
+            for (var i = 0; i < head.length; i++) {
+              tr.append($('<th></th>').text(head[i].name));
+            }
+            $('#tab').append(tr);
+          } else {
+            $('#output').html('<ol id="lst"></ol>');
+          }
+        }
+        if (istable) {
+          var tr = $('<tr></tr>');
+          for (var i = 0; i < r.fields.length; i++) {
+            tr.append($('<td></td>').text(r.fields[i]));
+          }
+          $('#tab').append(tr);
+        } else {
+          var url = 'https://paqu.let.rug.nl:8068/tree?db=' + dbname + '&names=true&mwu=false&arch=' + r.arch + '&file=' + r.sentid + '.xml&global=true&marknodes=';
+          for (var i = 0; i < r.ids.length; i++) {
+            if (i > 0) {
+              url += ',';
+            }
+            url += r.ids[i];
+          }
+          var a = $('<a href="' + url + '" target="_blank"></a>').html(r.sentence);
+          $('#lst').append($('<li></li>').append(a));
+        }
+      },
+      error: function (e) {
+        $('#error').text(e).removeClass('hide');
+      },
+      time: function (t) {
+        $('#time').removeClass('hide').text(t);
+      },
+      done: function () {
+        $('#wait').addClass('hide');
+      }
+    }
+
+    function q(tag) {
+      var el = document.forms['alpgform']
+      el.elements['query'].value = qs[tag];
+      el.scrollIntoView();
+    }
+    function formclear() {
+      document.forms['alpgform'].elements['query'].value = '';
+    }
+    //--></script>
+</head>
+
+<body>
+  <div class="nav">
+    <input type="checkbox" id="menu" />
+    <h1>AlpinoGraph</h1>
+    <label for="menu" id="nav-icon">&#9776;</label>
+
+    <div class="multi-level">
+      <div class="item">
+<input type="checkbox" id="tut"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="tut">Tutorial</label>
+<ul>
+<li><div class="sub-item">
+<input type="checkbox" id="tut-uitdr"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="tut-uitdr">Uitdrukkingen en gezegdes</label>
+<ul>
+<li><a href="javascript:q('tut-uitdr-advduivel')">advocaat van de duivel</a></li>
+<li><a href="javascript:q('tut-uitdr-kalfput')">als het kalf verdronken is dempt men de put</a></li>
+<li><a href="javascript:q('tut-uitdr-voorzover')">voor zover mogelijk</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="tut-ud"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="tut-ud">Universal Dependencies</label>
+<ul>
+<li><div class="sub-item">
+<input type="checkbox" id="tut-ud-eten"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="tut-ud-eten">wat eten en drinken we?</label>
+<ul>
+<li><a href="javascript:q('tut-ud-eten-zin')">zinnen</a></li>
+<li><a href="javascript:q('tut-ud-eten-tel')">telling van woorden</a></li>
+</ul>
+</div></li>
+<li><a href="javascript:q('tut-ud-pos')">possessieven</a></li>
+</ul>
+</div></li>
+</ul>
+</div>
+<div class="item">
+<input type="checkbox" id="spod"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod">SPOD</label>
+<ul>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-attrib"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-attrib">Attributen</label>
+<ul>
+<li><a href="javascript:q('spod-pos')">pos</a></li>
+<li><a href="javascript:q('spod-postag')">postag</a></li>
+<li><a href="javascript:q('spod-pt')">pt</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-sents"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-sents">Hoofdzinnen</label>
+<ul>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-smain"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-smain">mededelende hoofdzinnen</label>
+<ul>
+<li><a href="javascript:q('spod-smain-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-smain-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-whq"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-whq">vraagzinnen (wh)</label>
+<ul>
+<li><a href="javascript:q('spod-whq-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-whq-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-janee"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-janee">ja/nee vragen</label>
+<ul>
+<li><a href="javascript:q('spod-janee-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-janee-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-imp"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-imp">imperatieven</label>
+<ul>
+<li><a href="javascript:q('spod-imp-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-imp-tel')">telling</a></li>
+</ul>
+</div></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-bijzinnen"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-bijzinnen">Bijzinnen</label>
+<ul>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-whsub"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-whsub">ingebedde vraagzinnen</label>
+<ul>
+<li><a href="javascript:q('spod-whsub-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-whsub-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ssub"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ssub">finiete bijzinnen</label>
+<ul>
+<li><a href="javascript:q('spod-ssub-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ssub-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ssubdat"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ssubdat">finiete bijzinnen met &#34;dat&#34;</label>
+<ul>
+<li><a href="javascript:q('spod-ssubdat-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ssubdat-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ssubof"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ssubof">finiete bijzinnen met &#34;of&#34;</label>
+<ul>
+<li><a href="javascript:q('spod-ssubof-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ssubof-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ssubcmp"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ssubcmp">finiete bijzinnen met andere voegwoorden</label>
+<ul>
+<li><a href="javascript:q('spod-ssubcmp-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ssubcmp-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-oti"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-oti">infiniete bijzinnen met &#34;om&#34;</label>
+<ul>
+<li><a href="javascript:q('spod-oti-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-oti-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-otivc"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-otivc">infiniete bijzinnen met &#34;om&#34; die als complement optreden</label>
+<ul>
+<li><a href="javascript:q('spod-otivc-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-otivc-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-otimod"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-otimod">infiniete bijzinnen met &#34;om&#34; die als bepaling optreden</label>
+<ul>
+<li><a href="javascript:q('spod-otimod-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-otimod-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-otiww"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-otiww">infiniete bijzinnen met &#34;om&#34; die als bepaling bij een werkwoord optreden</label>
+<ul>
+<li><a href="javascript:q('spod-otiww-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-otiww-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-otin"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-otin">infiniete bijzinnen met &#34;om&#34; die als bepaling bij een zelfstandig naamwoord optreden</label>
+<ul>
+<li><a href="javascript:q('spod-otin-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-otin-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-otisu"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-otisu">infiniete bijzinnen met &#34;om&#34; die als onderwerp fungeren</label>
+<ul>
+<li><a href="javascript:q('spod-otisu-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-otisu-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-otipred"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-otipred">infiniete bijzinnen met &#34;om&#34; die als predicaat fungeren</label>
+<ul>
+<li><a href="javascript:q('spod-otipred-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-otipred-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-otiobc"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-otiobc">infiniete bijzinnen met &#34;om&#34; die optreden met combinaties zoals &#34;te ADJ; zo ADJ; genoeg ADJ; voldoende N&#34;</label>
+<ul>
+<li><a href="javascript:q('spod-otiobc-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-otiobc-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-tite"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-tite">infiniete bijzinnen met alleen &#34;te&#34;</label>
+<ul>
+<li><a href="javascript:q('spod-tite-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-tite-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ti"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ti">infiniete bijzinnen met ander voorzetsel</label>
+<ul>
+<li><a href="javascript:q('spod-ti-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ti-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-relssub"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-relssub">relatieve bijzinnen</label>
+<ul>
+<li><a href="javascript:q('spod-relssub-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-relssub-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-whrel"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-whrel">free relatives</label>
+<ul>
+<li><a href="javascript:q('spod-whrel-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-whrel-tel')">telling</a></li>
+</ul>
+</div></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-corc"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-corc">Correlatieve comparatieven</label>
+<ul>
+<li><a href="javascript:q('spod-corc-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-corc-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-compcomp"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-compcomp">Woorden met een comparatief complement</label>
+<ul>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-cc"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-cc">totaal</label>
+<ul>
+<li><a href="javascript:q('spod-cc-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-cc-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-cczo"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-cczo">met als hoofd &#34;zo&#34;</label>
+<ul>
+<li><a href="javascript:q('spod-cczo-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-cczo-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-cceven"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-cceven">met als hoofd &#34;even&#34;</label>
+<ul>
+<li><a href="javascript:q('spod-cceven-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-cceven-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ccca"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ccca">met als hoofd comparatief adjectief</label>
+<ul>
+<li><a href="javascript:q('spod-ccca-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ccca-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ccdannp"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ccdannp">met als hoofd comparatief adjectief, gevolgd door NP</label>
+<ul>
+<li><a href="javascript:q('spod-ccdannp-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ccdannp-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ccdanvs"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ccdanvs">met als hoofd comparatief adjectief, gevolgd door VP of S</label>
+<ul>
+<li><a href="javascript:q('spod-ccdanvs-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ccdanvs-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ccdanpp"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ccdanpp">met als hoofd comparatief adjectief, gevolgd door PP</label>
+<ul>
+<li><a href="javascript:q('spod-ccdanpp-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ccdanpp-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ccdanav"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ccdanav">met als hoofd comparatief adjectief, gevolgd door A of ADV</label>
+<ul>
+<li><a href="javascript:q('spod-ccdanav-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ccdanav-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ccmm"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ccmm">met als hoofd &#34;meer&#34;, &#34;minder&#34;</label>
+<ul>
+<li><a href="javascript:q('spod-ccmm-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ccmm-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ccmdnp"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ccmdnp">met als hoofd &#34;meer&#34;, &#34;minder&#34;, gevolgd door NP</label>
+<ul>
+<li><a href="javascript:q('spod-ccmdnp-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ccmdnp-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ccmdvs"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ccmdvs">met als hoofd &#34;meer&#34;, &#34;minder&#34;, gevolgd door VP of S</label>
+<ul>
+<li><a href="javascript:q('spod-ccmdvs-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ccmdvs-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ccmdpp"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ccmdpp">met als hoofd &#34;meer&#34;, &#34;minder&#34;, gevolgd door PP</label>
+<ul>
+<li><a href="javascript:q('spod-ccmdpp-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ccmdpp-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ccmdav"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ccmdav">met als hoofd &#34;meer&#34;, &#34;minder&#34;, gevolgd door A of ADV</label>
+<ul>
+<li><a href="javascript:q('spod-ccmdav-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ccmdav-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ccnn"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ccnn">met als hoofd &#34;niet&#34;, &#34;niets&#34;, &#34;ander&#34;, &#34;anders&#34;</label>
+<ul>
+<li><a href="javascript:q('spod-ccnn-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ccnn-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ccndnp"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ccndnp">met als hoofd &#34;niet&#34;, &#34;niets&#34;, &#34;ander&#34;, &#34;anders&#34;, gevolgd door NP</label>
+<ul>
+<li><a href="javascript:q('spod-ccndnp-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ccndnp-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ccndvs"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ccndvs">met als hoofd &#34;niet&#34;, &#34;niets&#34;, &#34;ander&#34;, &#34;anders&#34;, gevolgd door VP of S</label>
+<ul>
+<li><a href="javascript:q('spod-ccndvs-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ccndvs-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ccndpp"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ccndpp">met als hoofd &#34;niet&#34;, &#34;niets&#34;, &#34;ander&#34;, &#34;anders&#34;, gevolgd door PP</label>
+<ul>
+<li><a href="javascript:q('spod-ccndpp-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ccndpp-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ccndav"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ccndav">met als hoofd &#34;niet&#34;, &#34;niets&#34;, &#34;ander&#34;, &#34;anders&#34;, gevolgd door A of ADV</label>
+<ul>
+<li><a href="javascript:q('spod-ccndav-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ccndav-tel')">telling</a></li>
+</ul>
+</div></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-neven"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-neven">Nevenschikkingen</label>
+<ul>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-conj"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-conj">alle nevenschikkingen</label>
+<ul>
+<li><a href="javascript:q('spod-conj-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-conj-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><a href="javascript:q('spod-crdcount')">nevenschikkingen met aantal coördinatoren (minimaal 1)</a></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-crd0"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-crd0">nevenschikkingen zonder coördinator</label>
+<ul>
+<li><a href="javascript:q('spod-crd0-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-crd0-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-crd1"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-crd1">nevenschikkingen met 1 coördinator</label>
+<ul>
+<li><a href="javascript:q('spod-crd1-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-crd1-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-crd1en"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-crd1en">nevenschikkingen met 1 coördinator, en dat is &#34;en&#34;</label>
+<ul>
+<li><a href="javascript:q('spod-crd1en-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-crd1en-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-crd1of"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-crd1of">nevenschikkingen met 1 coördinator, en dat is &#34;of&#34;</label>
+<ul>
+<li><a href="javascript:q('spod-crd1of-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-crd1of-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-crd1maar"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-crd1maar">nevenschikkingen met 1 coördinator, en dat is &#34;maar&#34;</label>
+<ul>
+<li><a href="javascript:q('spod-crd1maar-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-crd1maar-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-crd1enz"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-crd1enz">nevenschikkingen met 1 coördinator, en de coordinator sluit de nevenschikking af (&#34;enzovoorts&#34;)</label>
+<ul>
+<li><a href="javascript:q('spod-crd1enz-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-crd1enz-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-crd2"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-crd2">nevenschikkingen met 2 coördinatoren</label>
+<ul>
+<li><a href="javascript:q('spod-crd2-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-crd2-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-crd2p"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-crd2p">nevenschikkingen met meer dan 2 coördinatoren</label>
+<ul>
+<li><a href="javascript:q('spod-crd2p-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-crd2p-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><a href="javascript:q('spod-cnjcount')">nevenschikkingen met aantal conjuncten (minimaal 1)</a></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-cnj1"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-cnj1">nevenschikkingen met slechts 1 conjunct</label>
+<ul>
+<li><a href="javascript:q('spod-cnj1-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-cnj1-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-cnj2"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-cnj2">nevenschikkingen met 2 conjuncten</label>
+<ul>
+<li><a href="javascript:q('spod-cnj2-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-cnj2-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-cnj3"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-cnj3">nevenschikkingen met 3 conjuncten</label>
+<ul>
+<li><a href="javascript:q('spod-cnj3-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-cnj3-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-cnj4"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-cnj4">nevenschikkingen met 4 conjuncten</label>
+<ul>
+<li><a href="javascript:q('spod-cnj4-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-cnj4-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-cnj5"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-cnj5">nevenschikkingen met 5 conjuncten</label>
+<ul>
+<li><a href="javascript:q('spod-cnj5-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-cnj5-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-cnj6"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-cnj6">nevenschikkingen met 6 conjuncten</label>
+<ul>
+<li><a href="javascript:q('spod-cnj6-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-cnj6-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-cnj6p"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-cnj6p">nevenschikkingen met meer dan 6 conjuncten</label>
+<ul>
+<li><a href="javascript:q('spod-cnj6p-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-cnj6p-tel')">telling</a></li>
+</ul>
+</div></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-wgroep"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-wgroep">Woordgroepen</label>
+<ul>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-np"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-np">np</label>
+<ul>
+<li><a href="javascript:q('spod-np-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-np-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-pp"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-pp">pp</label>
+<ul>
+<li><a href="javascript:q('spod-pp-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-pp-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ap"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ap">ap</label>
+<ul>
+<li><a href="javascript:q('spod-ap-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ap-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-advp"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-advp">advp</label>
+<ul>
+<li><a href="javascript:q('spod-advp-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-advp-tel')">telling</a></li>
+</ul>
+</div></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ppgroep"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ppgroep">Voorzetselgroepen</label>
+<ul>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ppnp"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ppnp">grammaticale functie, bepalingen bij zelfstandige naamwoorden</label>
+<ul>
+<li><a href="javascript:q('spod-ppnp-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ppnp-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ppap"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ppap">grammaticale functie, bepalingen bij adjectieven (en als adjectief gebruikte deelwoorden)</label>
+<ul>
+<li><a href="javascript:q('spod-ppap-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ppap-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-pppc"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-pppc">grammaticale functie, voorzetselvoorwerp</label>
+<ul>
+<li><a href="javascript:q('spod-pppc-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-pppc-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ppld"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ppld">grammaticale functie, locatief/directioneel complement</label>
+<ul>
+<li><a href="javascript:q('spod-ppld-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ppld-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-pppredc"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-pppredc">grammaticale functie, predicatief complement</label>
+<ul>
+<li><a href="javascript:q('spod-pppredc-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-pppredc-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ppbep"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ppbep">grammaticale functie, bijwoordelijke bepaling</label>
+<ul>
+<li><a href="javascript:q('spod-ppbep-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ppbep-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ppinp"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ppinp">interne structuur, P + NP</label>
+<ul>
+<li><a href="javascript:q('spod-ppinp-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ppinp-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ppirp"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ppirp">interne structuur, +R-pronomen + P</label>
+<ul>
+<li><a href="javascript:q('spod-ppirp-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ppirp-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ppimwu"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ppimwu">interne structuur, complex voorzetsel</label>
+<ul>
+<li><a href="javascript:q('spod-ppimwu-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ppimwu-tel')">telling</a></li>
+</ul>
+</div></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ww"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ww">Werkwoorden</label>
+<ul>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-vwuit"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-vwuit">vaste werkwoordelijke uitdrukkingen</label>
+<ul>
+<li><a href="javascript:q('spod-vwuit-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-vwuit-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-groen"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-groen">groene werkwoordsvolgorde</label>
+<ul>
+<li><a href="javascript:q('spod-groen-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-groen-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-rood"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-rood">rode werkwoordsvolgorde</label>
+<ul>
+<li><a href="javascript:q('spod-rood-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-rood-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-wwclus"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-wwclus">werkwoordsclusters</label>
+<ul>
+<li><a href="javascript:q('spod-wwclus-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-wwclus-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-accinf"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-accinf">accusativus cum infinitivo</label>
+<ul>
+<li><a href="javascript:q('spod-accinf-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-accinf-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-passive"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-passive">passief</label>
+<ul>
+<li><a href="javascript:q('spod-passive-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-passive-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-nppas"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-nppas">niet-persoonlijke passief</label>
+<ul>
+<li><a href="javascript:q('spod-nppas-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-nppas-tel')">telling</a></li>
+</ul>
+</div></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-wwsch"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-wwsch">Scheidbare werkwoorden</label>
+<ul>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-vpart"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-vpart">Werkwoorden met een scheidbaar partikel</label>
+<ul>
+<li><a href="javascript:q('spod-vpart-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-vpart-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-vpartex"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-vpartex">Werkwoorden met een scheidbaar partikel, partikel gescheiden van het werkwoord</label>
+<ul>
+<li><a href="javascript:q('spod-vpartex-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-vpartex-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-vpartin"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-vpartin">Werkwoorden met een scheidbaar partikel, partikel geïncorporeerd in het werkwoord</label>
+<ul>
+<li><a href="javascript:q('spod-vpartin-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-vpartin-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-vprtn"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-vprtn">Niet-finiete werkwoorden met een scheidbaar partikel</label>
+<ul>
+<li><a href="javascript:q('spod-vprtn-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-vprtn-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-vprtnex"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-vprtnex">Niet-finiete werkwoorden met een scheidbaar partikel, partikel gescheiden van het werkwoord</label>
+<ul>
+<li><a href="javascript:q('spod-vprtnex-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-vprtnex-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-vprtnin"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-vprtnin">Niet-finiete werkwoorden met een scheidbaar partikel, partikel geïncorporeerd in het werkwoord</label>
+<ul>
+<li><a href="javascript:q('spod-vprtnin-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-vprtnin-tel')">telling</a></li>
+</ul>
+</div></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-inb"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-inb">Inbedding</label>
+<ul>
+<li><a href="javascript:q('spod-inb-all')">telling van alle niveaus</a></li>
+<li><a href="javascript:q('spod-inb0')">geen inbedding</a></li>
+<li><a href="javascript:q('spod-inb1')">minstens 1 finiete zinsinbedding</a></li>
+<li><a href="javascript:q('spod-inb2')">minstens 2 finiete zinsinbeddingen</a></li>
+<li><a href="javascript:q('spod-inb3')">minstens 3 finiete zinsinbeddingen</a></li>
+<li><a href="javascript:q('spod-inb4')">minstens 4 finiete zinsinbeddingen</a></li>
+<li><a href="javascript:q('spod-inb5')">minstens 5 finiete zinsinbeddingen</a></li>
+<li><a href="javascript:q('spod-inb6')">minstens 6 finiete zinsinbeddingen</a></li>
+<li><a href="javascript:q('spod-inb7')">minstens 7 finiete zinsinbeddingen</a></li>
+<li><a href="javascript:q('spod-inb8')">minstens 8 finiete zinsinbeddingen</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="sod-topiextr"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="sod-topiextr">Topicalizatie en Extractie</label>
+<ul>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-nptsub"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-nptsub">np-topic is subject</label>
+<ul>
+<li><a href="javascript:q('spod-nptsub-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-nptsub-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-nptnsub"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-nptnsub">np-topic is geen subject</label>
+<ul>
+<li><a href="javascript:q('spod-nptnsub-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-nptnsub-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-tnonloc"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-tnonloc">topic is niet lokaal</label>
+<ul>
+<li><a href="javascript:q('spod-tnonloc-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-tnonloc-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-locext"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-locext">lokale extractie</label>
+<ul>
+<li><a href="javascript:q('spod-locext-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-locext-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-nlocext"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-nlocext">niet-lokale extractie</label>
+<ul>
+<li><a href="javascript:q('spod-nlocext-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-nlocext-tel')">telling</a></li>
+</ul>
+</div></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-parser"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-parser">Parser succes</label>
+<ul>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-ok"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-ok">volledige parse</label>
+<ul>
+<li><a href="javascript:q('spod-ok-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-ok-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><a href="javascript:q('spod-catcount')">aantal geparste delen</a></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-cats0"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-cats0">geen enkel deel is geparst</label>
+<ul>
+<li><a href="javascript:q('spod-cats0-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-cats0-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-cats1"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-cats1">parse bestaat uit één deel</label>
+<ul>
+<li><a href="javascript:q('spod-cats1-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-cats1-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-cats2"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-cats2">parse bestaat uit twee losse delen</label>
+<ul>
+<li><a href="javascript:q('spod-cats2-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-cats2-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-cats3"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-cats3">parse bestaat uit drie losse delen</label>
+<ul>
+<li><a href="javascript:q('spod-cats3-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-cats3-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-cats4"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-cats4">parse bestaat uit vier of meer losse delen</label>
+<ul>
+<li><a href="javascript:q('spod-cats4-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-cats4-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><a href="javascript:q('spod-skipcount')">aantal overgeslagen woorden</a></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-skips0"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-skips0">geen enkel woord is overgeslagen</label>
+<ul>
+<li><a href="javascript:q('spod-skips0-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-skips0-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-skips1"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-skips1">een van de woorden is overgeslagen</label>
+<ul>
+<li><a href="javascript:q('spod-skips1-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-skips1-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-skips2"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-skips2">twee van de woorden zijn overgeslagen</label>
+<ul>
+<li><a href="javascript:q('spod-skips2-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-skips2-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-skips3"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-skips3">drie van de woorden zijn overgeslagen</label>
+<ul>
+<li><a href="javascript:q('spod-skips3-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-skips3-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-skips4"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-skips4">vier of meer van de woorden zijn overgeslagen</label>
+<ul>
+<li><a href="javascript:q('spod-skips4-zin')">zinnen</a></li>
+<li><a href="javascript:q('spod-skips4-tel')">telling</a></li>
+</ul>
+</div></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-onbekend"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-onbekend">Onbekende woorden</label>
+<ul>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-his"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-his">&#34;alle&#34; woorden (nodes met attribuut @his)</label>
+<ul>
+<li><a href="javascript:q('spod-his-zin')">woorden</a></li>
+<li><a href="javascript:q('spod-his-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-normal"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-normal">woorden uit het woordenboek of de namenlijst</label>
+<ul>
+<li><a href="javascript:q('spod-normal-zin')">woorden</a></li>
+<li><a href="javascript:q('spod-normal-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-onbeken"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-onbeken">woorden niet direct uit het woordenboek</label>
+<ul>
+<li><a href="javascript:q('spod-onbeken-zin')">woorden</a></li>
+<li><a href="javascript:q('spod-onbeken-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-compoun"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-compoun">woorden herkend als samenstelling</label>
+<ul>
+<li><a href="javascript:q('spod-compoun-zin')">woorden</a></li>
+<li><a href="javascript:q('spod-compoun-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-name"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-name">woorden herkend als naam (maar niet uit namenlijst)</label>
+<ul>
+<li><a href="javascript:q('spod-name-zin')">woorden</a></li>
+<li><a href="javascript:q('spod-name-tel')">telling</a></li>
+</ul>
+</div></li>
+<li><div class="sub-item">
+<input type="checkbox" id="spod-noun"/>
+<img src="images/Arrow.png" alt="arrow" class="arrow"><label for="spod-noun">onbekende woorden die niet als samenstelling of naam werden herkend</label>
+<ul>
+<li><a href="javascript:q('spod-noun-zin')">woorden</a></li>
+<li><a href="javascript:q('spod-noun-tel')">telling</a></li>
+</ul>
+</div></li>
+</ul>
+</div></li>
+</ul>
+</div>
+
+    </div>
+
+  </div>
+
+  <div id="main">
+
+    <form id="alpgform" action="bin/alpg" method="post" accept-charset="utf-8"
+      enctype="application/x-www-form-urlencoded" target="cframe">
+      Corpus:<br><select name="corpus">
+        <option value="alpinotreebank">Alpino Treebank</option>
+        <option value="cgn">Corpus Gesproken Nederlands</option>
+        <option value="eindhoven">Eindhoven</option>
+        <option value="lassyklein">Lassy Klein</option>
+        <option value="newspapers">Lassy Groot: Kranten</option>
+      </select>
+      <p>
+        Query:<br>
+        <textarea rows="20" name="query" id="query"></textarea>
+        <p>
+          <input type="submit" value="Doen">
+          <input type="button" value="Wissen" onClick="formclear(form)">
+    </form>
+    <div id="error" class="hide"></div>
+    <div id="output"></div>
+    <div id="time" class="hide"></div>
+    <div id="wait" class="hide"><img src="images/busy.gif" alt="busy"></div>
+  </div>
+  <div id="foot">
+    <a href="https://www.let.rug.nl/kleiweg/werklog/pages/alpinoagens.html" target="_blank">help</a>
+  </div>
+  <iframe src="leeg.html" id="cframe" name="cframe" class="hide"></iframe>
+</body>
+
+</html>

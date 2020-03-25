@@ -1,0 +1,192 @@
+* {
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+}
+
+
+/*Global*/
+
+html, body {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: helvetica, sans-serif;
+  background-color: #e0ffe0;
+}
+
+
+/*Func*/
+
+.multi-level, .item ul, .nav input[type="checkbox"] {
+  display: none;
+}
+
+#menu:checked ~ .multi-level, .item input:checked ~ ul {
+  display: block;
+}
+
+
+/*Arrow*/
+
+.arrow {
+  width: 12px;
+  height: 12px;
+  vertical-align: middle;
+  float: left;
+  z-index: 0;
+  margin: 7px 1em 0 2em;
+}
+
+.item input + .arrow {
+  transform: rotate(-90deg);
+  transition: 0.1s;
+}
+
+.item input:checked + .arrow {
+  transform: rotate(0deg);
+  transition: 0.1s;
+}
+
+
+/*Styles*/
+
+label:hover {
+  cursor: pointer;
+  color: #0000e0;
+}
+
+label {
+  width: 100%;
+  display: block;
+  z-index: 3;
+  position: relative;
+}
+
+.nav {
+  width: 100%;
+  background-color: #e0ffe0;
+  overflow-x: hidden;
+  border-bottom: 1px solid #CFD8DC;
+}
+
+#nav-icon {
+  font-size: 28px;
+  line-height: 50px;
+  padding-left: 1em;
+  color: white;
+  /* background-color: #F44336; */
+}
+
+.nav ul, .nav li, label {
+  line-height: 1.8;
+  margin: 0;
+  padding: 0 2em;
+  list-style: none;
+  text-decoration: none;
+  /* color: #90A4AE; */
+  font-weight: 100;
+  width: 100%;
+}
+
+.item ul {
+  padding: 0 0.25em;
+}
+
+.nav li a {
+  line-height: 1.8;
+  margin: 0;
+  padding: 0 4em;
+  list-style: none;
+  text-decoration: none;
+  /* color: #90A4AE; */
+  color: black;
+  font-weight: 100;
+}
+
+.nav li a:hover {
+  color: #0000e0;
+}
+
+
+/* content */
+
+h1 {
+  color: white;
+  background-color: green;
+  margin-top: 0px;
+  padding: 8px;
+  width: 100%;
+  text-align: center;
+  font-size: 28px;
+  position: absolute;
+  top: 0px;
+  left: auto;
+  right: auto;
+}
+
+#main {
+  margin: 0px;
+  padding: 1em 2em;
+  background-color: white;
+}
+
+.hide {
+  display: none;
+}
+
+#error {
+  padding: 1em 2em;
+  border: 2px solid red;
+  background-color: orange;
+}
+
+#output table, #output th, #output td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+#output th, #output td {
+  padding: .4em 1em;
+  vertical-align: top;
+}
+
+#output a {
+  color: black;
+  text-decoration: none;
+}
+
+#output a:hover {
+  color: #0000EE;
+}
+
+#output span.mark {
+  color: green;
+}
+
+#output span.mark:hover {
+  color: #0000e0;
+}
+
+#output li {
+  margin: 0.4em 0px;
+}
+
+#time {
+  margin-top: 1em;
+}
+
+textarea {
+  width: 100%;
+}
+
+#foot {
+  padding: 1em 2em;
+  border-top: 1px solid #CFD8DC;
+  background-color: #e0ffe0;
+}
+
+#foot a {
+  text-decoration: none;
+  color: #0000e0;
+}

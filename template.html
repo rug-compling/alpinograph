@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>AlpinoGraph</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="main.css">
+  <link rel="icon" href="../favicon.ico" type="image/ico">
+  <script type="text/javascript" src="../jquery.js"></script>
+  <script type="text/javascript"><!--
+    var qs = {};
+    PART1;
+    var dbname = '';
+    var started = false;
+    var head = {};
+    var istable = false;
+
+    window._fn = {
+      reset: function () {
+        $('#error').text('').addClass('hide');
+        $('#time').text('').addClass('hide');
+        $('#output').text('');
+        $('#wait').removeClass('hide');
+        started = false;
+      },
+      db: function (name) {
+        dbname = name;
+      },
+      header: function (h) {
+        head = h;
+      },
+      row: function (r) {
+        if (!started) {
+          started = true;
+          if (r.sentid) {
+            istable = false;
+          } else {
+            istable = true;
+          }
+          if (istable) {
+            $('#output').html('<table id="tab"></table>');
+            var tr = $('<tr></tr>');
+            for (var i = 0; i < head.length; i++) {
+              tr.append($('<th></th>').text(head[i].name));
+            }
+            $('#tab').append(tr);
+          } else {
+            $('#output').html('<ol id="lst"></ol>');
+          }
+        }
+        if (istable) {
+          var tr = $('<tr></tr>');
+          for (var i = 0; i < r.fields.length; i++) {
+            tr.append($('<td></td>').text(r.fields[i]));
+          }
+          $('#tab').append(tr);
+        } else {
+          var url = 'https://paqu.let.rug.nl:8068/tree?db=' + dbname + '&names=true&mwu=false&arch=' + r.arch + '&file=' + r.sentid + '.xml&global=true&marknodes=';
+          for (var i = 0; i < r.ids.length; i++) {
+            if (i > 0) {
+              url += ',';
+            }
+            url += r.ids[i];
+          }
+          var a = $('<a href="' + url + '" target="_blank"></a>').html(r.sentence);
+          $('#lst').append($('<li></li>').append(a));
+        }
+      },
+      error: function (e) {
+        $('#error').text(e).removeClass('hide');
+      },
+      time: function (t) {
+        $('#time').removeClass('hide').text(t);
+      },
+      done: function () {
+        $('#wait').addClass('hide');
+      }
+    }
+
+    function q(tag) {
+      var el = document.forms['alpgform']
+      el.elements['query'].value = qs[tag];
+      el.scrollIntoView();
+    }
+    function formclear() {
+      document.forms['alpgform'].elements['query'].value = '';
+    }
+    //--></script>
+</head>
+
+<body>
+  <div class="nav">
+    <input type="checkbox" id="menu" />
+    <h1>AlpinoGraph</h1>
+    <label for="menu" id="nav-icon">&#9776;</label>
+
+    <div class="multi-level">
+      <!--PART2-->
+    </div>
+
+  </div>
+
+  <div id="main">
+
+    <form id="alpgform" action="bin/alpg" method="post" accept-charset="utf-8"
+      enctype="application/x-www-form-urlencoded" target="cframe">
+      Corpus:<br><select name="corpus">
+        <option value="alpinotreebank">Alpino Treebank</option>
+        <option value="cgn">Corpus Gesproken Nederlands</option>
+        <option value="eindhoven">Eindhoven</option>
+        <option value="lassyklein">Lassy Klein</option>
+        <option value="newspapers">Lassy Groot: Kranten</option>
+      </select>
+      <p>
+        Query:<br>
+        <textarea rows="20" name="query" id="query"></textarea>
+        <p>
+          <input type="submit" value="Doen">
+          <input type="button" value="Wissen" onClick="formclear(form)">
+    </form>
+    <div id="error" class="hide"></div>
+    <div id="output"></div>
+    <div id="time" class="hide"></div>
+    <div id="wait" class="hide"><img src="images/busy.gif" alt="busy"></div>
+  </div>
+  <div id="foot">
+    <a href="https://www.let.rug.nl/kleiweg/werklog/pages/alpinoagens.html" target="_blank">help</a>
+  </div>
+  <iframe src="leeg.html" id="cframe" name="cframe" class="hide"></iframe>
+</body>
+
+</html>
