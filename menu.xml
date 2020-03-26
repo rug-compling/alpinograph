@@ -68,6 +68,19 @@
           order by aantal desc, woord
         </item>
       </item>
+      <item id="tud-ud-wwobj" lbl="werkwoord met object">
+        <item id="tut-ud-wwobj-zin" lbl="zinnen">
+          match p = (:word{upos:'VERB'})-[:ud{main:'obj'}]->(w:word)
+          where w.upos != 'PRON'
+          return p
+        </item>
+        <item id="tut-ud-wwobj-tel" lbl="telling">
+          match (w2:word{upos:'VERB'})-[:ud{main:'obj'}]->(w1:word)
+          where w1.upos != 'PRON'
+          return w1.lemma as "woord 1", w2.lemma as "woord 2", count(w1.lemma + ' ' + w2.lemma) as aantal
+          order by aantal desc, "woord 1", "woord 2"
+        </item>
+      </item>
       <item id="tut-ud-pos" lbl="possessieven">
         match p = (:word)-[:ud{rel:'nmod:poss'}]->(:word)
         return p
