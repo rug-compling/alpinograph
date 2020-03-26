@@ -32,7 +32,7 @@ func main() {
 	x(err)
 
 	var menu MenuT
-	xml.Unmarshal(b, &menu)
+	x(xml.Unmarshal(b, &menu))
 
 	var buf1 bytes.Buffer
 	var buf2 bytes.Buffer
@@ -84,8 +84,14 @@ func main() {
 	x(err)
 	fmt.Print(
 		strings.Replace(
-			strings.Replace(string(b), "PART1;", buf1.String(), 1),
-			"<!--PART2-->", buf2.String(), 1))
+			strings.Replace(
+				strings.Replace(string(b), "PART1;", buf1.String(), 1),
+				"<!--PART2-->", buf2.String(), 1),
+			"<!--WARNING-->", `<!--
+
+        WAARSCHUWING: dit is een gegenereerd bestand, bewerk het niet
+
+-->`, 1))
 
 }
 

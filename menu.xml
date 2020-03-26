@@ -2,6 +2,39 @@
 <menu>
 
   <item id="tut" lbl="Tutorial">
+    <item id="tut-bitri" lbl="Bigrammen en trigrammen en zo">
+      <item id="tut-bitri-bi" lbl="bigram: in geval">
+        -- het minst voorkomende woord staat vooraan voor sneller zoeken
+        match p = (:word{lemma:'geval'})&lt;-[:next]-(:word{lemma:'in'})
+        return p
+      </item>
+      <item id="tut-bitri-tri" lbl="trigram: in elk geval">
+        -- het minst voorkomende woord staat vooraan voor sneller zoeken
+        match p = (:word{lemma:'geval'})&lt;-[:next]-(:word{lemma:'elk'})&lt;-[:next]-(:word{lemma:'in'})
+        return p
+      </item>
+      <item id="tut-bitri-volgend" lbl="welk woord volgt er op &quot;in geval&quot;">
+        match (:word{lemma:'in'})-[:next]->(:word{lemma:'geval'})-[:next]->(w:word)
+        return w.lemma as lemma, count(w.lemma) as aantal
+        order by aantal desc, lemma
+      </item>
+      <item id="tut-bitri-tussen" lbl="welk woord staat er tussen &quot;in&quot; en &quot;van&quot;">
+        match (:word{lemma:'in'})-[:next]->(n:word)-[:next]->(:word{lemma:'van'})
+        return n.lemma as lemma, count(n.lemma) as aantal
+        order by aantal desc, lemma
+      </item>
+      <item id="tut-bitri-mwu" lbl="multi-word unit">
+        -- multi-word units zitten op een node boven de woorden
+        match p = (:node{lemma:'in geval van'})
+        return p
+      </item>
+      <item id="tut-bitri-mwu-van" lbl="multi-word units die eindigen met &quot;van&quot;">
+        match (n:node{cat:'mwu'})-[:rel]->(w:word{lemma:'van'})
+        where n.end = w.end
+        return n.word as &quot;multi-word unit&quot;, count(n) as aantal
+        order by aantal desc, &quot;multi-word unit&quot;
+      </item>
+    </item>
     <item id="tut-uitdr" lbl="Uitdrukkingen en gezegdes">
       <item id="tut-uitdr-advduivel" lbl="advocaat van de duivel">
         match (w1:word{lemma: 'advocaat'}),

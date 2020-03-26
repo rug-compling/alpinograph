@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Alpino-corpora in AgensGraph</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="style.css">
+  </head>
+  <body>
+    <div id="container">
+      <h1>Alpino-corpora in AgensGraph</h1>
+      <p>Een <code>&lt;node&gt;</code> in alpino_ds is een <code>(:node)</code> of een <code>(:word)</code> in AgensGraph</p>
+
+<p><code>:nw</code> is een alias voor <code>:node</code> of <code>:word</code></p>
+
+<p>Dit in alpino_ds:</p>
+<pre style="background-color:#f0f3f3">&lt;node id=&#34;11&#34;&gt;
+  &lt;node id=&#34;12&#34; rel=&#34;hd&#34; /&gt;
+&lt;/node&gt;
+</pre>
+<p>&hellip; is dit in AgensGraph:</p>
+<pre style="background-color:#f0f3f3">(:node{id: &#39;11&#39;})-[:rel{rel: &#39;hd&#39;}]-&gt;(:node{id: &#39;12&#39;})
+</pre>
+<p>..of, als de binnenste node een woord is:</p>
+<pre style="background-color:#f0f3f3">(:node{id: &#39;11&#39;})-[:rel{rel: &#39;hd&#39;}]-&gt;(:word{id: &#39;12&#39;})
+</pre>
+<p>Dit:</p>
+<pre style="background-color:#f0f3f3">match (n:node{cat: &#39;np&#39;}) return n;
+</pre>
+<p>&hellip; is sneller dan dit:</p>
+<pre style="background-color:#f0f3f3">match (n{cat: &#39;np&#39;}) return n;
+</pre>
+<p>&hellip; omdat agens in het tweede geval ook gaat zoeken in de type items
+zonder <code>cat</code>, en omdat daarvoor geen index voor <code>cat</code> is moeten alle items
+bekeken worden.</p>
+
+<p>Items <code>(:node)</code> en <code>(:word)</code> en dus <code>(:nw)</code> hebben dezelfde indexen, ook al
+zijn die voor <code>(:node)</code> of <code>(:word)</code> leeg.</p>
+
+<h2>Patronen</h2>
+<pre style="background-color:#f0f3f3">-- Alpino-relaties
+(:sentence)-[:rel{rel: &#39;top&#39;}-&gt;(:node{cat: &#39;top&#39;})
+(:node)-[:rel]-&gt;(:node)
+(:node)-[:rel]-&gt;(:word)
+(:node)-[:rel]-&gt;(:nw)           -- link naar :node of :word
+
+-- relaties tussen woordparen
+(:sentence)-[:pair]-&gt;(:word)    -- enkelzijdige relatie, zoals hd/-
+(:word)-[:pair]-&gt;(:word)
+(:word)-[:pair]-&gt;(:node{cat: &#39;mwu&#39;})
+(:node{cat: &#39;mwu&#39;})-[:pair]-&gt;(:word)
+(:node{cat: &#39;mwu&#39;})-[:pair]-&gt;(:node{cat: &#39;mwu&#39;})
+(:nw)-[:pair]-&gt;(:nw)            -- link van :node of :word naar :node of :word
+
+-- basic universal dependencies
+(:sentence)-[:ud{rel: &#39;root&#39;, main: &#39;root&#39;}]-&gt;(:word)
+(:word)-[:ud]-&gt;(:word)
+
+-- enhanced universal dependencies
+(:sentence)-[:eud{rel: &#39;root&#39;, main: &#39;root&#39;}]-&gt;(:word)
+(:word)-[:eud]-&gt;(:word)
+
+-- alle universal dependencies: dep is een alias voor ud of eud
+(:sentence)-[:dep{rel: &#39;root&#39;, main: &#39;root&#39;}]-&gt;(:word)
+(:word)-[:dep]-&gt;(:word)
+
+-- opeenvolgende tokens
+(:word)-[:next]-&gt;(:word)
+(:word{end: 1})-[:next*]-&gt;(:word{last: true})    -- de hele zin
+
+-- metadata
+(:meta)
+</pre>
+<h2>Attributen van items</h2>
+
+<p><strong><code>:sentence</code></strong></p>
+<div class="overflow mytable">
+<table>
+<thead>
+<tr>
+<th>attribuut</th>
+<th>type</th>
+<th>opmerkingen</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>sentid</code></td>
+<td>string</td>
+<td></td>
+</tr>
+
+<tr>
+<td><code>text</code></td>
+<td>string</td>
+<td></td>
+</tr>
+
+<tr>
+<td><code>tokens</code></td>
+<td>string</td>
+<td>getokeniseerde tekst</td>
+</tr>
+
+<tr>
+<td><code>len</code></td>
+<td>int</td>
+<td>aantal tokens</td>
+</tr>
+
+<tr>
+<td><code>cats</code></td>
+<td>int</td>
+<td>parser-succes</td>
+</tr>
+
+<tr>
+<td><code>skips</code></td>
+<td>int</td>
+<td>parser-succes</td>
+</tr>
+
+<tr>
+<td><code>conllu_status</code></td>
+<td>string</td>
+<td><code>OK</code>, <code>error</code></td>
+</tr>
+
+<tr>
+<td><code>conllu_error</code></td>
+<td>string</td>
+<td>als <code>conllu_status</code> != <code>OK</code></td>
+</tr>
+</tbody>
+</table>
+</div><p><strong><code>:node</code></strong></p>
+<div class="overflow mytable">
+<table>
+<thead>
+<tr>
+<th>attribuut</th>
+<th>type</th>
+<th>opmerkingen</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>sentid</code></td>
+<td>string</td>
+<td></td>
+</tr>
+
+<tr>
+<td><code>id</code></td>
+<td>int</td>
+<td></td>
+</tr>
+
+<tr>
+<td><code>begin</code></td>
+<td>int</td>
+<td></td>
+</tr>
+
+<tr>
+<td><code>end</code></td>
+<td>int</td>
+<td></td>
+</tr>
+
+<tr>
+<td><code>_clause</code></td>
+<td>bool</td>
+<td>node is een smain, sv1 of ssub</td>
+</tr>
+
+<tr>
+<td><code>_clause_lvl</code></td>
+<td>int</td>
+<td>bovenste _clause is niveau 1</td>
+</tr>
+
+<tr>
+<td><code>_deste</code></td>
+<td>bool</td>
+<td>zie beneden</td>
+</tr>
+
+<tr>
+<td><code>_n_words</code></td>
+<td>int</td>
+<td>aantal tokens dat onder deze node zit</td>
+</tr>
+
+<tr>
+<td><code>_np</code></td>
+<td>bool</td>
+<td>node is een NP</td>
+</tr>
+
+<tr>
+<td><code>_vorfeld</code></td>
+<td>bool</td>
+<td>node is een vorfeld</td>
+</tr>
+
+<tr>
+<td>&hellip;</td>
+<td>string</td>
+<td>alle overige attributen uit de Alpino-node behalve <code>rel</code> en <code>index</code></td>
+</tr>
+</tbody>
+</table>
+</div><p>voor <code>cat</code> == <code>mwu</code> ook:</p>
+<div class="overflow mytable">
+<table>
+<thead>
+<tr>
+<th>attribuut</th>
+<th>type</th>
+<th>opmerkingen</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>pt</code></td>
+<td>string</td>
+<td><code>mwu</code></td>
+</tr>
+
+<tr>
+<td><code>word</code></td>
+<td>string</td>
+<td></td>
+</tr>
+
+<tr>
+<td><code>lemma</code></td>
+<td>string</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div><p>Het attibuut <code>_deste</code> is <code>true</code> voor nodes die overeenkomen met deze
+xpath-expressie:</p>
+<pre style="background-color:#f0f3f3">//node[ node[ @graad=&#34;comp&#34;]
+        and
+        node[ @lemma=(&#34;hoe&#34;, &#34;deste&#34;)
+              or
+              ( node[@lemma=&#34;des&#34;]
+                and
+                node[@lemma=&#34;te&#34;]
+              )
+        ]
+]
+</pre>
+<p><strong><code>:word</code></strong></p>
+<div class="overflow mytable">
+<table>
+<thead>
+<tr>
+<th>attribuut</th>
+<th>type</th>
+<th>opmerkingen</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>sentid</code></td>
+<td>string</td>
+<td></td>
+</tr>
+
+<tr>
+<td><code>last</code></td>
+<td>bool</td>
+<td><code>true</code> &mdash; alleen voor laatste token in de zin</td>
+</tr>
+
+<tr>
+<td><code>id</code></td>
+<td>int</td>
+<td></td>
+</tr>
+
+<tr>
+<td><code>begin</code></td>
+<td>int</td>
+<td></td>
+</tr>
+
+<tr>
+<td><code>end</code></td>
+<td>int</td>
+<td></td>
+</tr>
+
+<tr>
+<td><code>getal_n</code></td>
+<td>string</td>
+<td>in plaats van <code>getal-n</code></td>
+</tr>
+
+<tr>
+<td><code>_n_words</code></td>
+<td>int</td>
+<td><code>1</code> &mdash; aantal tokens dat onder deze node zit</td>
+</tr>
+
+<tr>
+<td><code>_np</code></td>
+<td>bool</td>
+<td>word is een NP</td>
+</tr>
+
+<tr>
+<td><code>_vorfeld</code></td>
+<td>bool</td>
+<td>word is een vorfeld</td>
+</tr>
+
+<tr>
+<td>&hellip;</td>
+<td>string</td>
+<td>alle overige attributen uit de Alpino-node behalve <code>rel</code> en <code>index</code></td>
+</tr>
+
+<tr>
+<td><code>upos</code></td>
+<td>string</td>
+<td>het veld <code>UPOS</code> van CoNLL-U</td>
+</tr>
+
+<tr>
+<td>&hellip;</td>
+<td>string</td>
+<td>alle features uit het veld <code>FEATS</code> van CoNLL-U, met hoofdletters</td>
+</tr>
+</tbody>
+</table>
+</div><p>Bij het zoeken naar CoNLL-U-features dubbele aanhalingstekens
+gebruiken, vanwege de hoofdletters:</p>
+<pre style="background-color:#f0f3f3">match (w:word{&#34;Gender&#34;: &#39;Com&#39;}) return w;
+</pre>
+<p><strong><code>:meta</code></strong></p>
+<div class="overflow mytable">
+<table>
+<thead>
+<tr>
+<th>attribuut</th>
+<th>type</th>
+<th>opmerkingen</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>sentid</code></td>
+<td>string</td>
+<td></td>
+</tr>
+
+<tr>
+<td><code>type</code></td>
+<td>string</td>
+<td><code>text</code>, <code>int</code>, <code>float</code>, <code>date</code>, <code>datetime</code></td>
+</tr>
+
+<tr>
+<td><code>name</code></td>
+<td>string</td>
+<td></td>
+</tr>
+
+<tr>
+<td><code>value</code></td>
+<td>string</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2>Attributen van relaties</h2>
+
+<p><strong><code>:rel</code></strong></p>
+<div class="overflow mytable">
+<table>
+<thead>
+<tr>
+<th>attribuut</th>
+<th>type</th>
+<th>opmerkingen</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>rel</code></td>
+<td>string</td>
+<td></td>
+</tr>
+
+<tr>
+<td><code>id</code></td>
+<td>int</td>
+<td>als de link oorspronkelijk naar een lege indexnode ging: id van die node</td>
+</tr>
+</tbody>
+</table>
+</div><p><strong><code>:pair</code></strong></p>
+<div class="overflow mytable">
+<table>
+<thead>
+<tr>
+<th>attribuut</th>
+<th>type</th>
+<th>opmerkingen</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>rel</code></td>
+<td>string</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div><p><strong><code>:ud</code></strong></p>
+<div class="overflow mytable">
+<table>
+<thead>
+<tr>
+<th>attribuut</th>
+<th>type</th>
+<th>opmerkingen</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>rel</code></td>
+<td>string</td>
+<td><em>main</em>, <em>main</em><code>:</code><em>aux</em></td>
+</tr>
+
+<tr>
+<td><code>main</code></td>
+<td>string</td>
+<td></td>
+</tr>
+
+<tr>
+<td><code>aux</code></td>
+<td>string</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div><p><strong><code>:eud</code></strong></p>
+<div class="overflow mytable">
+<table>
+<thead>
+<tr>
+<th>attribuut</th>
+<th>type</th>
+<th>opmerkingen</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td><code>rel</code></td>
+<td>string</td>
+<td><em>main</em>, <em>main</em><code>:</code><em>aux</em></td>
+</tr>
+
+<tr>
+<td><code>main</code></td>
+<td>string</td>
+<td></td>
+</tr>
+
+<tr>
+<td><code>aux</code></td>
+<td>string</td>
+<td></td>
+</tr>
+
+<tr>
+<td><code>from</code></td>
+<td>string</td>
+<td>indien niet gelijk aan waarde van <code>end</code></td>
+</tr>
+
+<tr>
+<td><code>to</code></td>
+<td>string</td>
+<td>indien niet gelijk aan waarde van <code>end</code></td>
+</tr>
+</tbody>
+</table>
+</div><p><strong><code>:next</code></strong></p>
+
+<p>geen attributen</p>
+
+    </div>
+  </body>
+</html>

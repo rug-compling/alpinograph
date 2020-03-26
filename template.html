@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-
+<!--WARNING-->
 <head>
   <title>AlpinoGraph</title>
   <meta charset="utf-8">
@@ -8,7 +8,7 @@
   <link rel="stylesheet" type="text/css" href="main.css">
   <link rel="icon" href="../favicon.ico" type="image/ico">
   <script type="text/javascript" src="../jquery.js"></script>
-  <script type="text/javascript"><!--
+  <script type="text/javascript">
     var qs = {};
     PART1;
     var dbname = '';
@@ -86,7 +86,7 @@
     function formclear() {
       document.forms['alpgform'].elements['query'].value = '';
     }
-    //--></script>
+  </script>
 </head>
 
 <body>
@@ -106,11 +106,15 @@
     <form id="alpgform" action="bin/alpg" method="post" accept-charset="utf-8"
       enctype="application/x-www-form-urlencoded" target="cframe">
       Corpus:<br><select name="corpus">
-        <option value="alpinotreebank">Alpino Treebank</option>
-        <option value="cgn">Corpus Gesproken Nederlands</option>
-        <option value="eindhoven">Eindhoven</option>
-        <option value="lassyklein">Lassy Klein</option>
-        <option value="newspapers">Lassy Groot: Kranten</option>
+        <optgroup label="&mdash; handmatig geannoteerde corpora &mdash;">
+          <option value="alpinotreebank">Alpino Treebank &mdash; 7&#8239;136 zinnen</option>
+          <option value="cgn">Corpus Gesproken Nederlands &mdash; 129&#8239;921 zinnen</option>
+          <option value="lassyklein">Lassy Klein &mdash; 65&#8239;200 zinnen</option>
+        </optgroup>
+        <optgroup label="&mdash; automatisch geannoteerde corpora &mdash;">
+          <option value="eindhoven">Eindhoven &mdash; 40&#8239;524 zinnen</option>
+          <option value="newspapers">Lassy Groot: Kranten &mdash; 14&#8239;974&#8239;458 zinnen</option>
+        </optgroup>
       </select>
       <p>
         Query:<br>
@@ -125,7 +129,7 @@
     <div id="wait" class="hide"><img src="images/busy.gif" alt="busy"></div>
   </div>
   <div id="foot">
-    <a href="https://www.let.rug.nl/kleiweg/werklog/pages/alpinoagens.html" target="_blank">help</a>
+    <a href="doc/" target="_blank">help</a>
   </div>
   <iframe src="leeg.html" id="cframe" name="cframe" class="hide"></iframe>
 </body>
