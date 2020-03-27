@@ -36,18 +36,25 @@ type Header struct {
 }
 
 type Line struct {
-	Fields   []string `json:"fields"`
-	Sentid   string   `json:"sentid"`
-	Sentence string   `json:"sentence"`
+	Fields   []string `json:"fields,omitempty"`
+	Sentid   string   `json:"sentid,omitempty"`
+	Sentence string   `json:"sentence,omitempty"`
 	Ids      []int    `json:"ids"`
-	Edges    []*Edge  `json:"edges"`
-	Arch     string   `json:"arch"`
+	Edges    []*Edge  `json:"edges,omitempty"`
+	Links    string   `json:"links,omitempty"`
+	Rels     []string `json:"rels,omitempty"`
+	Pairs    []string `json:"pairs,omitempty"` // TODO: pair heeft label nodig
+	Uds      []string `json:"uds,omitempty"`
+	Euds     []string `json:"euds,omitempty"`
+	Nexts    []string `json:"nexts,omitempty"`
+	Arch     string   `json:"arch,omitempty"`
 }
 
 type EdgeIntern struct {
-	label string
-	start string
-	end   string
+	label    string
+	start    string
+	end      string
+	needLink bool
 }
 
 type Edge struct {
@@ -424,6 +431,7 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 
 			edges := make(map[string]*EdgeIntern)
 			nodes := make(map[string]int)
+			links := make(map[int]bool)
 
 			line := &Line{
 				Fields: make([]string, len(scans)),
@@ -437,13 +445,16 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 					var e ag.BasicEdge
 
 					if p.Scan(val) == nil {
+						//n := len(p.Vertices) - 1
 						for _, v := range p.Vertices {
 							if sentid, ok := v.Properties["sentid"]; ok {
 								line.Sentid = fmt.Sprint(sentid)
 							}
 							if id, ok := v.Properties["id"]; ok {
 								if iid, err := strconv.Atoi(fmt.Sprint(id)); err == nil {
+									//if i == 0 || i == n {
 									idmap[iid] = true
+									//}
 									if v.Id.Valid {
 										nodes[v.Id.String()] = iid
 									}
@@ -452,10 +463,19 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 						}
 						for _, e := range p.Edges {
 							if e.Id.Valid && e.Start.Valid && e.End.Valid {
+								needlink := false
+								if e.Label == "rel" {
+									if i, ok := e.Properties["id"]; ok {
+										links[toINT(i)] = true
+									} else {
+										needlink = true
+									}
+								}
 								edge := EdgeIntern{
-									label: e.Label,
-									start: e.Start.String(),
-									end:   e.End.String(),
+									label:    e.Label,
+									start:    e.Start.String(),
+									end:      e.End.String(),
+									needLink: needlink,
 								}
 								edges[e.Id.String()] = &edge
 							}
@@ -482,10 +502,19 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 
 					if e.Scan(val) == nil {
 						if e.Id.Valid && e.Start.Valid && e.End.Valid {
+							needlink := false
+							if e.Label == "rel" {
+								if i, ok := e.Properties["id"]; ok {
+									links[toINT(i)] = true
+								} else {
+									needlink = true
+								}
+							}
 							edge := EdgeIntern{
-								label: e.Label,
-								start: e.Start.String(),
-								end:   e.End.String(),
+								label:    e.Label,
+								start:    e.Start.String(),
+								end:      e.End.String(),
+								needLink: needlink,
 							}
 							edges[e.Id.String()] = &edge
 						}
@@ -620,7 +649,19 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 						End:   end,
 					})
 				}
+				if ok2 && edge.needLink {
+					links[end] = true
+				}
 			}
+
+			keys := make([]string, 0, len(links))
+			for key := range links {
+				if key >= 0 {
+					keys = append(keys, fmt.Sprint(key))
+				}
+			}
+			sort.Strings(keys)
+			line.Links = strings.Join(keys, ",")
 
 			chLine <- line
 
@@ -684,4 +725,20 @@ func closeQuit() {
 		chQuitOpen = false
 		time.Sleep(10 * time.Second)
 	}
+}
+
+func toINT(v interface{}) int {
+	switch t := v.(type) {
+	case string:
+		i, err := strconv.Atoi(unescape(t))
+		if err == nil {
+			return i
+		}
+		return -999
+	case int:
+		return t
+	case float64:
+		return int(t)
+	}
+	return -999
 }

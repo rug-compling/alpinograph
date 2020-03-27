@@ -54,6 +54,20 @@
         return w1, w2
       </item>
     </item>
+    <item id="tut-pair" lbl="Woordpaarrelaties">
+      <item id="tut-pair-eten" lbl="zelfstandig naamwoorden (n) als lijdend voorwerp (obj1) bij &quot;eten&quot;">
+        match p = (:word{lemma: 'eten', pt: 'ww'})-[:pair{rel: 'obj1'}]->(:nw{pt: 'n'})
+        return p
+      </item>
+      <item id="tut-pair-graag" lbl="werkwoorden (ww) waarbij &quot;graag&quot; als modifier (mod) optreedt">
+        match p = (:nw{pt: 'ww'})-[:pair{rel: 'mod'}]->(:word{lemma: 'graag'})
+        return p
+      </item>
+      <item id="tut-pair-obj12" lbl="werkwoorden met lijdend voorwerp en meewerkend voorwerp">
+        match (w1:nw{pt: 'n'})&lt;-[:pair{rel:'obj1'}]-(w:word{pt:'ww'})-[:pair{rel:'obj2'}]->(w2:nw{pt: 'n'})
+        return w.lemma as werkwoord, w1.word as "lijdend voorwerp", w2.word as "meewerkend voorwerp"
+      </item>
+    </item>
     <item id="tut-ud" lbl="Universal Dependencies">
       <item id="tut-ud-eten" lbl="wat eten en drinken we?">
         <item id="tut-ud-eten-zin" lbl="zinnen">
@@ -445,7 +459,6 @@
       <item id="spod-corc-zin" lbl="zinnen">
         match (n1:node{_deste: true})&lt;-[:rel*0..]-(n0:node)&lt;-[:rel*0..]-(n:node{cat: 'du'}),
               (n0)-[:rel*0..]->(n2:node{_deste: true})
-        match (n0)&lt;-[:rel*0..]-(n)
         optional match p = (n0)&lt;-[:rel*0..]-(:node{cat:'du'})&lt;-[:rel*1..]-(n)
         with n, n1, n2, p
         where n1.id &lt; n2.id
@@ -457,7 +470,6 @@
         from (
           match (n1:node{_deste: true})&lt;-[:rel*0..]-(n0:node)&lt;-[:rel*0..]-(n:node{cat: 'du'}),
                 (n0)-[:rel*0..]->(n2:node{_deste: true})
-          match (n0)&lt;-[:rel*0..]-(n)
           optional match p = (n0)&lt;-[:rel*0..]-(:node{cat:'du'})&lt;-[:rel*1..]-(n)
           with n, n1, n2, p
           where n1.id &lt; n2.id

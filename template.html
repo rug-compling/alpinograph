@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <!--WARNING-->
+
 <head>
   <title>AlpinoGraph</title>
   <meta charset="utf-8">
@@ -56,7 +57,11 @@
           }
           $('#tab').append(tr);
         } else {
-          var url = 'https://paqu.let.rug.nl:8068/tree?db=' + dbname + '&names=true&mwu=false&arch=' + r.arch + '&file=' + r.sentid + '.xml&global=true&marknodes=';
+          var url = 'https://paqu.let.rug.nl:8068/tree?db=' + dbname +
+            '&names=true&mwu=false&arch=' + r.arch +
+            '&file=' + r.sentid + '.xml' +
+            '&global=true&ms=' + r.links +
+            '&marknodes=';
           for (var i = 0; i < r.ids.length; i++) {
             if (i > 0) {
               url += ',';
