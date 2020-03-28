@@ -143,39 +143,43 @@ h1 {
   font-family: monospace;
 }
 
-#output table, #output th, #output td {
+#output2 table, #output2 th, #output2 td {
   border: 1px solid black;
   border-collapse: collapse;
 }
 
-#output th, #output td {
+#output2 th, #output2 td {
   padding: .4em 1em;
   vertical-align: top;
 }
 
-#output a {
+#output2 tr > td:first-child {
+  text-align: right;
+}
+
+#output1 a {
   color: black;
   text-decoration: none;
 }
 
-#output a:hover {
+#output1 a:hover {
   color: #0000EE;
 }
 
-#output span.mark {
+#output1 span.mark {
   color: green;
 }
 
-#output span.mark:hover {
+#output1 span.mark:hover {
   color: #0000e0;
 }
 
-#output li {
+#output1 li {
   margin: 0.4em 0px;
 }
 
-#time {
-  margin-top: 1em;
+#runner {
+  margin: 1em 0px;
 }
 
 textarea {
@@ -191,4 +195,9 @@ textarea {
 #foot a {
   text-decoration: none;
   color: #0000e0;
+}
+
+#time {
+  width: 12em;
+  display: inline-block;
 }

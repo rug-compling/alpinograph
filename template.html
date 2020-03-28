@@ -15,13 +15,18 @@
     var dbname = '';
     var started = false;
     var head = {};
-    var istable = false;
+    var hassentence = false;
+    var lineno = 0;
 
     window._fn = {
       reset: function () {
         $('#error').text('').addClass('hide');
-        $('#time').text('').addClass('hide');
-        $('#output').text('');
+        $('#time').text('');
+        $('#butZin').addClass('hide');
+        $('#butTab').addClass('hide');
+        $('#output1').text('').addClass('hide');
+        $('#output2').text('').addClass('hide');
+        $('#runner').removeClass('hide');
         $('#wait').removeClass('hide');
         started = false;
       },
@@ -34,49 +39,54 @@
       row: function (r) {
         if (!started) {
           started = true;
+          lineno = 0;
           if (r.sentid) {
-            istable = false;
+            hassentence = true;
+            $('#butZin').removeClass('hide').prop('disabled', true);
+            $('#butTab').removeClass('hide').prop('disabled', false);
           } else {
-            istable = true;
+            hassentence = false;
           }
-          if (istable) {
-            $('#output').html('<table id="tab"></table>');
-            var tr = $('<tr></tr>');
-            for (var i = 0; i < head.length; i++) {
-              tr.append($('<th></th>').text(head[i].name));
-            }
-            $('#tab').append(tr);
-          } else {
-            $('#output').html('<ol id="lst"></ol>');
-          }
-        }
-        if (istable) {
+          $('#output2').html('<table id="tab"></table>');
           var tr = $('<tr></tr>');
-          for (var i = 0; i < r.fields.length; i++) {
-            tr.append($('<td></td>').text(r.fields[i]));
+          tr.append($('<th></th>').text('#'));
+          for (var i = 0; i < head.length; i++) {
+            tr.append($('<th></th>').text(head[i].name));
           }
           $('#tab').append(tr);
-        } else {
-          var url = 'https://paqu.let.rug.nl:8068/tree?db=' + dbname +
-            '&names=true&mwu=false&arch=' + r.arch +
-            '&file=' + r.sentid + '.xml' +
-            '&global=true&ms=' + r.links +
-            '&marknodes=';
-          for (var i = 0; i < r.ids.length; i++) {
-            if (i > 0) {
-              url += ',';
-            }
-            url += r.ids[i];
+          if (hassentence) {
+            $('#output1').removeClass('hide').html('<ol id="lst"></ol>');
+          } else {
+            $('#output2').removeClass('hide');
           }
-          var a = $('<a href="' + url + '" target="_blank"></a>').html(r.sentence);
-          $('#lst').append($('<li></li>').append(a));
         }
+        var tr = $('<tr></tr>');
+        lineno = lineno + 1;
+        tr.append($('<td></td>').text('' + lineno + '.'));
+        for (var i = 0; i < r.fields.length; i++) {
+          tr.append($('<td></td>').text(r.fields[i]));
+        }
+        $('#tab').append(tr);
+        if (hassentence) { }
+        var url = 'https://paqu.let.rug.nl:8068/tree?db=' + dbname +
+          '&names=true&mwu=false&arch=' + r.arch +
+          '&file=' + r.sentid + '.xml' +
+          '&global=true&ms=' + r.links +
+          '&marknodes=';
+        for (var i = 0; i < r.ids.length; i++) {
+          if (i > 0) {
+            url += ',';
+          }
+          url += r.ids[i];
+        }
+        var a = $('<a href="' + url + '" target="_blank"></a>').html(r.sentence);
+        $('#lst').append($('<li></li>').append(a));
       },
       error: function (e) {
         $('#error').text(e).removeClass('hide');
       },
       time: function (t) {
-        $('#time').removeClass('hide').text(t);
+        $('#time').text(t);
       },
       done: function () {
         $('#wait').addClass('hide');
@@ -84,12 +94,31 @@
     }
 
     function q(tag) {
+      $('#runner').addClass('hide');
+      $('#error').text('').addClass('hide');
+      $('#butZin').addClass('hide');
+      $('#butTab').addClass('hide');
+      $('#output1').text('').addClass('hide');
+      $('#output2').text('').addClass('hide');
       var el = document.forms['alpgform']
       el.elements['query'].value = qs[tag];
       el.scrollIntoView();
     }
     function formclear() {
       document.forms['alpgform'].elements['query'].value = '';
+    }
+
+    function showZin() {
+      $('#butZin').prop('disabled', true);
+      $('#butTab').prop('disabled', false);
+      $('#output1').removeClass('hide');
+      $('#output2').addClass('hide');
+    }
+    function showTab() {
+      $('#butZin').prop('disabled', false);
+      $('#butTab').prop('disabled', true);
+      $('#output1').addClass('hide');
+      $('#output2').removeClass('hide');
     }
   </script>
 </head>
@@ -128,21 +157,19 @@
         <textarea rows="20" name="query" id="query"></textarea>
       </p>
       <p>
-        Uitvoer:
-        <select name="parse">
-          <option value="parsed">zinnen (zo mogelijk)</option>
-          <option value="raw">tabel</option>
-        </select>
-      </p>
-      <p>
         <input type="submit" value="Doen">
         <input type="button" value="Wissen" onClick="formclear(form)">
       </p>
     </form>
     <div id="error" class="hide"></div>
-    <div id="output"></div>
-    <div id="time" class="hide"></div>
-    <div id="wait" class="hide"><img src="images/busy.gif" alt="busy"></div>
+    <div id="runner"class="hide">
+      <span id="time"></span>
+      <img id="wait" src="images/busy.gif" alt="busy">
+    </div>
+    <button class="hide" id="butZin" onClick="showZin()">zinnen</button>
+    <button class="hide" id="butTab" onClick="showTab()">tabel</button>
+    <div id="output1" class="hide"></div>
+    <div id="output2" class="hide"></div>
   </div>
   <div id="foot">
     <a href="doc/" target="_blank">help</a>

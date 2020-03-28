@@ -71,9 +71,9 @@
     <item id="tut-ud" lbl="Universal Dependencies">
       <item id="tut-ud-eten" lbl="wat eten en drinken we?">
         <item id="tut-ud-eten-zin" lbl="zinnen">
-          match p = (w:word)-[:ud{main:'obj'}]->(:word{upos:'NOUN'})
-          where w.lemma in ['eten','op_eten','drinken','op_drinken']
-          return p
+          match (w1:word)-[:ud{main:'obj'}]->(w2:word{upos:'NOUN'})
+          where w1.lemma in ['eten','op_eten','drinken','op_drinken']
+          return w1, w2
         </item>
         <item id="tut-ud-eten-tel" lbl="telling van woorden">
           match (w:word)-[:ud{main:'obj'}]->(w2:word{upos:'NOUN'})
@@ -84,9 +84,9 @@
       </item>
       <item id="tud-ud-wwobj" lbl="werkwoord met object">
         <item id="tut-ud-wwobj-zin" lbl="zinnen">
-          match p = (:word{upos:'VERB'})-[:ud{main:'obj'}]->(w:word)
-          where w.upos != 'PRON'
-          return p
+          match (w1:word{upos:'VERB'})-[:ud{main:'obj'}]->(w2:word)
+          where w2.upos != 'PRON'
+          return w1, w2
         </item>
         <item id="tut-ud-wwobj-tel" lbl="telling">
           match (w2:word{upos:'VERB'})-[:ud{main:'obj'}]->(w1:word)
@@ -96,8 +96,8 @@
         </item>
       </item>
       <item id="tut-ud-pos" lbl="possessieven">
-        match p = (:word)-[:ud{rel:'nmod:poss'}]->(:word)
-        return p
+        match (w1:word)-[:ud{rel:'nmod:poss'}]->(w2:word)
+        return w1, w2
       </item>
     </item>
   </item>
