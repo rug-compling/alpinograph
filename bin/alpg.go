@@ -19,6 +19,7 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -128,7 +129,7 @@ window.parent._fn.done();
 		<-chFinished
 	}()
 
-	corpus, dbname, arch, query, err := parseRequest()
+	corpus, dbname, raw, arch, query, err := parseRequest()
 	if err != nil {
 		output(fmt.Sprintf("window.parent._fn.error(%q);\n", err.Error()))
 		return
@@ -161,7 +162,7 @@ window.parent._fn.done();
 		}
 	}()
 
-	err = run(corpus, arch, query)
+	err = run(corpus, arch, query, raw)
 	if err != nil {
 		output(fmt.Sprintf("window.parent._fn.error(%q);\n", err.Error()))
 		return
@@ -171,7 +172,7 @@ window.parent._fn.done();
 	time.Sleep(time.Second)
 }
 
-func parseRequest() (corpus string, dbname string, arch string, query string, err error) {
+func parseRequest() (corpus string, dbname string, raw bool, arch string, query string, err error) {
 	var req *http.Request
 	req, err = cgi.Request()
 	if err != nil {
@@ -192,12 +193,14 @@ func parseRequest() (corpus string, dbname string, arch string, query string, er
 		return
 	}
 
+	raw = req.FormValue("parse") == "raw"
+
 	return
 }
 
-func run(corpus, arch, query string) error {
+func run(corpus, arch, query string, raw bool) error {
 
-	safequery, err := safeQuery(query, 100, 0)
+	safequery, err := safeQuery(query)
 	if err != nil {
 		return err
 	}
@@ -206,7 +209,7 @@ func run(corpus, arch, query string) error {
 	chLine := make(chan *Line)
 	chErr := make(chan error) // TODO: close(chErr)
 
-	go doQuery(corpus, arch, safequery, chHeader, chLine, chErr)
+	go doQuery(corpus, arch, safequery, raw, chHeader, chLine, chErr)
 
 	// do Header
 	var header []*Header
@@ -247,9 +250,7 @@ LOOP:
 	return nil
 }
 
-func safeQuery(query string, limit, offset int) (string, error) {
-
-	// TODO: limit en offset gebruiken
+func safeQuery(query string) (string, error) {
 
 	// TODO: is dit nog nodig?
 	// https://github.com/bitnine-oss/agensgraph/issues/496
@@ -271,33 +272,19 @@ func safeQuery(query string, limit, offset int) (string, error) {
 	// limieten worden in rows.Next() gedaan
 	return query, nil
 
-	/*
-
-		// verwijder eventuele buitenste limieten
-		// TODO: ook interne limieten vóór UNION, INTERSECT, EXCEPT ??
-		query = reLimits.ReplaceAllString(query, "")
-
-		// TODO: interne limieten vóór UNION, INTERSECT, EXCEPT toevoegen ??
-		qu := strings.ToUpper(query)
-		if strings.HasPrefix(qu, "MATCH") {
-			return fmt.Sprintf("%s\nSKIP %d LIMIT %d", query, offset, limit), nil
-		}
-		if strings.HasPrefix(qu, "SELECT") {
-			return fmt.Sprintf("%s\nLIMIT %d OFFSET %d", query, limit, offset), nil
-		}
-		return "", fmt.Errorf("Query must start with MATCH or SELECT")
-
-	*/
-
 }
 
-func doQuery(corpus, arch, safequery string, chHeader chan []*Header, chLine chan *Line, chErr chan error) {
+func doQuery(corpus, arch, safequery string, raw bool, chHeader chan []*Header, chLine chan *Line, chErr chan error) {
 	var chRow chan []interface{}
 	dbOpen := false
 	chHeaderOpen := true
 	chRowOpen := false
 	var db *sql.DB
 	defer func() {
+		if r := recover(); r != nil {
+			chErr <- fmt.Errorf("Recovered in doQuery: %v", r)
+			return
+		}
 		if chHeaderOpen {
 			close(chHeader)
 		}
@@ -361,7 +348,7 @@ func doQuery(corpus, arch, safequery string, chHeader chan []*Header, chLine cha
 
 	chRow = make(chan []interface{})
 	chRowOpen = true
-	go doResults(corpus, arch, headers, chRow, chLine, chErr)
+	go doResults(corpus, arch, raw, headers, chRow, chLine, chErr)
 
 	count := 0
 	for rows.Next() {
@@ -391,12 +378,16 @@ func doQuery(corpus, arch, safequery string, chHeader chan []*Header, chLine cha
 
 }
 
-func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, chLine chan *Line, chErr chan error) {
+func doResults(corpus, arch string, raw bool, header []*Header, chRow chan []interface{}, chLine chan *Line, chErr chan error) {
 
 	dbOpened := false
 	var db *sql.DB
 
 	defer func() {
+		if r := recover(); r != nil {
+			chErr <- fmt.Errorf("Recovered in doResults: %v\n\n%v", r, string(debug.Stack()))
+			return
+		}
 		close(chLine)
 		if dbOpened {
 			go db.Close()
@@ -423,6 +414,7 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 			return
 		case scans, ok := <-chRow:
 			if !ok {
+				// chRow is gesloten: klaar
 				return
 			}
 
@@ -438,30 +430,78 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 				Edges:  make([]*Edge, 0),
 			}
 			for i, v := range scans {
-				val := *(v.(*[]uint8))
+				val := *(v.(*[]byte))
+				sval := string(val)
+				// output(fmt.Sprintf("console.log('string: %q');", sval))
 				for {
-					var p ag.BasicPath
-					var v ag.BasicVertex
-					var e ag.BasicEdge
+					if !raw {
+						var p ag.BasicPath
+						var v ag.BasicVertex
+						var e ag.BasicEdge
 
-					if p.Scan(val) == nil {
-						//n := len(p.Vertices) - 1
-						for _, v := range p.Vertices {
+						// paden die met een edge beginnen doen een panic in BasicPath.Scan
+						// TODO: https://github.com/bitnine-oss/agensgraph-golang/issues/3
+						if strings.HasPrefix(sval, "[sentence") ||
+							strings.HasPrefix(sval, "[node") ||
+							strings.HasPrefix(sval, "[word") {
+							if p.Scan(val) == nil {
+								//n := len(p.Vertices) - 1
+								for _, v := range p.Vertices {
+									if sentid, ok := v.Properties["sentid"]; ok {
+										line.Sentid = fmt.Sprint(sentid)
+									}
+									if id, ok := v.Properties["id"]; ok {
+										if iid, err := strconv.Atoi(fmt.Sprint(id)); err == nil {
+											//if i == 0 || i == n {
+											idmap[iid] = true
+											//}
+											if v.Id.Valid {
+												nodes[v.Id.String()] = iid
+											}
+										}
+									}
+								}
+								for _, e := range p.Edges {
+									if e.Id.Valid && e.Start.Valid && e.End.Valid {
+										needlink := false
+										if e.Label == "rel" {
+											if i, ok := e.Properties["id"]; ok {
+												links[toINT(i)] = true
+											} else {
+												needlink = true
+											}
+										}
+										edge := EdgeIntern{
+											label:    e.Label,
+											start:    e.Start.String(),
+											end:      e.End.String(),
+											needLink: needlink,
+										}
+										edges[e.Id.String()] = &edge
+									}
+								}
+								line.Fields[i] = "PATH"
+								break
+							}
+						}
+
+						if v.Scan(val) == nil {
 							if sentid, ok := v.Properties["sentid"]; ok {
 								line.Sentid = fmt.Sprint(sentid)
 							}
 							if id, ok := v.Properties["id"]; ok {
-								if iid, err := strconv.Atoi(fmt.Sprint(id)); err == nil {
-									//if i == 0 || i == n {
+								if iid, err := strconv.Atoi(string(fmt.Sprint(id))); err == nil {
 									idmap[iid] = true
-									//}
 									if v.Id.Valid {
 										nodes[v.Id.String()] = iid
 									}
 								}
 							}
+							line.Fields[i] = "VERTEX"
+							break
 						}
-						for _, e := range p.Edges {
+
+						if e.Scan(val) == nil {
 							if e.Id.Valid && e.Start.Valid && e.End.Valid {
 								needlink := false
 								if e.Label == "rel" {
@@ -479,61 +519,23 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 								}
 								edges[e.Id.String()] = &edge
 							}
+							line.Fields[i] = "EDGE"
+							break
 						}
-						line.Fields[i] = "PATH"
-						break
-					}
 
-					if v.Scan(val) == nil {
-						if sentid, ok := v.Properties["sentid"]; ok {
-							line.Sentid = fmt.Sprint(sentid)
-						}
-						if id, ok := v.Properties["id"]; ok {
-							if iid, err := strconv.Atoi(string(fmt.Sprint(id))); err == nil {
-								idmap[iid] = true
-								if v.Id.Valid {
-									nodes[v.Id.String()] = iid
-								}
+						if header[i].Name == "sentid" {
+							if line.Sentid == "" {
+								line.Sentid = unescape(sval)
+							}
+						} else if header[i].Name == "id" {
+							if id, err := strconv.Atoi(sval); err == nil {
+								idmap[id] = true
 							}
 						}
-						line.Fields[i] = "VERTEX"
-						break
-					}
-
-					if e.Scan(val) == nil {
-						if e.Id.Valid && e.Start.Valid && e.End.Valid {
-							needlink := false
-							if e.Label == "rel" {
-								if i, ok := e.Properties["id"]; ok {
-									links[toINT(i)] = true
-								} else {
-									needlink = true
-								}
-							}
-							edge := EdgeIntern{
-								label:    e.Label,
-								start:    e.Start.String(),
-								end:      e.End.String(),
-								needLink: needlink,
-							}
-							edges[e.Id.String()] = &edge
-						}
-						line.Fields[i] = "EDGE"
-						break
-					}
-
-					if header[i].Name == "sentid" {
-						if line.Sentid == "" {
-							line.Sentid = unescape(string(val))
-						}
-					} else if header[i].Name == "id" {
-						if id, err := strconv.Atoi(string(val)); err == nil {
-							idmap[id] = true
-						}
-					}
-					line.Fields[i] = unescape(string(val))
+					} // if !raw
+					line.Fields[i] = unescape(sval)
 					break
-				}
+				} // for
 			} // range scans
 
 			line.Ids = make([]int, 0, len(idmap))
@@ -665,8 +667,9 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 
 			chLine <- line
 
-		}
-	}
+		} // select
+
+	} // for
 }
 
 func unescape(s string) string {

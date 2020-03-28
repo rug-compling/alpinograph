@@ -107,26 +107,37 @@
   </div>
 
   <div id="main">
-
     <form id="alpgform" action="bin/alpg" method="post" accept-charset="utf-8"
       enctype="application/x-www-form-urlencoded" target="cframe">
-      Corpus:<br><select name="corpus">
-        <optgroup label="&mdash; handmatig geannoteerde corpora &mdash;">
-          <option value="alpinotreebank">Alpino Treebank &mdash; 7&#8239;136 zinnen</option>
-          <option value="cgn">Corpus Gesproken Nederlands &mdash; 129&#8239;921 zinnen</option>
-          <option value="lassyklein">Lassy Klein &mdash; 65&#8239;200 zinnen</option>
-        </optgroup>
-        <optgroup label="&mdash; automatisch geannoteerde corpora &mdash;">
-          <option value="eindhoven">Eindhoven &mdash; 40&#8239;524 zinnen</option>
-          <option value="newspapers">Lassy Groot: Kranten &mdash; 14&#8239;974&#8239;458 zinnen</option>
-        </optgroup>
-      </select>
+      <p>
+        Corpus:
+        <select name="corpus">
+          <optgroup label="&mdash; handmatig geannoteerde corpora &mdash;">
+            <option value="alpinotreebank">Alpino Treebank &mdash; 7&#8239;136 zinnen</option>
+            <option value="cgn">Corpus Gesproken Nederlands &mdash; 129&#8239;921 zinnen</option>
+            <option value="lassyklein">Lassy Klein &mdash; 65&#8239;200 zinnen</option>
+          </optgroup>
+          <optgroup label="&mdash; automatisch geannoteerde corpora &mdash;">
+            <option value="eindhoven">Eindhoven &mdash; 40&#8239;524 zinnen</option>
+            <option value="newspapers">Lassy Groot: Kranten &mdash; 14&#8239;974&#8239;458 zinnen</option>
+          </optgroup>
+        </select>
+      </p>
       <p>
         Query:<br>
         <textarea rows="20" name="query" id="query"></textarea>
-        <p>
-          <input type="submit" value="Doen">
-          <input type="button" value="Wissen" onClick="formclear(form)">
+      </p>
+      <p>
+        Uitvoer:
+        <select name="parse">
+          <option value="parsed">zinnen (zo mogelijk)</option>
+          <option value="raw">tabel</option>
+        </select>
+      </p>
+      <p>
+        <input type="submit" value="Doen">
+        <input type="button" value="Wissen" onClick="formclear(form)">
+      </p>
     </form>
     <div id="error" class="hide"></div>
     <div id="output"></div>

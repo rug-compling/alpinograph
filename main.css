@@ -78,7 +78,7 @@ label {
   /* background-color: #F44336; */
 }
 
-.nav ul, .nav li, label {
+.nav ul, .nav li, .nav label {
   line-height: 1.8;
   margin: 0;
   padding: 0 2em;
@@ -139,6 +139,8 @@ h1 {
   padding: 1em 2em;
   border: 2px solid red;
   background-color: orange;
+  white-space: pre-wrap;
+  font-family: monospace;
 }
 
 #output table, #output th, #output td {
