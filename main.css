@@ -197,7 +197,7 @@ textarea {
   color: #0000e0;
 }
 
-#time {
-  width: 12em;
-  display: inline-block;
+#wait {
+  position: absolute;
+  left: 12em;
 }

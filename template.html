@@ -21,7 +21,7 @@
     window._fn = {
       reset: function () {
         $('#error').text('').addClass('hide');
-        $('#time').text('');
+        $('#time').text('...');
         $('#butZin').addClass('hide');
         $('#butTab').addClass('hide');
         $('#output1').text('').addClass('hide');
@@ -90,16 +90,21 @@
       },
       done: function () {
         $('#wait').addClass('hide');
+        if (!started) {
+          $('#output1').removeClass('hide').text('Niets gevonden');
+        }
       }
     }
 
     function q(tag) {
+      /*
       $('#runner').addClass('hide');
       $('#error').text('').addClass('hide');
       $('#butZin').addClass('hide');
       $('#butTab').addClass('hide');
       $('#output1').text('').addClass('hide');
       $('#output2').text('').addClass('hide');
+      */
       var el = document.forms['alpgform']
       el.elements['query'].value = qs[tag];
       el.scrollIntoView();
@@ -162,9 +167,9 @@
       </p>
     </form>
     <div id="error" class="hide"></div>
-    <div id="runner"class="hide">
+    <div id="runner" class="hide">
+      <span id="wait"><img src="images/busy.gif" alt="busy"></span>
       <span id="time"></span>
-      <img id="wait" src="images/busy.gif" alt="busy">
     </div>
     <button class="hide" id="butZin" onClick="showZin()">zinnen</button>
     <button class="hide" id="butTab" onClick="showTab()">tabel</button>
