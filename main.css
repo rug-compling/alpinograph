@@ -143,6 +143,10 @@ h1 {
   font-family: monospace;
 }
 
+#output2 table {
+  margin-top: .5em;
+}
+
 #output2 table, #output2 th, #output2 td {
   border: 1px solid black;
   border-collapse: collapse;
