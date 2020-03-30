@@ -67,9 +67,8 @@ var (
 	db *sql.DB
 
 	// reLimits   = regexp.MustCompile(`((?i)\s+(limit|skip|order)\s+(\d+|all))+\s*$`)
-	reQuote    = regexp.MustCompile(`\\.`)
-	reComment1 = regexp.MustCompile(`(?s:/\*.*?\*/)`)
-	reComment2 = regexp.MustCompile(`--.*`)
+	reQuote   = regexp.MustCompile(`\\.`)
+	reComment = regexp.MustCompile(`(?s:/\*.*?\*/)|--.*`)
 
 	chOut      = make(chan string)
 	chQuit     = make(chan bool)
@@ -258,9 +257,7 @@ func safeQuery(query string) (string, error) {
 	// verwijder alle separators
 	query = strings.TrimSpace(strings.Replace(query, ";", " ", -1))
 
-	// TODO: dit gaat niet goed als comment1 genest is in comment2
-	query = reComment1.ReplaceAllLiteralString(query, "")
-	query = reComment2.ReplaceAllLiteralString(query, "")
+	query = reComment.ReplaceAllLiteralString(query, "")
 	query = strings.TrimSpace(query)
 
 	qu := strings.ToUpper(query)
@@ -270,6 +267,10 @@ func safeQuery(query string) (string, error) {
 
 	return query, nil
 
+}
+
+func safeString(s string) string {
+	return strings.Replace(strings.Replace(s, "'", "", -1), `\`, "", -1)
 }
 
 func doQuery(corpus, arch, safequery string, chHeader chan []*Header, chLine chan *Line, chErr chan error) {
@@ -492,8 +493,7 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 				line.Arch = url.QueryEscape(arch)
 			}
 
-			// TODO: sanitize sentid
-			rows, err := db.QueryContext(ctx, qc(corpus, "match (s:sentence{sentid: '"+line.Sentid+"'}) return s.tokens"))
+			rows, err := db.QueryContext(ctx, qc(corpus, "match (s:sentence{sentid: '"+safeString(line.Sentid)+"'}) return s.tokens"))
 			if err != nil {
 				chErr <- wrap(err)
 				return
