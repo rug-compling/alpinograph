@@ -1,10 +1,5 @@
 package main
 
-// TODO: worden alle verbindingen met de database gesloten?
-// TODO: worden alle channels gesloten?
-// TODO: waitgroups voor alle goroutines
-// TODO: 1 globale context en cancel
-
 import (
 	ag "github.com/bitnine-oss/agensgraph-golang"
 	_ "github.com/lib/pq"
@@ -19,6 +14,7 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"runtime"
 	"runtime/debug"
 	"sort"
 	"strconv"
@@ -43,11 +39,6 @@ type Line struct {
 	Ids      []int    `json:"ids"`
 	Edges    []*Edge  `json:"edges,omitempty"`
 	Links    string   `json:"links,omitempty"`
-	Rels     []string `json:"rels,omitempty"`
-	Pairs    []string `json:"pairs,omitempty"` // TODO: pair heeft label nodig
-	Uds      []string `json:"uds,omitempty"`
-	Euds     []string `json:"euds,omitempty"`
-	Nexts    []string `json:"nexts,omitempty"`
 	Arch     string   `json:"arch,omitempty"`
 }
 
@@ -73,36 +64,39 @@ var (
 		"newspapers":     [2]string{"lassynewspapers", ""},
 	}
 
-	login string
+	db *sql.DB
 
 	// reLimits   = regexp.MustCompile(`((?i)\s+(limit|skip|order)\s+(\d+|all))+\s*$`)
 	reQuote    = regexp.MustCompile(`\\.`)
 	reComment1 = regexp.MustCompile(`(?s:/\*.*?\*/)`)
 	reComment2 = regexp.MustCompile(`--.*`)
 
-	chFinished = make(chan bool)
 	chOut      = make(chan string)
 	chQuit     = make(chan bool)
 	chQuitOpen = true
 	muQuit     sync.Mutex
 
-	ctx    context.Context
-	cancel context.CancelFunc
+	ctx       context.Context
+	cancel    context.CancelFunc
+	hasCancel = false
+	muCancel  sync.Mutex
+
+	wg sync.WaitGroup
 )
 
 func main() {
 
+	wg.Add(1)
 	go func() {
 		for {
 			s, ok := <-chOut
-			if !ok {
-				close(chFinished)
+			if !ok { // chOut gesloten: klaar
+				wg.Done()
 				return
 			}
 			_, err := fmt.Print(s)
-			if err != nil {
-				cancel()
-				closeQuit()
+			if err != nil { // stdout gesloten
+				doQuit()
 			}
 		}
 	}()
@@ -126,43 +120,43 @@ window.parent._fn.done();
 </html>
 `
 		close(chOut)
-		<-chFinished
+		doQuit()
+		wg.Wait()
+		fmt.Print(`<script type="text/javascript">
+console.log("main done");
+</script>
+`)
 	}()
 
 	corpus, dbname, arch, query, err := parseRequest()
 	if err != nil {
-		output(fmt.Sprintf("window.parent._fn.error(%q);\n", err.Error()))
+		errout(err)
 		return
 	}
 
-	output(fmt.Sprintf("window.parent._fn.db(%q);\n", dbname))
+	output(fmt.Sprintf("window.parent._fn.db(%q);", dbname))
 
-	if strings.HasPrefix(os.Getenv("CONTEXT_DOCUMENT_ROOT"), "/home/peter") {
-		login = "port=9333 user=peter dbname=peter sslmode=disable"
-	} else {
-		login = "user=guest password=guest port=19033 dbname=p209327 sslmode=disable"
-		if h, _ := os.Hostname(); !strings.HasPrefix(h, "haytabo") {
-			login += " host=haytabo.let.rug.nl"
-		}
-	}
-
+	wg.Add(1)
 	go func() {
 		chSignal := make(chan os.Signal, 1)
 		signal.Notify(chSignal, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
-		<-chSignal
-		closeQuit()
+		select {
+		case <-chSignal:
+			doQuit()
+		case <-chQuit:
+		}
+		wg.Done()
 	}()
 
 	start := time.Now()
 
 	err = run(corpus, arch, query, start)
 	if err != nil {
-		output(fmt.Sprintf("window.parent._fn.error(%q);\n", err.Error()))
+		errout(err)
 		return
 	}
 
 	since(start)
-	time.Sleep(time.Second)
 }
 
 func parseRequest() (corpus string, dbname string, arch string, query string, err error) {
@@ -196,11 +190,22 @@ func run(corpus, arch, query string, start time.Time) error {
 		return err
 	}
 
+	err = openDB(corpus)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
 	chHeader := make(chan []*Header)
 	chLine := make(chan *Line)
-	chErr := make(chan error) // TODO: close(chErr)
+	chErr := make(chan error)
 
-	go doQuery(corpus, arch, safequery, chHeader, chLine, chErr)
+	wg.Add(1)
+	go func() {
+		doQuery(corpus, arch, safequery, chHeader, chLine, chErr)
+		wg.Done()
+		// log("doQuery done")
+	}()
 
 	ticker := time.Tick(10 * time.Second)
 
@@ -231,11 +236,11 @@ LOOP2:
 	for {
 		select {
 		case <-chQuit:
-			return fmt.Errorf("Quit")
-		case err := <-chErr:
-			return err
+			break LOOP2
 		case <-ticker:
 			since(start)
+		case err := <-chErr:
+			return err
 		case line, ok := <-chLine:
 			if !ok {
 				break LOOP2
@@ -244,7 +249,7 @@ LOOP2:
 			if err != nil {
 				return err
 			}
-			output(fmt.Sprintln("r(", string(b), ");"))
+			output("r(" + string(b) + ");")
 		}
 	}
 
@@ -270,21 +275,17 @@ func safeQuery(query string) (string, error) {
 		return "", fmt.Errorf("Query must start with MATCH or SELECT")
 	}
 
-	// limieten worden in rows.Next() gedaan
 	return query, nil
 
 }
 
 func doQuery(corpus, arch, safequery string, chHeader chan []*Header, chLine chan *Line, chErr chan error) {
 	var chRow chan []interface{}
-	dbOpen := false
 	chHeaderOpen := true
 	chRowOpen := false
-	var db *sql.DB
 	defer func() {
 		if r := recover(); r != nil {
 			chErr <- fmt.Errorf("Recovered in doQuery: %v", r)
-			return
 		}
 		if chHeaderOpen {
 			close(chHeader)
@@ -292,47 +293,11 @@ func doQuery(corpus, arch, safequery string, chHeader chan []*Header, chLine cha
 		if chRowOpen {
 			close(chRow)
 		}
-		if dbOpen {
-			go db.Close()
-			time.Sleep(time.Second)
-		}
 	}()
 
-	var err error
-	db, err = sql.Open("postgres", login)
+	rows, err := db.QueryContext(ctx, qc(corpus, safequery))
 	if err != nil {
-		chErr <- err
-		return
-	}
-	dbOpen = true
-	err = db.Ping()
-	if err != nil {
-		chErr <- err
-		return
-	}
-
-	_, err = db.Exec("set graph_path='" + corpus + "'")
-	if err != nil {
-		chErr <- err
-		return
-	}
-
-	ctx, cancel = context.WithCancel(context.Background())
-	chDone := make(chan bool)
-	defer close(chDone)
-	go func() {
-		select {
-		case <-chDone:
-			return
-		case <-chQuit:
-			cancel()
-			return
-		}
-	}()
-
-	rows, err := db.QueryContext(ctx, safequery)
-	if err != nil {
-		chErr <- err
+		chErr <- wrap(err)
 		return
 	}
 
@@ -349,14 +314,19 @@ func doQuery(corpus, arch, safequery string, chHeader chan []*Header, chLine cha
 
 	chRow = make(chan []interface{})
 	chRowOpen = true
-	go doResults(corpus, arch, headers, chRow, chLine, chErr)
+
+	wg.Add(1)
+	go func() {
+		doResults(corpus, arch, headers, chRow, chLine, chErr)
+		wg.Done()
+		// log("doResults done")
+	}()
 
 	count := 0
 	for rows.Next() {
 		select {
 		case <-chQuit:
-			cancel()
-			rows.Close()
+			break
 		default:
 		}
 		scans := make([]interface{}, len(ctypes))
@@ -365,53 +335,33 @@ func doQuery(corpus, arch, safequery string, chHeader chan []*Header, chLine cha
 		}
 		err := rows.Scan(scans...)
 		if err != nil {
-			chErr <- err
+			chErr <- wrap(err)
 			return
 		}
 		chRow <- scans
 		count++
 		if count == MAXROWS {
-			go rows.Close()
-			time.Sleep(time.Second)
+			// rows.Close() // dit hangt
 			break
 		}
 	}
-
+	if err := rows.Err(); err != nil {
+		chErr <- wrap(err)
+	}
 }
 
 func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, chLine chan *Line, chErr chan error) {
 
-	dbOpened := false
-	var db *sql.DB
-
 	defer func() {
 		if r := recover(); r != nil {
 			chErr <- fmt.Errorf("Recovered in doResults: %v\n\n%v", r, string(debug.Stack()))
-			return
 		}
 		close(chLine)
-		if dbOpened {
-			go db.Close()
-			time.Sleep(time.Second)
-		}
-	}()
-
-	chDone := make(chan bool)
-	defer close(chDone)
-	go func() {
-		select {
-		case <-chDone:
-			return
-		case <-chQuit:
-			cancel()
-			return
-		}
 	}()
 
 	for {
 		select {
 		case <-chQuit:
-			cancel()
 			return
 		case scans, ok := <-chRow:
 			if !ok {
@@ -420,7 +370,6 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 			}
 
 			idmap := make(map[int]bool)
-			// endmap := make(map[int]bool)
 
 			edges := make(map[string]*EdgeIntern)
 			nodes := make(map[string]int)
@@ -434,7 +383,7 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 				val := *(v.(*[]byte))
 				sval := string(val)
 				line.Fields[i] = unescape(sval)
-				// output(fmt.Sprintf("console.log('string: %q');", sval))
+				// log(sval)
 				for {
 
 					var p ag.BasicPath
@@ -552,70 +501,57 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 				line.Arch = url.QueryEscape(arch)
 			}
 
-			if !dbOpened {
-				var err error
-				db, err = sql.Open("postgres", login)
-				if err != nil {
-					chErr <- err
-					return
-				}
-				dbOpened = true
-				err = db.Ping()
-				if err != nil {
-					chErr <- err
-					return
-				}
-				_, err = db.Exec("set graph_path='" + corpus + "'")
-				if err != nil {
-					chErr <- err
-					return
-				}
-			}
-
 			// TODO: sanitize sentid
-			rows, err := db.QueryContext(ctx, "match (s:sentence{sentid: '"+line.Sentid+"'}) return s.tokens")
+			rows, err := db.QueryContext(ctx, qc(corpus, "match (s:sentence{sentid: '"+line.Sentid+"'}) return s.tokens"))
 			if err != nil {
-				chErr <- err
+				chErr <- wrap(err)
 				return
 			}
 			for rows.Next() {
-				select {
-				case <-chQuit:
-					cancel()
-				default:
-				}
 				var s string
 				err := rows.Scan(&s)
 				if err != nil {
-					rows.Close()
-					chErr <- err
+					// rows.Close()
+					chErr <- wrap(err)
 					return
 				}
 				line.Sentence = unescape(s)
+				select {
+				case <-chQuit:
+					// rows.Close()
+					return
+				default:
+				}
 			}
 
 			tokens := strings.Fields(line.Sentence)
 			endmap := make(map[int]bool)
 			for id := range idmap {
-				rows, err := db.QueryContext(ctx, fmt.Sprintf("match (:nw{sentid: '%s', id: %d})-[:rel*0..]->(w:word) return w.end", line.Sentid, id))
+				rows, err := db.QueryContext(
+					ctx,
+					qc(corpus, fmt.Sprintf("match (:nw{sentid: '%s', id: %d})-[:rel*0..]->(w:word) return w.end", line.Sentid, id)))
 				if err != nil {
-					chErr <- fmt.Errorf("%v: end match", err)
+					chErr <- wrap(err)
 					return
 				}
 				for rows.Next() {
-					select {
-					case <-chQuit:
-						cancel()
-					default:
-					}
 					var end int
 					err := rows.Scan(&end)
 					if err != nil {
-						rows.Close()
-						chErr <- err
+						// rows.Close()
+						chErr <- wrap(err)
 						return
 					}
 					endmap[end] = true
+					select {
+					case <-chQuit:
+						// rows.Close()
+						return
+					default:
+					}
+				}
+				if err := rows.Err(); err != nil {
+					chErr <- wrap(err)
 				}
 			}
 			inMark := false
@@ -669,6 +605,22 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 	} // for
 }
 
+func toINT(v interface{}) int {
+	switch t := v.(type) {
+	case string:
+		i, err := strconv.Atoi(unescape(t))
+		if err == nil {
+			return i
+		}
+		return -999
+	case int:
+		return t
+	case float64:
+		return int(t)
+	}
+	return -999
+}
+
 func unescape(s string) string {
 	if len(s) == 0 {
 		return s
@@ -710,37 +662,23 @@ func getNewspapers(sentid string) string {
 	return "/net/corpora/LassyLarge/WR-P-P-G/DACT/" + np[p1][1]
 }
 
-func output(s string) {
-	chOut <- fmt.Sprint(`<script type="text/javascript"><!--
-` + s + `
-</script>
-`)
-}
-
-func closeQuit() {
+func doQuit() {
 	muQuit.Lock()
-	defer muQuit.Unlock()
 	if chQuitOpen {
 		close(chQuit)
 		chQuitOpen = false
-		time.Sleep(10 * time.Second)
 	}
+	muQuit.Unlock()
+	doCancel()
 }
 
-func toINT(v interface{}) int {
-	switch t := v.(type) {
-	case string:
-		i, err := strconv.Atoi(unescape(t))
-		if err == nil {
-			return i
-		}
-		return -999
-	case int:
-		return t
-	case float64:
-		return int(t)
+func doCancel() {
+	muCancel.Lock()
+	if hasCancel {
+		cancel()
+		hasCancel = false
 	}
-	return -999
+	muCancel.Unlock()
 }
 
 func since(start time.Time) {
@@ -755,5 +693,62 @@ func since(start time.Time) {
 	} else {
 		s = fmt.Sprintf("%d:%02d:%02d", dur/time.Hour, (dur%time.Hour)/time.Minute, (dur%time.Minute)/time.Second)
 	}
-	output(fmt.Sprintf("window.parent._fn.time('%v');\n", s))
+	output(fmt.Sprintf("window.parent._fn.time('%v');", s))
+}
+
+func openDB(corpus string) error {
+
+	var login string
+	if strings.HasPrefix(os.Getenv("CONTEXT_DOCUMENT_ROOT"), "/home/peter") {
+		login = "port=9333 user=peter dbname=peter sslmode=disable"
+	} else {
+		login = "user=guest password=guest port=19033 dbname=p209327 sslmode=disable"
+		if h, _ := os.Hostname(); !strings.HasPrefix(h, "haytabo") {
+			login += " host=haytabo.let.rug.nl"
+		}
+	}
+
+	var err error
+	db, err = sql.Open("postgres", login)
+	if err != nil {
+		return err
+	}
+
+	err = db.Ping()
+	if err != nil {
+		db.Close()
+		return err
+	}
+
+	ctx, cancel = context.WithCancel(context.Background())
+	hasCancel = true
+
+	return nil
+}
+
+func qc(corpus, query string) string {
+	return fmt.Sprintf("set graph_path='%s';\n%s", corpus, query)
+}
+
+func output(s string) {
+	chOut <- fmt.Sprint(`<script type="text/javascript">
+` + s + `
+</script>
+`)
+}
+
+func log(s string) {
+	output(fmt.Sprintf("console.log(%q);", s))
+}
+
+func errout(err error) {
+	output(fmt.Sprintf("window.parent._fn.error(%q);", err.Error()))
+}
+
+func wrap(err error) error {
+	_, filename, lineno, ok := runtime.Caller(1)
+	if ok {
+		return fmt.Errorf("%v:%v: %v", filename, lineno, err)
+	}
+	return err
 }
