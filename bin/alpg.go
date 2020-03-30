@@ -122,10 +122,7 @@ window.parent._fn.done();
 		close(chOut)
 		doQuit()
 		wg.Wait()
-		fmt.Print(`<script type="text/javascript">
-console.log("main done");
-</script>
-`)
+		// fmt.Println("<script type=\"text/javascript\">\nconsole.log(\"main done\");\n</script>")
 	}()
 
 	corpus, dbname, arch, query, err := parseRequest()
@@ -136,7 +133,6 @@ console.log("main done");
 
 	output(fmt.Sprintf("window.parent._fn.db(%q);", dbname))
 
-	wg.Add(1)
 	go func() {
 		chSignal := make(chan os.Signal, 1)
 		signal.Notify(chSignal, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
@@ -145,7 +141,6 @@ console.log("main done");
 			doQuit()
 		case <-chQuit:
 		}
-		wg.Done()
 	}()
 
 	start := time.Now()
@@ -200,10 +195,8 @@ func run(corpus, arch, query string, start time.Time) error {
 	chLine := make(chan *Line)
 	chErr := make(chan error)
 
-	wg.Add(1)
 	go func() {
 		doQuery(corpus, arch, safequery, chHeader, chLine, chErr)
-		wg.Done()
 		// log("doQuery done")
 	}()
 
@@ -315,10 +308,8 @@ func doQuery(corpus, arch, safequery string, chHeader chan []*Header, chLine cha
 	chRow = make(chan []interface{})
 	chRowOpen = true
 
-	wg.Add(1)
 	go func() {
 		doResults(corpus, arch, headers, chRow, chLine, chErr)
-		wg.Done()
 		// log("doResults done")
 	}()
 
@@ -693,7 +684,7 @@ func since(start time.Time) {
 	} else {
 		s = fmt.Sprintf("%d:%02d:%02d", dur/time.Hour, (dur%time.Hour)/time.Minute, (dur%time.Minute)/time.Second)
 	}
-	output(fmt.Sprintf("window.parent._fn.time('%v');", s))
+	output(fmt.Sprintf("window.parent._fn.time('Tijd: %s');", s))
 }
 
 func openDB(corpus string) error {
