@@ -155,20 +155,13 @@ window.parent._fn.done();
 
 	start := time.Now()
 
-	go func() {
-		for {
-			time.Sleep(20 * time.Second)
-			output(fmt.Sprintf("window.parent._fn.time('%v');\n", time.Since(start)))
-		}
-	}()
-
-	err = run(corpus, arch, query)
+	err = run(corpus, arch, query, start)
 	if err != nil {
 		output(fmt.Sprintf("window.parent._fn.error(%q);\n", err.Error()))
 		return
 	}
 
-	output(fmt.Sprintf("window.parent._fn.time('%v');\n", time.Since(start)))
+	since(start)
 	time.Sleep(time.Second)
 }
 
@@ -196,7 +189,7 @@ func parseRequest() (corpus string, dbname string, arch string, query string, er
 	return
 }
 
-func run(corpus, arch, query string) error {
+func run(corpus, arch, query string, start time.Time) error {
 
 	safequery, err := safeQuery(query)
 	if err != nil {
@@ -209,15 +202,23 @@ func run(corpus, arch, query string) error {
 
 	go doQuery(corpus, arch, safequery, chHeader, chLine, chErr)
 
+	ticker := time.Tick(10 * time.Second)
+
 	// do Header
 	var header []*Header
 	var ok bool
-	select {
-	case err := <-chErr:
-		return err
-	case header, ok = <-chHeader:
-		if !ok {
-			return fmt.Errorf("channel chHeader closed")
+LOOP1:
+	for {
+		select {
+		case err := <-chErr:
+			return err
+		case <-ticker:
+			since(start)
+		case header, ok = <-chHeader:
+			if !ok {
+				return fmt.Errorf("channel chHeader closed")
+			}
+			break LOOP1
 		}
 	}
 	b, err := json.Marshal(header)
@@ -226,16 +227,18 @@ func run(corpus, arch, query string) error {
 	}
 	output(fmt.Sprintln("window.parent._fn.header(", string(b), ");"))
 
-LOOP:
+LOOP2:
 	for {
 		select {
 		case <-chQuit:
 			return fmt.Errorf("Quit")
 		case err := <-chErr:
 			return err
+		case <-ticker:
+			since(start)
 		case line, ok := <-chLine:
 			if !ok {
-				break LOOP
+				break LOOP2
 			}
 			b, err := json.Marshal(line)
 			if err != nil {
@@ -738,4 +741,19 @@ func toINT(v interface{}) int {
 		return int(t)
 	}
 	return -999
+}
+
+func since(start time.Time) {
+	var s string
+	dur := time.Since(start)
+	if dur < time.Second {
+		s = fmt.Sprintf("%.3fms", float64(dur)/float64(time.Millisecond))
+	} else if dur < 10*time.Second {
+		s = fmt.Sprintf("%.1fs", float64(dur)/float64(time.Second))
+	} else if dur < time.Hour {
+		s = fmt.Sprintf("%d:%02d", dur/time.Minute, (dur%time.Minute)/time.Second)
+	} else {
+		s = fmt.Sprintf("%d:%02d:%02d", dur/time.Hour, (dur%time.Hour)/time.Minute, (dur%time.Minute)/time.Second)
+	}
+	output(fmt.Sprintf("window.parent._fn.time('%v');\n", s))
 }
