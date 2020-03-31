@@ -1706,7 +1706,7 @@
       </item>
     </item>
 
-    <item id="sod-topiextr" lbl="Topicalizatie en Extractie">
+    <item id="sod-topiextr" lbl="Topicalisatie en Extractie">
       <item id="spod-nptsub" lbl="np-topic is subject">
         <item id="spod-nptsub-zin" lbl="zinnen">
           match (n:nw{_vorfeld: true, _np: true})&lt;-[r:rel]-()
