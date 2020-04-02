@@ -4,23 +4,11 @@
   <item id="tut" lbl="Tutorial">
     <item id="tut-bitri" lbl="Bigrammen en trigrammen en zo">
       <item id="tut-bitri-bi" lbl="bigram: in geval">
-        -- Dit is erg traag op een groot corpus omdat het woordje &quot;in&quot; veel voorkomt:
-
-        /*
         match p = (:word{lemma:'in'})-[:next]->(:word{lemma:'geval'})
-        return p
-        */
-
-        -- Door het patroon om te draaien staat het woord &quot;geval&quot; dat zeldzamer is voorop.
-        -- Dat maakt het zoeken aanzienlijk sneller.
-
-        match p = (:word{lemma:'geval'})&lt;-[:next]-(:word{lemma:'in'})
         return p
       </item>
       <item id="tut-bitri-tri" lbl="trigram: in elk geval">
-        -- Het minst voorkomende woord staat vooraan voor sneller zoeken.
-
-        match p = (:word{lemma:'geval'})&lt;-[:next]-(:word{lemma:'elk'})&lt;-[:next]-(:word{lemma:'in'})
+        match p = (:word{lemma:'in'})-[:next]->(:word{lemma:'elk'})-[:next]->(:word{lemma:'geval'})
         return p
       </item>
       <item id="tut-bitri-volgend" lbl="welk woord volgt er op &quot;in geval&quot;">

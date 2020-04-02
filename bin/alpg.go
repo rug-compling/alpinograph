@@ -751,17 +751,20 @@ func wrap(err error) error {
 }
 
 func format(s string) string {
+	log(s)
 	if s[0] == '[' {
 		s = s[1:]
 	} else {
 		s = s + "]"
 	}
-	s = strings.Replace(s, "]{},", "] <table class=\"inner\"><tr><td></td></tr></table></div>", -1)
-	s = strings.Replace(s, "]{}]", "] ", -1)
-	s = strings.Replace(s, "]{&#34;", "]\n<table class=\"inner\"><tr><td>", -1)
-	s = strings.Replace(s, ", &#34;", "</tr>\n<tr><td>", -1)
-	s = strings.Replace(s, "&#34;: ", "\n</td><td>", -1)
-	s = strings.Replace(s, "},", "</tr></table></div><div class=\"inner\">\n", -1)
-	s = strings.Replace(s, "}]", "</tr></table></div>\n", 1)
-	return "<div class=\"inner\">" + s
+	s = strings.Replace(s, "]{},", "]\n<table class=\"inner\">\n<tr><td></td></tr>\n</table>\n</div>\n<div class=\"inner\">", -1)
+	s = strings.Replace(s, "]{}]", "]\n</div>\n", -1)
+	s = strings.Replace(s, "]{&#34;", "]\n<table class=\"inner\">\n<tr><td>", -1)
+	s = strings.Replace(s, ", &#34;", "</td></tr>\n<tr><td>", -1)
+	s = strings.Replace(s, "&#34;: ", "</td><td>", -1)
+	s = strings.Replace(s, "},", "</td></tr>\n</table>\n</div>\n<div class=\"inner\">\n", -1)
+	s = strings.Replace(s, "}]", "</td></tr>\n</table>\n</div>\n", 1)
+	s = "<div class=\"inner\">" + s
+	log(s)
+	return s
 }
