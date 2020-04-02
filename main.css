@@ -161,6 +161,20 @@ h1 {
   text-align: right;
 }
 
+#output2 table.inner tr > td:first-child {
+  text-align: left;
+}
+
+#output2 table.inner {
+    background-color: #e0ffe0;
+    margin-bottom: 1em;
+    display: none;
+}
+
+#output2 tr:hover table.inner {
+    display: table;
+}
+
 #output1 a {
   color: black;
   text-decoration: none;
@@ -171,11 +185,8 @@ h1 {
 }
 
 #output1 span.mark {
-  color: green;
-}
-
-#output1 span.mark:hover {
-  color: #0000e0;
+  background-color: #e0ffe0;
+  font-weight: bold;
 }
 
 #output1 li {
@@ -203,5 +214,5 @@ textarea {
 
 #wait {
   position: absolute;
-  left: 12em;
+  left: 8em;
 }

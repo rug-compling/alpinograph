@@ -70,6 +70,9 @@ zijn die voor <code>(:node)</code> of <code>(:word)</code> leeg.</p>
 
 -- metadata
 (:meta)
+
+-- documentatie over het corpus
+(:doc)
 </pre>
 <h2>Attributen van items</h2>
 
@@ -119,6 +122,18 @@ zijn die voor <code>(:node)</code> of <code>(:word)</code> leeg.</p>
 <td><code>skips</code></td>
 <td>int</td>
 <td>parser-succes</td>
+</tr>
+
+<tr>
+<td><code>build</code></td>
+<td>string</td>
+<td>versie van Alpino</td>
+</tr>
+
+<tr>
+<td><code>date</code></td>
+<td>string</td>
+<td>datum en tijd van parsen door Alpino</td>
 </tr>
 
 <tr>
@@ -346,6 +361,7 @@ xpath-expressie:</p>
 gebruiken, vanwege de hoofdletters:</p>
 <pre style="background-color:#f0f3f3">match (w:word{&#34;Gender&#34;: &#39;Com&#39;}) return w;
 </pre>
+
 <p><strong><code>:meta</code></strong></p>
 <div class="overflow mytable">
 <table>
@@ -378,12 +394,34 @@ gebruiken, vanwege de hoofdletters:</p>
 
 <tr>
 <td><code>value</code></td>
+<td>string/number</td>
+<td>number voor <code>int</code> en <code>float</code></td>
+</tr>
+</tbody>
+</table>
+
+<p><strong><code>:doc</code></strong></p>
+<div class="overflow mytable">
+<table>
+<thead>
+<tr>
+<th>attribuut</th>
+<th>type</th>
+<th>opmerkingen</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>alud_version</code></td>
 <td>string</td>
-<td></td>
+<td>versie van de automatische afleiding van Universal Dependencies</td>
 </tr>
 </tbody>
 </table>
 </div>
+
+
+
 <h2>Attributen van relaties</h2>
 
 <p><strong><code>:rel</code></strong></p>

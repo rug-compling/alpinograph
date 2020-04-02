@@ -4,12 +4,22 @@
   <item id="tut" lbl="Tutorial">
     <item id="tut-bitri" lbl="Bigrammen en trigrammen en zo">
       <item id="tut-bitri-bi" lbl="bigram: in geval">
-        -- het minst voorkomende woord staat vooraan voor sneller zoeken
+        -- Dit is erg traag op een groot corpus omdat het woordje &quot;in&quot; veel voorkomt:
+
+        /*
+        match p = (:word{lemma:'in'})-[:next]->(:word{lemma:'geval'})
+        return p
+        */
+
+        -- Door het patroon om te draaien staat het woord &quot;geval&quot; dat zeldzamer is voorop.
+        -- Dat maakt het zoeken aanzienlijk sneller.
+
         match p = (:word{lemma:'geval'})&lt;-[:next]-(:word{lemma:'in'})
         return p
       </item>
       <item id="tut-bitri-tri" lbl="trigram: in elk geval">
-        -- het minst voorkomende woord staat vooraan voor sneller zoeken
+        -- Het minst voorkomende woord staat vooraan voor sneller zoeken.
+
         match p = (:word{lemma:'geval'})&lt;-[:next]-(:word{lemma:'elk'})&lt;-[:next]-(:word{lemma:'in'})
         return p
       </item>
@@ -98,6 +108,52 @@
       <item id="tut-ud-pos" lbl="possessieven">
         match (w1:word)-[:ud{rel:'nmod:poss'}]->(w2:word)
         return w1, w2
+      </item>
+    </item>
+    <item id="tut-mv" lbl="Jongens- en meisjesnamen">
+      <item id="tut-mv-en" lbl="persoon en zijn/haar">
+        <item id="tut-mv-en-zin" lbl="zinnen">
+          match (w:word)&lt;-[r1:rel*0..1{rel: 'mwp'}]-(n:nw)&lt;-[:rel]-(:node{cat:'conj'})-[:rel]->()-[:rel{rel:'det'}]->(w2:word{pt:'vnw'})
+          where w2.lemma in ['zijn', 'haar']
+            and ( w.ntype = 'eigen' or w.postag = 'SPEC(deeleigen)' )
+            and ( w.neclass is null or w.neclass = 'PER' )
+            and ( n.id = w.id or n.cat = 'mwu' )
+          return distinct n, w2
+        </item>
+        <item id="tut-mv-en-tel" lbl="telling">
+          select count(*), naam, case when sekse::text = '"zijn"' then 'M' else 'V' end as sekse
+          from (
+            match (w:word)&lt;-[r1:rel*0..1{rel: 'mwp'}]-(n:nw)&lt;-[:rel]-(:node{cat:'conj'})-[:rel]->()-[:rel{rel:'det'}]->(w2:word{pt:'vnw'})
+            where w2.lemma in ['zijn', 'haar']
+              and ( w.ntype = 'eigen' or w.postag = 'SPEC(deeleigen)' )
+              and ( w.neclass is null or w.neclass = 'PER' )
+              and ( n.id = w.id or n.cat = 'mwu' )
+            return distinct n.sentid, n.id, n.word as naam, w2.lemma as sekse
+          ) as foo
+          group by naam, sekse
+        </item>
+      </item>
+      <item id="tut-mv-ww" lbl="persoon ww't zijn/haar">
+        <item id="tut-mv-ww-zin" lbl="zinnen">
+          match (w2:word)&lt;-[:rel{rel: 'det'}]-()&lt;-[:rel{rel: 'obj1'}]-()-[r3:rel{rel: 'su'}]->()-[:rel*0..1{rel: 'hd'}]->(n:nw)-[r1:rel*0..1{rel: 'mwp'}]->(w:word)
+          where  w2.lemma in ['zijn', 'haar']
+            and ( w.ntype = 'eigen' or w.postag = 'SPEC(deeleigen)' )
+            and ( w.neclass is null or w.neclass = 'PER' )
+            and ( n.id = w.id or n.cat = 'mwu' )
+          return distinct n, w2
+        </item>
+        <item id="tut-mv-ww-tel" lbl="telling">
+          select count(*), naam, case when sekse::text = '"zijn"' then 'M' else 'V' end as sekse
+          from (
+            match (w2:word)&lt;-[:rel{rel: 'det'}]-()&lt;-[:rel{rel: 'obj1'}]-()-[r3:rel{rel: 'su'}]->()-[:rel*0..1{rel: 'hd'}]->(n:nw)-[r1:rel*0..1{rel: 'mwp'}]->(w:word)
+            where  w2.lemma in ['zijn', 'haar']
+              and ( w.ntype = 'eigen' or w.postag = 'SPEC(deeleigen)' )
+              and ( w.neclass is null or w.neclass = 'PER' )
+              and ( n.id = w.id or n.cat = 'mwu' )
+            return distinct n.sentid, n.id, n.word as naam, w2.lemma as sekse
+          ) as foo
+          group by naam, sekse
+        </item>
       </item>
     </item>
   </item>

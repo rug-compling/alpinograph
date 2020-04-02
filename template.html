@@ -66,7 +66,7 @@
         lineno = lineno + 1;
         tr.append($('<td></td>').text('' + lineno + '.'));
         for (var i = 0; i < r.fields.length; i++) {
-          tr.append($('<td></td>').text(r.fields[i]));
+          tr.append($('<td></td>').html(r.fields[i]));
         }
         $('#tab').append(tr);
         if (hassentence) { }

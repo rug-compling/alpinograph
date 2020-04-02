@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"html"
 	"net/http"
 	"net/http/cgi"
 	"net/url"
@@ -374,7 +375,7 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 			for i, v := range scans {
 				val := *(v.(*[]byte))
 				sval := string(val)
-				line.Fields[i] = unescape(sval)
+				line.Fields[i] = html.EscapeString(unescape(sval))
 				// log(sval)
 				for {
 
@@ -386,8 +387,11 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 					// TODO: https://github.com/bitnine-oss/agensgraph-golang/issues/3
 					if strings.HasPrefix(sval, "[sentence") ||
 						strings.HasPrefix(sval, "[node") ||
-						strings.HasPrefix(sval, "[word") {
+						strings.HasPrefix(sval, "[word") ||
+						strings.HasPrefix(sval, "[meta") ||
+						strings.HasPrefix(sval, "[doc") {
 						if p.Scan(val) == nil {
+							line.Fields[i] = format(line.Fields[i])
 							//n := len(p.Vertices) - 1
 							for _, v := range p.Vertices {
 								if sentid, ok := v.Properties["sentid"]; ok {
@@ -428,6 +432,7 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 					}
 
 					if v.Scan(val) == nil {
+						line.Fields[i] = format(line.Fields[i])
 						if sentid, ok := v.Properties["sentid"]; ok {
 							line.Sentid = fmt.Sprint(sentid)
 						}
@@ -443,6 +448,7 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 					}
 
 					if e.Scan(val) == nil {
+						line.Fields[i] = format(line.Fields[i])
 						if e.Id.Valid && e.Start.Valid && e.End.Valid {
 							needlink := false
 							if e.Label == "rel" {
@@ -742,4 +748,20 @@ func wrap(err error) error {
 		return fmt.Errorf("%v:%v: %v", filename, lineno, err)
 	}
 	return err
+}
+
+func format(s string) string {
+	if s[0] == '[' {
+		s = s[1:]
+	} else {
+		s = s + "]"
+	}
+	s = strings.Replace(s, "]{},", "] <table class=\"inner\"><tr><td></td></tr></table>", -1)
+	s = strings.Replace(s, "]{}]", "] ", -1)
+	s = strings.Replace(s, "]{&#34;", "]\n<table class=\"inner\"><tr><td>", -1)
+	s = strings.Replace(s, ", &#34;", "</tr>\n<tr><td>", -1)
+	s = strings.Replace(s, "&#34;: ", "\n</td><td>", -1)
+	s = strings.Replace(s, "},", "</tr></table>\n", -1)
+	s = strings.Replace(s, "}]", "</tr></table>\n", 1)
+	return s
 }
