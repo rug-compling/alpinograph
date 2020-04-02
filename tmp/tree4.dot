@@ -1,0 +1,175 @@
+strict graph gr {
+
+    ranksep=".25 equally"
+    nodesep=.05
+    ordering=out
+
+    node [shape=box, height=0, width=0, fontsize=12, fontname="Helvetica", color="#ffc0c0", style=filled];
+
+    n0 [label="top"];
+    n3 [label="du"];
+    n4 [label="smain"];
+    n6 [label="np"];
+    n9 [label="inf"];
+    n12 [label="inf"];
+    n13 [label="pp"];
+    n15 [label="np"];
+    n19 [label="np"];
+    n23 [label="whrel"];
+    n25 [label="ssub"];
+    n26 [label="np"];
+    n30 [label="inf"];
+    n35 [label="cp"];
+    n37 [label="ssub"];
+    n38 [label="np"];
+    n41 [label="advp"];
+
+    node [fontname="Helvetica-Oblique", shape=box, color="#c0c0ff", style=filled];
+
+    t1 [label=","];
+    t2 [label=","];
+    t5 [label="zou"];
+    t7 [label="de"];
+    t8 [label="regering"];
+    t11 [label="moeten"];
+    t14 [label="In"];
+    t16 [label="uitzonderlijke"];
+    t17 [label="gevallen"];
+    t20 [label="de"];
+    t21 [label="afkoeling"];
+    t22 [label="instellen"];
+    t24 [label="waarbij"];
+    t27 [label="de"];
+    t28 [label="regeling"];
+    t29 [label="moet"];
+    t33 [label="zo"];
+    t34 [label="zijn"];
+    t36 [label="dat"];
+    t39 [label="de"];
+    t40 [label="stakingsvrijheid"];
+    t42 [label="zoveel"];
+    t43 [label="mogelijk"];
+    t44 [label="gegarandeerd"];
+    t45 [label="blijft"];
+    t46 [label="."];
+
+    node [fontname="Helvetica", shape=plaintext, color="#d3d3d3", style=solid, fontsize=9];
+
+    n3n4   [label="nucl"];
+    n3n35  [label="sat"];
+    n4t5   [label="hd"];
+    n4n6   [label="su"];
+    n4n9   [label="vc"];
+    n6t7   [label="det"];
+    n6t8   [label="hd"];
+    n9n6   [label="su"];
+    n9t11  [label="hd"];
+    n9n12  [label="vc"];
+    n12n13 [label="mod"];
+    n12n6  [label="su"];
+    n12n19 [label="obj1"];
+    n12t22 [label="hd"];
+    n12n23 [label="mod"];
+    n13t14 [label="hd"];
+    n13n15 [label="obj1"];
+    n15t16 [label="mod"];
+    n15t17 [label="hd"];
+    n19t20 [label="det"];
+    n19t21 [label="hd"];
+    n23t24 [label="rhd"];
+    n23n25 [label="body"];
+    n25n26 [label="su"];
+    n25t29 [label="hd"];
+    n25n30 [label="vc"];
+    n26t27 [label="det"];
+    n26t28 [label="hd"];
+    n30t24 [label="mod"];
+    n30n26 [label="su"];
+    n30t33 [label="predc"];
+    n30t34 [label="hd"];
+    n35t36 [label="cmp"];
+    n35n37 [label="body"];
+    n37n38 [label="su"];
+    n37n41 [label="mod"];
+    n37t44 [label="predc"];
+    n37t45 [label="hd"];
+    n38t39 [label="det"];
+    n38t40 [label="hd"];
+    n41t42 [label="hd"];
+    n41t43 [label="obcomp"];
+
+    e1  [label=" ", tooltip=" ", style=invis];
+    e2  [label=" ", tooltip=" ", style=invis];
+    e5  [label=" ", tooltip=" ", style=invis];
+    e11 [label=" ", tooltip=" ", style=invis];
+    e14 [label=" ", tooltip=" ", style=invis];
+    e20 [label=" ", tooltip=" ", style=invis];
+    e22 [label=" ", tooltip=" ", style=invis];
+    e24 [label=" ", tooltip=" ", style=invis];
+    e29 [label=" ", tooltip=" ", style=invis];
+    e33 [label=" ", tooltip=" ", style=invis];
+    e34 [label=" ", tooltip=" ", style=invis];
+    e36 [label=" ", tooltip=" ", style=invis];
+
+    {rank=same; edge[style=invis];  e1 -- t1 }
+    {rank=same; edge[style=invis];  e2 -- t2 }
+    {rank=same; edge[style=invis];  e5 -- t5 -- t7 -- t8 }
+    {rank=same; edge[style=invis];  e11 -- t11 }
+    {rank=same; edge[style=invis];  e14 -- t14 -- t16 -- t17 }
+    {rank=same; edge[style=invis];  e20 -- t20 -- t21 }
+    {rank=same; edge[style=invis];  e22 -- t22 }
+    {rank=same; edge[style=invis];  e24 -- t24 -- t27 -- t28 }
+    {rank=same; edge[style=invis];  e29 -- t29 }
+    {rank=same; edge[style=invis];  e33 -- t33 }
+    {rank=same; edge[style=invis];  e34 -- t34 }
+    {rank=same; edge[style=invis];  e36 -- t36 -- t39 -- t40 -- t42 -- t43 -- t44 -- t45 -- t46 }
+
+    edge [sametail=true, color="#d3d3d3"];
+
+    n0 	-- t1;
+    n0 	-- t2;
+    n0 	-- n3;
+    n0 	-- t46;
+    n3 	-- n3n4	  --  n4;
+    n3 	-- n3n35  -- n35;
+    n4 	-- n4t5	  --  t5;
+    n4 	-- n4n6	  --  n6;
+    n4 	-- n4n9	  --  n9;
+    n6 	-- n6t7	  --  t7;
+    n6 	-- n6t8	  --  t8;
+    n9 	-- n9n6	  --  n6;
+    n9 	-- n9t11  -- t11;
+    n9 	-- n9n12  -- n12;
+    n12 -- n12n13 -- n13;
+    n12 -- n12n6  --  n6;
+    n12 -- n12n19 -- n19;
+    n12 -- n12t22 -- t22;
+    n12 -- n12n23 -- n23;
+    n13 -- n13t14 -- t14;
+    n13 -- n13n15 -- n15;
+    n15 -- n15t16 -- t16;
+    n15 -- n15t17 -- t17;
+    n19 -- n19t20 -- t20;
+    n19 -- n19t21 -- t21;
+    n23 -- n23t24 -- t24;
+    n23 -- n23n25 -- n25;
+    n25 -- n25n26 -- n26;
+    n25 -- n25t29 -- t29;
+    n25 -- n25n30 -- n30;
+    n26 -- n26t27 -- t27;
+    n26 -- n26t28 -- t28;
+    n30 -- n30t24 -- t24;
+    n30 -- n30n26 -- n26;
+    n30 -- n30t33 -- t33;
+    n30 -- n30t34 -- t34;
+    n35 -- n35t36 -- t36;
+    n35 -- n35n37 -- n37;
+    n37 -- n37n38 -- n38;
+    n37 -- n37n41 -- n41;
+    n37 -- n37t44 -- t44;
+    n37 -- n37t45 -- t45;
+    n38 -- n38t39 -- t39;
+    n38 -- n38t40 -- t40;
+    n41 -- n41t42 -- t42;
+    n41 -- n41t43 -- t43;
+}
