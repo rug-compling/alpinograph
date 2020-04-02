@@ -216,3 +216,8 @@ textarea {
   position: absolute;
   left: 8em;
 }
+
+div.inner {
+  display: inline-block;
+  margin-right: 1em;
+}

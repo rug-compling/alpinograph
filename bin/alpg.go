@@ -756,12 +756,12 @@ func format(s string) string {
 	} else {
 		s = s + "]"
 	}
-	s = strings.Replace(s, "]{},", "] <table class=\"inner\"><tr><td></td></tr></table>", -1)
+	s = strings.Replace(s, "]{},", "] <table class=\"inner\"><tr><td></td></tr></table></div>", -1)
 	s = strings.Replace(s, "]{}]", "] ", -1)
 	s = strings.Replace(s, "]{&#34;", "]\n<table class=\"inner\"><tr><td>", -1)
 	s = strings.Replace(s, ", &#34;", "</tr>\n<tr><td>", -1)
 	s = strings.Replace(s, "&#34;: ", "\n</td><td>", -1)
-	s = strings.Replace(s, "},", "</tr></table>\n", -1)
-	s = strings.Replace(s, "}]", "</tr></table>\n", 1)
-	return s
+	s = strings.Replace(s, "},", "</tr></table></div><div class=\"inner\">\n", -1)
+	s = strings.Replace(s, "}]", "</tr></table></div>\n", 1)
+	return "<div class=\"inner\">" + s
 }
