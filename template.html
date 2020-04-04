@@ -12,7 +12,7 @@
   <script type="text/javascript">
     var qs = {};
     PART1;
-    var dbname = '';
+    var corpus = '';
     var started = false;
     var haserror = false;
     var head = {};
@@ -32,8 +32,8 @@
         started = false;
         haserror = false;
       },
-      db: function (name) {
-        dbname = name;
+      cp: function (name) {
+        corpus = name;
       },
       header: function (h) {
         head = h;
@@ -70,17 +70,13 @@
         }
         $('#tab').append(tr);
         if (hassentence) { }
-        var url = 'https://paqu.let.rug.nl:8068/tree?db=' + dbname +
-          '&names=true&mwu=false&arch=' + r.arch +
-          '&file=' + r.sentid + '.xml' +
-          '&global=true&ms=' + r.links +
-          '&marknodes=';
-        for (var i = 0; i < r.ids.length; i++) {
-          if (i > 0) {
-            url += ',';
-          }
-          url += r.ids[i];
-        }
+        var url = 'bin/tree?c=' + corpus +
+          '&s=' + r.sentid +
+          '&i=' + r.ids +
+          '&r=' + r.rels +
+          '&u=' + r.uds +
+          '&e=' + r.euds +
+          '&p=' + r.pairs;
         var a = $('<a href="' + url + '" target="_blank"></a>').html(r.sentence);
         $('#lst').append($('<li></li>').append(a));
       },

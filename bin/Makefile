@@ -1,5 +1,5 @@
 
-all: alpg
+% : %.go
+	go build $<
 
-alpg: alpg.go newspapers.go
-	go build -o $@ $^
+all: alpg tree

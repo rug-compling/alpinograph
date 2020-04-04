@@ -34,11 +34,12 @@ strict graph gr {
 
     {rank=same; edge[style=invis]; t2 -- t4 -- t5 -- t9 -- t10 -- t11 }
 
-    edge [sametail=true, color="#d3d3d3"];
+    edge [sametail=true, samehead=true, color="#d3d3d3"];
 
     n0 -- n1;
     n0 -- t11;
-    n1 -- n1t2 -- t2;
+    n1 -- n1t2;
+    n1t2 -- t2 [dir="forward"];
     n1 -- n1n3 -- n3;
     n3 -- n3t4 -- t4;
     n3 -- n3t5 -- t5;

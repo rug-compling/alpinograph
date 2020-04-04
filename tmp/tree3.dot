@@ -2,7 +2,7 @@ strict graph gr {
 
     ranksep=".25 equally"
     nodesep=.05
-    ordering=out
+    // ordering=out
 
     node [shape=box, height=0, width=0, fontsize=12, fontname="Helvetica", color="#ffc0c0", style=filled];
 
@@ -101,8 +101,7 @@ strict graph gr {
 
     {rank=same; edge[style=invis];  t14 -- t16 -- t17 -- t5 -- t7 -- t8 -- t20 -- t21 -- t11 -- t22 -- t1 -- t24 -- t27 -- t28 -- t33 -- t29 -- t34 -- t2 -- t36 -- t39 -- t40 -- t42 -- t43 -- t44 -- t45 -- t46}
 
-    edge [sametail=true, color="#d3d3d3"];
-
+    edge [sametail=true, samehead=true, color="#d3d3d3"];
 
     n0 	-- t1;
     n0 	-- t2;
@@ -150,4 +149,15 @@ strict graph gr {
     n38 -- n38t40 -- t40;
     n41 -- n41t42 -- t42;
     n41 -- n41t43 -- t43;
+
+    p1 [label="obj1"];
+    p2 [label="hd/-"];
+    p2b [label=""];
+    
+    edge [sametail=false, samehead=false, color="#000000"];
+
+    t14 -- p1  [               headport="w", tailport="s", tailclip=true];
+    p1 -- t17  [dir="forward", headport="s", tailport="e", headclip=true];
+    t5 -- p2  [dir="back",              headport="n", tailport="s", headclip=true]
+    p2  -- p2b [headport="n", tailport="s", headclip=true]
 }

@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
-	"net/http"
 	"net/http/cgi"
 	"net/url"
 	"os"
@@ -37,34 +36,21 @@ type Line struct {
 	Fields   []string `json:"fields,omitempty"`
 	Sentid   string   `json:"sentid,omitempty"`
 	Sentence string   `json:"sentence,omitempty"`
-	Ids      []int    `json:"ids"`
-	Edges    []*Edge  `json:"edges,omitempty"`
-	Links    string   `json:"links,omitempty"`
-	Arch     string   `json:"arch,omitempty"`
-}
-
-type EdgeIntern struct {
-	label    string
-	start    string
-	end      string
-	needLink bool
+	IDs      string   `json:"ids"`
+	Rels     string   `json:"rels"`
+	UDs      string   `json:"uds"`
+	EUDs     string   `json:"euds"`
+	Pairs    string   `json:"pairs"`
 }
 
 type Edge struct {
-	Label string `json:"label"`
-	Start int    `json:"start"`
-	End   int    `json:"end"`
+	label string
+	value string
+	start string
+	end   string
 }
 
 var (
-	corpora = map[string][2]string{
-		"alpinotreebank": [2]string{"alpinotreebank", "/net/corpora/paqu/cdb.dact"},
-		"cgn":            [2]string{"cgn", "/net/corpora/paqu/cgnmeta.dact"},
-		"eindhoven":      [2]string{"eindhoven", "/net/corpora/paqu/eindhoven.dact"},
-		"lassyklein":     [2]string{"lassysmall", "/net/corpora/paqu/lassysmallmeta.dact"},
-		"newspapers":     [2]string{"lassynewspapers", ""},
-	}
-
 	db *sql.DB
 
 	// reLimits   = regexp.MustCompile(`((?i)\s+(limit|skip|order)\s+(\d+|all))+\s*$`)
@@ -125,13 +111,19 @@ window.parent._fn.done();
 		// fmt.Println("<script type=\"text/javascript\">\nconsole.log(\"main done\");\n</script>")
 	}()
 
-	corpus, dbname, arch, query, err := parseRequest()
+	req, err := cgi.Request()
 	if err != nil {
 		errout(err)
 		return
 	}
 
-	output(fmt.Sprintf("window.parent._fn.db(%q);", dbname))
+	corpus := strings.Replace(req.FormValue("corpus"), "'", "", -1)
+	if corpus == "" {
+		errout(fmt.Errorf("Missing corpus"))
+		return
+	}
+
+	output(fmt.Sprintf("window.parent._fn.cp(%q);", corpus))
 
 	go func() {
 		chSignal := make(chan os.Signal, 1)
@@ -145,7 +137,7 @@ window.parent._fn.done();
 
 	start := time.Now()
 
-	err = run(corpus, arch, query, start)
+	err = run(corpus, req.FormValue("query"), start)
 	if err != nil {
 		errout(err)
 		return
@@ -154,31 +146,7 @@ window.parent._fn.done();
 	since(start)
 }
 
-func parseRequest() (corpus string, dbname string, arch string, query string, err error) {
-	var req *http.Request
-	req, err = cgi.Request()
-	if err != nil {
-		return
-	}
-
-	corpus = req.FormValue("corpus")
-	dbname = corpora[corpus][0]
-	arch = corpora[corpus][1]
-	if dbname == "" {
-		err = fmt.Errorf("Invalid or missing corpus %q", corpus)
-		return
-	}
-
-	query = strings.TrimSpace(req.FormValue("query"))
-	if query == "" {
-		err = fmt.Errorf("Missing query")
-		return
-	}
-
-	return
-}
-
-func run(corpus, arch, query string, start time.Time) error {
+func run(corpus, query string, start time.Time) error {
 
 	safequery, err := safeQuery(query)
 	if err != nil {
@@ -196,7 +164,7 @@ func run(corpus, arch, query string, start time.Time) error {
 	chErr := make(chan error)
 
 	go func() {
-		doQuery(corpus, arch, safequery, chHeader, chLine, chErr)
+		doQuery(corpus, safequery, chHeader, chLine, chErr)
 		// log("doQuery done")
 	}()
 
@@ -274,7 +242,7 @@ func safeString(s string) string {
 	return strings.Replace(strings.Replace(s, "'", "", -1), `\`, "", -1)
 }
 
-func doQuery(corpus, arch, safequery string, chHeader chan []*Header, chLine chan *Line, chErr chan error) {
+func doQuery(corpus, safequery string, chHeader chan []*Header, chLine chan *Line, chErr chan error) {
 	var chRow chan []interface{}
 	chHeaderOpen := true
 	chRowOpen := false
@@ -311,7 +279,7 @@ func doQuery(corpus, arch, safequery string, chHeader chan []*Header, chLine cha
 	chRowOpen = true
 
 	go func() {
-		doResults(corpus, arch, headers, chRow, chLine, chErr)
+		doResults(corpus, headers, chRow, chLine, chErr)
 		// log("doResults done")
 	}()
 
@@ -343,7 +311,7 @@ func doQuery(corpus, arch, safequery string, chHeader chan []*Header, chLine cha
 	}
 }
 
-func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, chLine chan *Line, chErr chan error) {
+func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine chan *Line, chErr chan error) {
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -363,14 +331,11 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 			}
 
 			idmap := make(map[int]bool)
-
-			edges := make(map[string]*EdgeIntern)
+			edges := make(map[string]*Edge)
 			nodes := make(map[string]int)
-			links := make(map[int]bool)
 
 			line := &Line{
 				Fields: make([]string, len(scans)),
-				Edges:  make([]*Edge, 0),
 			}
 			for i, v := range scans {
 				val := *(v.(*[]byte))
@@ -410,19 +375,13 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 							}
 							for _, e := range p.Edges {
 								if e.Id.Valid && e.Start.Valid && e.End.Valid {
-									needlink := false
-									if e.Label == "rel" {
-										if i, ok := e.Properties["id"]; ok {
-											links[toINT(i)] = true
-										} else {
-											needlink = true
-										}
+									edge := Edge{
+										label: e.Label,
+										start: e.Start.String(),
+										end:   e.End.String(),
 									}
-									edge := EdgeIntern{
-										label:    e.Label,
-										start:    e.Start.String(),
-										end:      e.End.String(),
-										needLink: needlink,
+									if e.Label == "pair" {
+										edge.value = unescape(fmt.Sprint(e.Properties["rel"]))
 									}
 									edges[e.Id.String()] = &edge
 								}
@@ -450,19 +409,10 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 					if e.Scan(val) == nil {
 						line.Fields[i] = format(line.Fields[i])
 						if e.Id.Valid && e.Start.Valid && e.End.Valid {
-							needlink := false
-							if e.Label == "rel" {
-								if i, ok := e.Properties["id"]; ok {
-									links[toINT(i)] = true
-								} else {
-									needlink = true
-								}
-							}
-							edge := EdgeIntern{
-								label:    e.Label,
-								start:    e.Start.String(),
-								end:      e.End.String(),
-								needLink: needlink,
+							edge := Edge{
+								label: e.Label,
+								start: e.Start.String(),
+								end:   e.End.String(),
 							}
 							edges[e.Id.String()] = &edge
 						}
@@ -482,21 +432,20 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 				} // for
 			} // range scans
 
-			line.Ids = make([]int, 0, len(idmap))
+			ints := make([]int, 0, len(idmap))
 			for key := range idmap {
-				line.Ids = append(line.Ids, key)
+				ints = append(ints, key)
 			}
-			sort.Ints(line.Ids)
+			sort.Ints(ints)
+			intss := make([]string, 0, len(ints))
+			for _, i := range ints {
+				intss = append(intss, fmt.Sprint(i))
+			}
+			line.IDs = strings.Join(intss, ",")
 
 			if line.Sentid == "" {
 				chLine <- line
 				continue
-			}
-
-			if corpus == "newspapers" {
-				line.Arch = url.QueryEscape(getNewspapers(line.Sentid + ".xml"))
-			} else {
-				line.Arch = url.QueryEscape(arch)
 			}
 
 			rows, err := db.QueryContext(ctx, qc(corpus, "match (s:sentence{sentid: '"+safeString(line.Sentid)+"'}) return s.tokens"))
@@ -571,29 +520,30 @@ func doResults(corpus, arch string, header []*Header, chRow chan []interface{}, 
 
 			line.Sentence = strings.Join(tokens, " ")
 
+			rels := make([]string, 0)
+			uds := make([]string, 0)
+			euds := make([]string, 0)
+			pairs := make([]string, 0)
 			for _, edge := range edges {
 				start, ok1 := nodes[edge.start]
 				end, ok2 := nodes[edge.end]
 				if ok1 && ok2 {
-					line.Edges = append(line.Edges, &Edge{
-						Label: edge.label,
-						Start: start,
-						End:   end,
-					})
-				}
-				if ok2 && edge.needLink {
-					links[end] = true
-				}
-			}
-
-			keys := make([]string, 0, len(links))
-			for key := range links {
-				if key >= 0 {
-					keys = append(keys, fmt.Sprint(key))
+					link := fmt.Sprintf("%d-%d", start, end)
+					if edge.label == "rel" {
+						rels = append(rels, link)
+					} else if edge.label == "ud" {
+						uds = append(uds, link)
+					} else if edge.label == "eud" {
+						euds = append(euds, link)
+					} else if edge.label == "pair" {
+						pairs = append(pairs, link+"-"+url.PathEscape(edge.value))
+					}
 				}
 			}
-			sort.Strings(keys)
-			line.Links = strings.Join(keys, ",")
+			line.Rels = strings.Join(rels, ",")
+			line.UDs = strings.Join(uds, ",")
+			line.EUDs = strings.Join(euds, ",")
+			line.Pairs = strings.Join(pairs, ",")
 
 			chLine <- line
 
@@ -639,24 +589,6 @@ func unescape(s string) string {
 		}
 		return s1[1:]
 	})
-}
-
-func getNewspapers(sentid string) string {
-	p1 := 0
-	p2 := len(np) - 1
-	if np[p2][0] <= sentid {
-		return "/net/corpora/LassyLarge/WR-P-P-G/DACT/" + np[p2][1]
-	}
-
-	for p2-p1 > 1 {
-		p := (p1 + p2) / 2
-		if np[p][0] > sentid {
-			p2 = p
-		} else {
-			p1 = p
-		}
-	}
-	return "/net/corpora/LassyLarge/WR-P-P-G/DACT/" + np[p1][1]
 }
 
 func doQuit() {
@@ -751,7 +683,6 @@ func wrap(err error) error {
 }
 
 func format(s string) string {
-	log(s)
 	if s[0] == '[' {
 		s = s[1:]
 	} else {
@@ -765,6 +696,5 @@ func format(s string) string {
 	s = strings.Replace(s, "},", "</td></tr>\n</table>\n</div>\n<div class=\"inner\">\n", -1)
 	s = strings.Replace(s, "}]", "</td></tr>\n</table>\n</div>\n", 1)
 	s = "<div class=\"inner\">" + s
-	log(s)
 	return s
 }

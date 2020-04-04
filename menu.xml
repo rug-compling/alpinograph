@@ -21,6 +21,11 @@
         return n.lemma as lemma, count(n.lemma) as aantal
         order by aantal desc, lemma
       </item>
+      <item id="tut-bitri-vinden" lbl="hoe vindt men het?">
+        match (:word{lemma:'vinden'})-[:next]->(:word{lemma:'het'})-[:next]->(adj:word{pt:'adj'})-[:next]->(:word{lemma:'dat'})
+        return adj.lemma as lemma, count(adj.lemma) as aantal
+        order by aantal desc, lemma
+      </item>
       <item id="tut-bitri-mwu" lbl="multi-word unit">
         -- multi-word units zitten op een node boven de woorden
         match p = (:node{lemma:'in geval van'})
