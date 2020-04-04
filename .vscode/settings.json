@@ -3,6 +3,9 @@
         "index.html": true,
         "mkMenu": true,
         "bin/alpg": true,
+        "bin/corpora.go": true,
+        "bin/mkCorpora": true,
+        "bin/tree": true
     },
     "editor.tabSize": 8
 }

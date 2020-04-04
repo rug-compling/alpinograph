@@ -3,11 +3,13 @@ package main
 import (
 	"github.com/pebbe/util"
 
+	"bufio"
 	"bytes"
 	"encoding/xml"
 	"fmt"
 	"html"
 	"io/ioutil"
+	"os"
 	"strings"
 )
 
@@ -28,6 +30,29 @@ var (
 )
 
 func main() {
+	manual := make([]string, 0)
+	auto := make([]string, 0)
+	fp, err := os.Open("corpora.txt")
+	x(err)
+	scanner := bufio.NewScanner(fp)
+	var isAuto bool
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			continue
+		}
+		if strings.HasPrefix(line, ":manual") {
+			isAuto = false
+		} else if strings.HasPrefix(line, ":auto") {
+			isAuto = true
+		} else if isAuto {
+			auto = append(auto, optFormat(line))
+		} else {
+			manual = append(manual, optFormat(line))
+		}
+	}
+	fp.Close()
+
 	b, err := ioutil.ReadFile("menu.xml")
 	x(err)
 
@@ -85,13 +110,17 @@ func main() {
 	fmt.Print(
 		strings.Replace(
 			strings.Replace(
-				strings.Replace(string(b), "PART1;", buf1.String(), 1),
-				"<!--PART2-->", buf2.String(), 1),
-			"<!--WARNING-->", `<!--
+				strings.Replace(
+					strings.Replace(
+						strings.Replace(string(b), "PART1;", buf1.String(), 1),
+						"<!--PART2-->", buf2.String(), 1),
+					"<!--WARNING-->", `<!--
 
         WAARSCHUWING: dit is een gegenereerd bestand, bewerk het niet
 
--->`, 1))
+-->`, 1),
+				"<!--OPTAUTO-->", strings.TrimSpace(strings.Join(auto, "\n")), 1),
+			"<!--OPTMANUAL-->", strings.TrimSpace(strings.Join(manual, "\n")), 1))
 
 }
 
@@ -148,4 +177,23 @@ func untabify(s string) string {
 		}
 	}
 	return buf.String()
+}
+
+func optFormat(s string) string {
+	a := strings.Fields(s)
+
+	lbl := a[0]
+
+	s1 := a[1]
+	s2 := ""
+	for n := len(s1); n > 3; n = len(s1) {
+		// U+202F = NARROW NO-BREAK SPACE
+		s2 = "&#8239;" + s1[n-3:n] + s2
+		s1 = s1[0 : n-3]
+	}
+	lines := s1 + s2
+
+	text := html.EscapeString(strings.Join(a[2:], " "))
+
+	return `            <option value="` + lbl + `">` + text + ` &mdash; ` + lines + ` zinnen</option>`
 }

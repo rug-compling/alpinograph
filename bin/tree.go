@@ -31,14 +31,6 @@ type Word struct {
 }
 
 var (
-	corpora = map[string]string{
-		"alpinotreebank": "Alpino Treebank",
-		"cgn":            "Corpus Gesproken Nederlands",
-		"lassyklein":     "Lassy Klein",
-		"eindhoven":      "Eindhoven",
-		"newspapers":     "Lassy Groot: Kranten",
-	}
-
 	reQuote = regexp.MustCompile(`\\.`)
 	db      *sql.DB
 )
