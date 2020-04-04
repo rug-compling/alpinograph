@@ -36,7 +36,7 @@ var (
 		"cgn":            "Corpus Gesproken Nederlands",
 		"lassyklein":     "Lassy Klein",
 		"eindhoven":      "Eindhoven",
-		"newspapers":     "Lassy Groot:",
+		"newspapers":     "Lassy Groot: Kranten",
 	}
 
 	reQuote = regexp.MustCompile(`\\.`)
@@ -76,10 +76,15 @@ func main() {
 		if x(row.Scan(&zin)) {
 			return
 		}
-		zin = unescape(zin)
+		zin = html.EscapeString(unescape(zin))
 	}
 
 	meta, ok := makeMeta(corpus, sid)
+	if !ok {
+		return
+	}
+
+	parser, ok := makeParser(corpus, sid)
 	if !ok {
 		return
 	}
@@ -115,15 +120,17 @@ func main() {
 <script type="text/javascript" src="../tooltip.js"></script>
 </head>
 <body>
+<em>%s</em>
+<p>
 corpus: %s<br>
-sentence-ID: %s
+sentence-ID: %s%s
 %s
 <div class="svg">
 %s
 </div>
 </body>
 </html>
-`, html.EscapeString(zin), c, sid, meta, svg)
+`, zin, zin, c, sid, parser, meta, svg)
 
 }
 
@@ -154,6 +161,30 @@ func makeMeta(corpus, sid string) (meta string, ok bool) {
 		return "", true
 	}
 	return "<p>\n" + strings.Join(lines, "<br>\n") + "\n</p>\n", true
+}
+
+func makeParser(corpus, sid string) (parser string, ok bool) {
+
+	rows, err := db.Query("match (s:sentence{sentid:'" + sid + "'}) return s.cats, s.skips")
+	if x(err) {
+		return
+	}
+
+	var c, s sql.NullInt64
+	for rows.Next() {
+		if x(rows.Scan(&c, &s)) {
+			return
+		}
+	}
+	x(rows.Err())
+	if c.Valid {
+		parser = fmt.Sprintf("<br>\ncats: %d", c.Int64)
+	}
+	if s.Valid {
+		parser += fmt.Sprintf("<br>\nskips: %d", s.Int64)
+	}
+
+	return parser, true
 }
 
 func makeTree(corpus, sid, idlist, rellist string, compact bool) (tree *bytes.Buffer, ok bool) {
