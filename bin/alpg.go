@@ -359,7 +359,9 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 								if sid, ok := v.Properties["sentid"]; ok {
 									sentid = fmt.Sprint(sid)
 								}
-								if id, ok := v.Properties["id"]; ok {
+								if v.Label == "sentence" {
+									nodes[v.Id.String()] = 99999
+								} else if id, ok := v.Properties["id"]; ok {
 									if iid, err := strconv.Atoi(fmt.Sprint(id)); err == nil {
 										//if i == 0 || i == n {
 										idmap[iid] = true
@@ -389,7 +391,9 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 						if sid, ok := v.Properties["sentid"]; ok {
 							sentid = fmt.Sprint(sid)
 						}
-						if id, ok := v.Properties["id"]; ok {
+						if v.Label == "sentence" {
+							nodes[v.Id.String()] = 99999
+						} else if id, ok := v.Properties["id"]; ok {
 							if iid, err := strconv.Atoi(string(fmt.Sprint(id))); err == nil {
 								idmap[iid] = true
 								if v.Id.Valid {
