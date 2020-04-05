@@ -50,7 +50,7 @@ func main() {
 	corpus := strings.Replace(req.FormValue("c"), "'", "", -1)
 	sid := strings.Replace(req.FormValue("s"), "'", "", -1)
 	idlist := strings.TrimSpace(req.FormValue("i"))
-	rellist := strings.TrimSpace(req.FormValue("r"))
+	edgelist := strings.TrimSpace(req.FormValue("e"))
 	compact := req.FormValue("style") == "compact"
 
 	if x(openDB()) {
@@ -81,7 +81,7 @@ func main() {
 		return
 	}
 
-	tree, ok := makeTree(corpus, sid, idlist, rellist, compact)
+	tree, ok := makeTree(corpus, sid, idlist, edgelist, compact)
 	if !ok {
 		return
 	}
@@ -180,7 +180,7 @@ func makeParser(corpus, sid string) (parser string, ok bool) {
 	return parser, true
 }
 
-func makeTree(corpus, sid, idlist, rellist string, compact bool) (tree *bytes.Buffer, ok bool) {
+func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.Buffer, ok bool) {
 
 	idmap := make(map[int]bool)
 	if idlist != "" {
@@ -194,9 +194,12 @@ func makeTree(corpus, sid, idlist, rellist string, compact bool) (tree *bytes.Bu
 	}
 
 	relmap := make(map[string]bool)
-	if rellist != "" {
-		for _, rel := range strings.Split(rellist, ",") {
-			relmap[rel] = true
+	if edgelist != "" {
+		for _, edge := range strings.Split(edgelist, ",") {
+			a := strings.SplitN(edge, "-", 3)
+			if len(a) == 3 && a[0][0] == 'r' {
+				relmap[a[0][1:]+"-"+a[1]] = true
+			}
 		}
 	}
 

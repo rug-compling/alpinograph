@@ -34,13 +34,8 @@ type Header struct {
 
 type Line struct {
 	Fields   []string `json:"fields,omitempty"`
-	Sentid   string   `json:"sentid,omitempty"`
 	Sentence string   `json:"sentence,omitempty"`
-	IDs      string   `json:"ids"`
-	Rels     string   `json:"rels"`
-	UDs      string   `json:"uds"`
-	EUDs     string   `json:"euds"`
-	Pairs    string   `json:"pairs"`
+	Args     string   `json:"args,omitempty"`
 }
 
 type Edge struct {
@@ -330,6 +325,8 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 				return
 			}
 
+			var sentid string
+
 			idmap := make(map[int]bool)
 			edges := make(map[string]*Edge)
 			nodes := make(map[string]int)
@@ -359,8 +356,8 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 							line.Fields[i] = format(line.Fields[i])
 							//n := len(p.Vertices) - 1
 							for _, v := range p.Vertices {
-								if sentid, ok := v.Properties["sentid"]; ok {
-									line.Sentid = fmt.Sprint(sentid)
+								if sid, ok := v.Properties["sentid"]; ok {
+									sentid = fmt.Sprint(sid)
 								}
 								if id, ok := v.Properties["id"]; ok {
 									if iid, err := strconv.Atoi(fmt.Sprint(id)); err == nil {
@@ -375,15 +372,12 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 							}
 							for _, e := range p.Edges {
 								if e.Id.Valid && e.Start.Valid && e.End.Valid {
-									edge := Edge{
+									edges[e.Id.String()] = &Edge{
 										label: e.Label,
 										start: e.Start.String(),
 										end:   e.End.String(),
+										value: unescape(fmt.Sprint(e.Properties["rel"])),
 									}
-									if e.Label == "pair" {
-										edge.value = unescape(fmt.Sprint(e.Properties["rel"]))
-									}
-									edges[e.Id.String()] = &edge
 								}
 							}
 							break
@@ -392,8 +386,8 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 
 					if v.Scan(val) == nil {
 						line.Fields[i] = format(line.Fields[i])
-						if sentid, ok := v.Properties["sentid"]; ok {
-							line.Sentid = fmt.Sprint(sentid)
+						if sid, ok := v.Properties["sentid"]; ok {
+							sentid = fmt.Sprint(sid)
 						}
 						if id, ok := v.Properties["id"]; ok {
 							if iid, err := strconv.Atoi(string(fmt.Sprint(id))); err == nil {
@@ -409,19 +403,19 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 					if e.Scan(val) == nil {
 						line.Fields[i] = format(line.Fields[i])
 						if e.Id.Valid && e.Start.Valid && e.End.Valid {
-							edge := Edge{
+							edges[e.Id.String()] = &Edge{
 								label: e.Label,
 								start: e.Start.String(),
 								end:   e.End.String(),
+								value: unescape(fmt.Sprint(e.Properties["rel"])),
 							}
-							edges[e.Id.String()] = &edge
 						}
 						break
 					}
 
 					if header[i].Name == "sentid" {
-						if line.Sentid == "" {
-							line.Sentid = unescape(sval)
+						if sentid == "" {
+							sentid = unescape(sval)
 						}
 					} else if header[i].Name == "id" {
 						if id, err := strconv.Atoi(sval); err == nil {
@@ -432,6 +426,11 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 				} // for
 			} // range scans
 
+			if sentid == "" {
+				chLine <- line
+				continue
+			}
+
 			ints := make([]int, 0, len(idmap))
 			for key := range idmap {
 				ints = append(ints, key)
@@ -441,14 +440,9 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 			for _, i := range ints {
 				intss = append(intss, fmt.Sprint(i))
 			}
-			line.IDs = strings.Join(intss, ",")
+			IDs := strings.Join(intss, ",")
 
-			if line.Sentid == "" {
-				chLine <- line
-				continue
-			}
-
-			rows, err := db.QueryContext(ctx, qc(corpus, "match (s:sentence{sentid: '"+safeString(line.Sentid)+"'}) return s.tokens"))
+			rows, err := db.QueryContext(ctx, qc(corpus, "match (s:sentence{sentid: '"+safeString(sentid)+"'}) return s.tokens"))
 			if err != nil {
 				chErr <- wrap(err)
 				return
@@ -475,7 +469,7 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 			for id := range idmap {
 				rows, err := db.QueryContext(
 					ctx,
-					qc(corpus, fmt.Sprintf("match (:nw{sentid: '%s', id: %d})-[:rel*0..]->(w:word) return w.end", line.Sentid, id)))
+					qc(corpus, fmt.Sprintf("match (:nw{sentid: '%s', id: %d})-[:rel*0..]->(w:word) return w.end", sentid, id)))
 				if err != nil {
 					chErr <- wrap(err)
 					return
@@ -520,30 +514,25 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 
 			line.Sentence = strings.Join(tokens, " ")
 
-			rels := make([]string, 0)
-			uds := make([]string, 0)
-			euds := make([]string, 0)
-			pairs := make([]string, 0)
+			rr := make([]string, 0)
 			for _, edge := range edges {
 				start, ok1 := nodes[edge.start]
 				end, ok2 := nodes[edge.end]
 				if ok1 && ok2 {
-					link := fmt.Sprintf("%d-%d", start, end)
+					p := ""
 					if edge.label == "rel" {
-						rels = append(rels, link)
+						p = "r"
 					} else if edge.label == "ud" {
-						uds = append(uds, link)
+						p = "u"
 					} else if edge.label == "eud" {
-						euds = append(euds, link)
+						p = "e"
 					} else if edge.label == "pair" {
-						pairs = append(pairs, link+"-"+url.PathEscape(edge.value))
+						p = "p"
 					}
+					rr = append(rr, fmt.Sprintf("%s%d-%d-%s", p, start, end, url.PathEscape(edge.value)))
 				}
 			}
-			line.Rels = strings.Join(rels, ",")
-			line.UDs = strings.Join(uds, ",")
-			line.EUDs = strings.Join(euds, ",")
-			line.Pairs = strings.Join(pairs, ",")
+			line.Args = fmt.Sprintf("c=%s&s=%s&i=%s&e=%s", corpus, url.PathEscape(sentid), IDs, strings.Join(rr, ","))
 
 			chLine <- line
 
