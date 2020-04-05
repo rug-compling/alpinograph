@@ -3,6 +3,6 @@ alpinotreebank	    7136	Alpino Treebank
 cgn		  129921	Corpus Gesproken Nederlands
 lassyklein	   65200	Lassy Klein
 :auto
-dwc		 1500001	Dutch Web Corpus
+dwc		 1498479	Dutch Web Corpus
 eindhoven	   40524	Eindhoven
 newspapers	14974458	Lassy Groot: Kranten

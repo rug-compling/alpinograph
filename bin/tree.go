@@ -109,6 +109,7 @@ func main() {
 <title>%s</title>
 <link rel="stylesheet" type="text/css" href="../tree.css">
 <link rel="stylesheet" type="text/css" href="../tooltip.css" />
+<link rel="icon" href="../../favicon.ico" type="image/ico">
 <script type="text/javascript" src="../tooltip.js"></script>
 </head>
 <body>
