@@ -651,37 +651,30 @@ func makeGraph2(corpus, sid, idlist, edgelist string) (graph *bytes.Buffer, ok b
     //nodesep=.05
     // ordering=out
 
-    node [height=0, width=0, style=filled, fontsize=12, color="#ffe0e0", fontname="Helvetica"];
+    node [height=0, width=0, fontsize=12];
 
 `)
 
 	for _, node := range nodes {
+		tooltip := makeTooltip(node.Properties)
+		id := toInt(node.Properties["id"])
+		var label, style string
 		if node.Label == "node" {
-			tooltip := makeTooltip(node.Properties)
-			id := toInt(node.Properties["id"])
+			label = toString(node.Properties["cat"])
 			if idmap[id] {
-				fmt.Fprintf(&buf, "    n%d [label=%q, color=\"#ff0000\", style=bold, tooltip=%q];\n", id, toString(node.Properties["cat"]), tooltip)
+				style = `fontname="Helvetica", color="#ff0000", style=bold`
 			} else {
-				fmt.Fprintf(&buf, "    n%d [label=%q, tooltip=%q];\n", id, toString(node.Properties["cat"]), tooltip)
+				style = `fontname="Helvetica", color="#ffe0e0", style=filled`
+			}
+		} else {
+			label = toString(node.Properties["word"])
+			if idmap[id] {
+				style = `fontname="Helvetica-Oblique", color="#0000ff", style=bold`
+			} else {
+				style = `fontname="Helvetica-Oblique", color="#e0e0ff", style=filled`
 			}
 		}
-	}
-
-	fmt.Fprint(&buf, `
-    node [fontname="Helvetica-Oblique", color="#e0e0ff", style=filled];
-
-`)
-
-	for _, node := range nodes {
-		if node.Label == "word" {
-			tooltip := makeTooltip(node.Properties)
-			id := toInt(node.Properties["id"])
-			if idmap[id] {
-				fmt.Fprintf(&buf, "    n%d [label=%q, color=\"#0000ff\", style=bold, tooltip=%q];\n", id, toString(node.Properties["word"]), tooltip)
-			} else {
-				fmt.Fprintf(&buf, "    n%d [label=%q, tooltip=%q];\n", id, toString(node.Properties["word"]), tooltip)
-			}
-		}
+		fmt.Fprintf(&buf, "    n%d [label=%q, %s, tooltip=%q];\n", id, label, style, tooltip)
 	}
 
 	/*
