@@ -102,6 +102,12 @@
         match (w1:word)-[:ud{rel:'nmod:poss'}]->(w2:word)
         return w1, w2
       </item>
+      <item id="tut-ud-rel" lbl="combinaties van UD en gewone relaties">
+        <item id="tut-ud-rel-ncc" lbl="nominalisaties van copula-constructies">
+          match p = (:node{cat:'np'})-[:rel{rel:'hd'}]->(:word)&lt;-[:ud{main:'cop'}]-(:word)
+          return p
+        </item>
+      </item>
     </item>
     <item id="tut-mv" lbl="Jongens- en meisjesnamen">
       <item id="tut-mv-en" lbl="persoon en zijn/haar">

@@ -360,7 +360,7 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 									sentid = fmt.Sprint(sid)
 								}
 								if v.Label == "sentence" {
-									nodes[v.Id.String()] = 99999
+									nodes[v.Id.String()] = -1
 								} else if id, ok := v.Properties["id"]; ok {
 									if iid, err := strconv.Atoi(fmt.Sprint(id)); err == nil {
 										//if i == 0 || i == n {
@@ -374,11 +374,15 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 							}
 							for _, e := range p.Edges {
 								if e.Id.Valid && e.Start.Valid && e.End.Valid {
+									rel := ""
+									if e.Label != "next" {
+										rel = unescape(fmt.Sprint(e.Properties["rel"]))
+									}
 									edges[e.Id.String()] = &Edge{
 										label: e.Label,
 										start: e.Start.String(),
 										end:   e.End.String(),
-										value: unescape(fmt.Sprint(e.Properties["rel"])),
+										value: rel,
 									}
 								}
 							}
@@ -392,7 +396,7 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 							sentid = fmt.Sprint(sid)
 						}
 						if v.Label == "sentence" {
-							nodes[v.Id.String()] = 99999
+							nodes[v.Id.String()] = -1
 						} else if id, ok := v.Properties["id"]; ok {
 							if iid, err := strconv.Atoi(string(fmt.Sprint(id))); err == nil {
 								idmap[iid] = true
@@ -407,11 +411,15 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 					if e.Scan(val) == nil {
 						line.Fields[i] = format(line.Fields[i])
 						if e.Id.Valid && e.Start.Valid && e.End.Valid {
+							rel := ""
+							if e.Label != "next" {
+								rel = unescape(fmt.Sprint(e.Properties["rel"]))
+							}
 							edges[e.Id.String()] = &Edge{
 								label: e.Label,
 								start: e.Start.String(),
 								end:   e.End.String(),
-								value: unescape(fmt.Sprint(e.Properties["rel"])),
+								value: rel,
 							}
 						}
 						break
@@ -532,8 +540,10 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 						p = "e"
 					} else if edge.label == "pair" {
 						p = "p"
+					} else if edge.label == "next" {
+						p = "n"
 					}
-					rr = append(rr, fmt.Sprintf("%s%d-%d-%s", p, start, end, url.PathEscape(edge.value)))
+					rr = append(rr, fmt.Sprintf("%s.%d.%d.%s", p, start, end, url.PathEscape(edge.value)))
 				}
 			}
 			line.Args = fmt.Sprintf("c=%s&s=%s&i=%s&e=%s", corpus, url.PathEscape(sentid), IDs, strings.Join(rr, ","))

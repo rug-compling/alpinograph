@@ -19,20 +19,38 @@ import (
 )
 
 type Edge struct {
+	label string
 	from  int
 	to    int
 	rel   string
 	orito int
+	key   string
 }
 
 type Word struct {
-	id  int
-	end int
+	id      int
+	end     int
+	word    string
+	tooltip string
+}
+
+type Node struct {
+	id      int
+	cat     string
+	tooltip string
 }
 
 var (
 	reQuote = regexp.MustCompile(`\\.`)
 	db      *sql.DB
+
+	names = map[string]string{
+		"r": "rel",
+		"p": "pair",
+		"u": "ud",
+		"e": "eud",
+		"n": "next",
+	}
 )
 
 func main() {
@@ -97,6 +115,26 @@ func main() {
 		return
 	}
 
+	var divsvg2 string
+
+	graph, ok := makeGraph2(corpus, sid, idlist, edgelist)
+	if !ok {
+		return
+	}
+
+	// divsvg2 = "<pre>\n" + graph.String() + "\n</pre>"
+
+	cmd = exec.Command("dot", "-Tsvg")
+	cmd.Stdin = graph
+	b, err = cmd.CombinedOutput()
+	if x(err) {
+		return
+	}
+	divsvg2, ok = postProcess(string(b))
+	if !ok {
+		return
+	}
+
 	c, ok := corpora[corpus]
 	if !ok {
 		c = corpus
@@ -121,9 +159,10 @@ sentence-ID: %s%s
 <div class="svg">
 %s
 </div>
+%s
 </body>
 </html>
-`, zin, zin, c, sid, parser, meta, svg)
+`, zin, zin, c, sid, parser, meta, svg, divsvg2)
 
 }
 
@@ -196,9 +235,9 @@ func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.B
 	relmap := make(map[string]bool)
 	if edgelist != "" {
 		for _, edge := range strings.Split(edgelist, ",") {
-			a := strings.SplitN(edge, "-", 3)
-			if len(a) == 3 && a[0][0] == 'r' {
-				relmap[a[0][1:]+"-"+a[1]] = true
+			a := strings.SplitN(edge, ".", 4)
+			if len(a) == 4 && a[0] == "r" {
+				relmap[a[1]+"-"+a[2]] = true
 			}
 		}
 	}
@@ -387,6 +426,301 @@ func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.B
 	return &buf, true
 }
 
+func makeGraph1(corpus, sid, edgelist string) (graph *bytes.Buffer, ok bool) {
+
+	idmap := make(map[string]bool)
+
+	for _, edge := range strings.Split(edgelist, ",") {
+		a := strings.SplitN(edge, ".", 4)
+		if len(a) == 4 {
+			idmap[a[1]] = true
+			idmap[a[2]] = true
+		}
+	}
+
+	idlist := make([]string, 0, len(idmap))
+	for id := range idmap {
+		idlist = append(idlist, id)
+	}
+
+	rows, err := db.Query("match (n:nw{sentid:'" + sid + "'}) where n.id in [" + strings.Join(idlist, ",") + "] return n order by n.id")
+	if x(err) {
+		return
+	}
+
+	nodes := make([]Node, 0)
+	words := make([]Word, 0)
+
+	for rows.Next() {
+		var n []byte
+		if x(rows.Scan(&n)) {
+			return
+		}
+		var v ag.BasicVertex
+		if x(v.Scan(n)) {
+			return
+		}
+		if v.Label == "node" {
+			nodes = append(nodes, Node{
+				id:      toInt(v.Properties["id"]),
+				cat:     toString(v.Properties["cat"]),
+				tooltip: makeTooltip(v.Properties),
+			})
+		} else {
+			words = append(words, Word{
+				id:      toInt(v.Properties["id"]),
+				word:    toString(v.Properties["word"]),
+				tooltip: makeTooltip(v.Properties),
+			})
+		}
+	}
+	if x(rows.Err()) {
+		return
+	}
+
+	var buf bytes.Buffer
+
+	fmt.Fprint(&buf, `digraph gr {
+
+
+`)
+
+	if len(nodes) > 0 {
+
+		fmt.Fprintln(&buf, "    node [fontname=\"Helvetica\", color=\"#ff0000\", style=bold];\n")
+
+		for _, node := range nodes {
+			fmt.Fprintf(&buf, "    n%d [label=%q, tooltip=%q];\n", node.id, node.cat, node.tooltip)
+		}
+
+	}
+
+	if len(words) > 0 {
+
+		fmt.Fprintln(&buf, "    node [fontname=\"Helvetica\", color=\"#0000ff\", style=bold];\n")
+
+		for _, word := range words {
+			fmt.Fprintf(&buf, "    n%d [label=%q, tooltip=%q];\n", word.id, word.word, word.tooltip)
+		}
+
+		fmt.Fprintf(&buf, "    {rank=same; n%d", words[0].id)
+		for _, word := range words[1:] {
+			fmt.Fprintf(&buf, "  n%d", word.id)
+		}
+		fmt.Fprintln(&buf, "}\n")
+	}
+
+	fmt.Fprintln(&buf, "    edge [color=\"#d3d3d3\"];\n")
+
+	root := 0
+	for _, edge := range strings.Split(edgelist, ",") {
+		a := strings.SplitN(edge, ".", 4)
+		if len(a) == 4 {
+			lbl := names[a[0]]
+			if a[0] != "n" {
+				lbl += ":" + a[3]
+			}
+			var e1 string
+			if a[1] == "-1" {
+				root++
+				e1 = fmt.Sprintf("r%d", root)
+				fmt.Fprintf(&buf, "    %s [label=\" \", tooltip=\" \", style=invis];\n", e1)
+			} else {
+				e1 = "n" + a[1]
+			}
+			fmt.Fprintf(&buf, "    %s -> n%s [label=%q];\n", e1, a[2], lbl)
+		}
+	}
+
+	fmt.Fprint(&buf, "\n}\n")
+
+	return &buf, true
+}
+
+func makeGraph2(corpus, sid, idlist, edgelist string) (graph *bytes.Buffer, ok bool) {
+
+	idmap := make(map[int]bool)
+	if idlist != "" {
+		for _, id := range strings.Split(idlist, ",") {
+			i, err := strconv.Atoi(id)
+			if x(err) {
+				return
+			}
+			idmap[i] = true
+		}
+	}
+
+	edgemap := make(map[string]bool)
+	if edgelist != "" {
+		for _, edge := range strings.Split(edgelist, ",") {
+			edgemap[edge] = true
+		}
+	}
+
+	rows, err := db.Query("match (n1{sentid:'" + sid + "'})-[r]->(n2) where n1.id in [" + idlist + "] or n2.id in [" + idlist + "] return distinct n1, r, n2")
+	if x(err) {
+		return
+	}
+
+	nodes := make([]ag.BasicVertex, 0)
+	links := make([]Edge, 0)
+	words := make([]Word, 0)
+
+	seen := make(map[int]bool)
+	for rows.Next() {
+		var n1, r, n2 []byte
+		if x(rows.Scan(&n1, &r, &n2)) {
+			return
+		}
+
+		var v1 ag.BasicVertex
+		var e ag.BasicEdge
+		var v2 ag.BasicVertex
+
+		var id1, id2 int
+
+		if x(v1.Scan(n1)) {
+			return
+		}
+		if x(e.Scan(r)) {
+			return
+		}
+		if x(v2.Scan(n2)) {
+			return
+		}
+		id1 = toInt(v1.Properties["id"])
+		id2 = toInt(v2.Properties["id"])
+
+		if !seen[id1] {
+			seen[id1] = true
+			if v1.Label == "node" || v1.Label == "word" {
+				nodes = append(nodes, v1)
+			}
+			if v1.Label == "word" {
+				words = append(words, Word{
+					id:  toInt(v1.Properties["id"]),
+					end: toInt(v1.Properties["end"]),
+				})
+			}
+		}
+		if !seen[id2] {
+			seen[id2] = true
+			if v2.Label == "node" || v2.Label == "word" {
+				nodes = append(nodes, v2)
+			}
+			if v2.Label == "word" {
+				words = append(words, Word{
+					id:  toInt(v2.Properties["id"]),
+					end: toInt(v2.Properties["end"]),
+				})
+			}
+		}
+
+		rel := ""
+		lbl := e.Label
+		if e.Label != "next" {
+			rel = toString(e.Properties["rel"])
+			lbl += ":" + rel
+		}
+		link := Edge{
+			label: lbl,
+			from:  id1,
+			to:    id2,
+			key:   fmt.Sprintf("%s.%d.%d.%s", e.Label[:1], id1, id2, rel),
+		}
+		links = append(links, link)
+	}
+	if x(rows.Err()) {
+		return
+	}
+
+	if len(nodes) == 0 {
+		fmt.Println("Niet gevonden")
+		return
+	}
+
+	sort.Slice(words, func(a, b int) bool {
+		return words[a].end < words[b].end
+	})
+
+	var buf bytes.Buffer
+
+	fmt.Fprint(&buf, `digraph gr {
+
+    //ranksep=".25 equally"
+    //nodesep=.05
+    // ordering=out
+
+    node [height=0, width=0, style=filled, fontsize=12, color="#ffe0e0", fontname="Helvetica"];
+
+`)
+
+	for _, node := range nodes {
+		if node.Label == "node" {
+			tooltip := makeTooltip(node.Properties)
+			id := toInt(node.Properties["id"])
+			if idmap[id] {
+				fmt.Fprintf(&buf, "    n%d [label=%q, color=\"#ff0000\", style=bold, tooltip=%q];\n", id, toString(node.Properties["cat"]), tooltip)
+			} else {
+				fmt.Fprintf(&buf, "    n%d [label=%q, tooltip=%q];\n", id, toString(node.Properties["cat"]), tooltip)
+			}
+		}
+	}
+
+	fmt.Fprint(&buf, `
+    node [fontname="Helvetica-Oblique", color="#e0e0ff", style=filled];
+
+`)
+
+	for _, node := range nodes {
+		if node.Label == "word" {
+			tooltip := makeTooltip(node.Properties)
+			id := toInt(node.Properties["id"])
+			if idmap[id] {
+				fmt.Fprintf(&buf, "    n%d [label=%q, color=\"#0000ff\", style=bold, tooltip=%q];\n", id, toString(node.Properties["word"]), tooltip)
+			} else {
+				fmt.Fprintf(&buf, "    n%d [label=%q, tooltip=%q];\n", id, toString(node.Properties["word"]), tooltip)
+			}
+		}
+	}
+
+	/*
+		fmt.Fprintf(&buf, "\n    {rank=same; n%d", words[0].id)
+		for _, w := range words[1:] {
+			fmt.Fprintf(&buf, " n%d", w.id)
+		}
+		fmt.Fprintln(&buf, "}\n")
+	*/
+
+	fmt.Fprintf(&buf, `
+
+    edge [color="#d3d3d3", fontname="Helvetica", fontsize=10];
+
+`)
+
+	root := 0
+	for _, link := range links {
+		var e1 string
+		if link.from < 0 {
+			root++
+			e1 = fmt.Sprintf("r%d", root)
+			fmt.Fprintf(&buf, "    %s [style=invis];\n", e1)
+		} else {
+			e1 = fmt.Sprintf("n%d", link.from)
+		}
+		if edgemap[link.key] {
+			fmt.Fprintf(&buf, "    %s -> n%d [color=\"#000000\", label=%q];\n", e1, link.to, link.label)
+		} else {
+			fmt.Fprintf(&buf, "    %s -> n%d [label=%q];\n", e1, link.to, link.label)
+		}
+	}
+
+	fmt.Fprint(&buf, "\n}\n")
+
+	return &buf, true
+
+}
+
 func postProcess(svg string) (string, bool) {
 	// XML-declaratie en DOCtype overslaan
 	if i := strings.Index(svg, "<svg"); i < 0 {
@@ -491,13 +825,13 @@ func toInt(v interface{}) int {
 		if err == nil {
 			return i
 		}
-		return -999
+		return -1
 	case int:
 		return t
 	case float64:
 		return int(t)
 	}
-	return -999
+	return -1
 }
 
 func openDB() error {
