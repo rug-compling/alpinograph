@@ -116,23 +116,24 @@ func main() {
 	}
 
 	var divsvg2 string
+	if idlist != "" {
+		graph, ok := makeGraph2(corpus, sid, idlist, edgelist)
+		if !ok {
+			return
+		}
 
-	graph, ok := makeGraph2(corpus, sid, idlist, edgelist)
-	if !ok {
-		return
-	}
+		// divsvg2 = "<pre>\n" + graph.String() + "\n</pre>"
 
-	// divsvg2 = "<pre>\n" + graph.String() + "\n</pre>"
-
-	cmd = exec.Command("dot", "-Tsvg")
-	cmd.Stdin = graph
-	b, err = cmd.CombinedOutput()
-	if x(err) {
-		return
-	}
-	divsvg2, ok = postProcess(string(b))
-	if !ok {
-		return
+		cmd = exec.Command("dot", "-Tsvg")
+		cmd.Stdin = graph
+		b, err = cmd.CombinedOutput()
+		if x(err) {
+			return
+		}
+		divsvg2, ok = postProcess(string(b))
+		if !ok {
+			return
+		}
 	}
 
 	c, ok := corpora[corpus]
@@ -156,9 +157,7 @@ func main() {
 corpus: %s<br>
 sentence-ID: %s%s
 %s
-<div class="svg">
 %s
-</div>
 %s
 </body>
 </html>
@@ -753,7 +752,7 @@ func postProcess(svg string) (string, bool) {
 
 		lines = append(lines, line)
 	}
-	return strings.Join(lines, ""), true
+	return `<div class="svg">` + strings.Join(lines, "") + "</div>", true
 }
 
 func makeTooltip(p map[string]interface{}) string {
