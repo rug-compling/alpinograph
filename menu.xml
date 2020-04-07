@@ -1720,44 +1720,44 @@
         return n
       </item>
       <item id="spod-inb1" lbl="minstens 1 finiete zinsinbedding">
-        match (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})
+        match p = (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})
         where n2._clause_lvl - n._clause_lvl = 1
-        return distinct n
+        return p
       </item>
       <item id="spod-inb2" lbl="minstens 2 finiete zinsinbeddingen">
-        match (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})
+        match p = (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})
         where n2._clause_lvl - n._clause_lvl = 2
-        return distinct n
+        return p
       </item>
       <item id="spod-inb3" lbl="minstens 3 finiete zinsinbeddingen">
-        match (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})
+        match p = (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})
         where n2._clause_lvl - n._clause_lvl = 3
-        return distinct n
+        return p
       </item>
       <item id="spod-inb4" lbl="minstens 4 finiete zinsinbeddingen">
-        match (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})
+        match p = (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})
         where n2._clause_lvl - n._clause_lvl = 4
-        return distinct n
+        return p
       </item>
       <item id="spod-inb5" lbl="minstens 5 finiete zinsinbeddingen">
-        match (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})
+        match p = (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})
         where n2._clause_lvl - n._clause_lvl = 5
-        return distinct n
+        return p
       </item>
       <item id="spod-inb6" lbl="minstens 6 finiete zinsinbeddingen">
-        match (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})
+        match p = (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})
         where n2._clause_lvl - n._clause_lvl = 6
-        return distinct n
+        return p
       </item>
       <item id="spod-inb7" lbl="minstens 7 finiete zinsinbeddingen">
-        match (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})
+        match p = (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})
         where n2._clause_lvl - n._clause_lvl = 7
-        return distinct n
+        return p
       </item>
       <item id="spod-inb8" lbl="minstens 8 finiete zinsinbeddingen">
-        match (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})
+        match p = (n:node{_clause:true})-[:rel*1..]->(n2:node{sentid:n.sentid, _clause:true})
         where n2._clause_lvl - n._clause_lvl = 8
-        return distinct n
+        return p
       </item>
     </item>
 
