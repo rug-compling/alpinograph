@@ -223,3 +223,8 @@ div.inner {
   display: inline-block;
   margin-right: 1em;
 }
+
+/* dit maakt selecteren vanaf begin van de tekst makkelijker */
+#lst li {
+  padding-left: 1em;
+}
