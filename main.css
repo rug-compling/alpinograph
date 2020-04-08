@@ -168,12 +168,14 @@ h1 {
 #output2 table.inner {
     background-color: #e0ffe0;
     margin-bottom: 1em;
-    display: none;
+    /* display: none; */
 }
 
+/*
 #output2 tr:hover table.inner {
     display: table;
 }
+*/
 
 #output1 a {
   color: black;

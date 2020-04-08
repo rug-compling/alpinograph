@@ -99,7 +99,7 @@
       $('#output1').text('').addClass('hide');
       $('#output2').text('').addClass('hide');
       */
-      var el = document.forms['alpgform']
+      var el = document.forms['alpgform'];
       el.elements['query'].value = qs[tag];
       el.scrollIntoView();
     }
@@ -119,6 +119,33 @@
       $('#output1').addClass('hide');
       $('#output2').removeClass('hide');
     }
+    function store() {
+      var el = document.forms['alpgform'];
+      var c = el.elements['corpus'].value;
+      var q = el.elements['query'].value;
+      var h = encodeURIComponent(q) + ',' + c;
+      location.hash = h;
+      return true;
+    }
+    function restore() {
+      var h = location.hash.replace('#', '');
+      if (h == '') {
+        return;
+      }
+      var a = h.split(',');
+      var el = document.forms['alpgform'];
+      el.elements['query'].value = decodeURIComponent(a[0]);
+      if (a[1]) {
+        el.elements['corpus'].value = a[1];
+      }
+      if (a[2]) {
+        location.hash = a[0] + ',' + a[1];
+        el.submit();
+      }
+    }
+    $(document).ready(function () {
+      restore();
+    });
   </script>
 </head>
 
@@ -136,7 +163,7 @@
 
   <div id="main">
     <form id="alpgform" action="bin/alpg" method="post" accept-charset="utf-8"
-      enctype="application/x-www-form-urlencoded" target="cframe">
+      enctype="application/x-www-form-urlencoded" target="cframe" onsubmit="return store()">
       <p>
         Corpus:
         <select name="corpus">

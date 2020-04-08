@@ -1557,14 +1557,14 @@
     <item id="spod-wwsch" lbl="Scheidbare werkwoorden">
       <item id="spod-vpart" lbl="Werkwoorden met een scheidbaar partikel">
         <item id="spod-vpart-zin" lbl="zinnen">
-          -- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten
+          -- alleen voor automatisch verwerkte corpora
 
           match (w:word)
           where w.sc starts with 'part_'
           return w.sentid, w.id
         </item>
         <item id="spod-vpart-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten
+          -- alleen voor automatisch verwerkte corpora
 
           select count(distinct(sentid)) as zinnen, count(sentid) as items
           from (
@@ -1576,7 +1576,7 @@
       </item>
       <item id="spod-vpartex" lbl="Werkwoorden met een scheidbaar partikel, partikel gescheiden van het werkwoord">
         <item id="spod-vpartex-zin" lbl="zinnen">
-          -- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten
+          -- alleen voor automatisch verwerkte corpora
 
           match (w:word)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)
           where w.sc starts with 'part_'
@@ -1584,7 +1584,7 @@
           return w.sentid, w.id
         </item>
         <item id="spod-vpartex-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten
+          -- alleen voor automatisch verwerkte corpora
 
           select count(distinct(sentid)) as zinnen, count(sentid) as items
           from (
@@ -1597,7 +1597,7 @@
       </item>
       <item id="spod-vpartin" lbl="Werkwoorden met een scheidbaar partikel, partikel geïncorporeerd in het werkwoord">
         <item id="spod-vpartin-zin" lbl="zinnen">
-          -- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten
+          -- alleen voor automatisch verwerkte corpora
 
           match (w:word)
           where w.sc starts with 'part_'
@@ -1609,7 +1609,7 @@
           return w.sentid, w.id
         </item>
         <item id="spod-vpartin-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten
+          -- alleen voor automatisch verwerkte corpora
 
           select count(distinct(sentid)) as zinnen, count(sentid) as items
           from (
@@ -1626,7 +1626,7 @@
       </item>
       <item id="spod-vprtn" lbl="Niet-finiete werkwoorden met een scheidbaar partikel">
         <item id="spod-vprtn-zin" lbl="zinnen">
-          -- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten
+          -- alleen voor automatisch verwerkte corpora
 
           match (w:word)
           where w.sc starts with 'part_'
@@ -1634,7 +1634,7 @@
           return w.sentid, w.id
         </item>
         <item id="spod-vprtn-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten
+          -- alleen voor automatisch verwerkte corpora
 
           select count(distinct(sentid)) as zinnen, count(sentid) as items
           from (
@@ -1647,7 +1647,7 @@
       </item>
       <item id="spod-vprtnex" lbl="Niet-finiete werkwoorden met een scheidbaar partikel, partikel gescheiden van het werkwoord">
         <item id="spod-vprtnex-zin" lbl="zinnen">
-          -- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten
+          -- alleen voor automatisch verwerkte corpora
 
           match (w:word)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)
           where w.sc starts with 'part_'
@@ -1656,7 +1656,7 @@
           return w.sentid, w.id
         </item>
         <item id="spod-vprtnex-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten
+          -- alleen voor automatisch verwerkte corpora
 
           select count(distinct(sentid)) as zinnen, count(sentid) as items
           from (
@@ -1670,7 +1670,7 @@
       </item>
       <item id="spod-vprtnin" lbl="Niet-finiete werkwoorden met een scheidbaar partikel, partikel geïncorporeerd in het werkwoord">
         <item id="spod-vprtnin-zin" lbl="zinnen">
-          -- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten
+          -- alleen voor automatisch verwerkte corpora
 
           match (w:word)
           where w.sc starts with 'part_'
@@ -1684,7 +1684,7 @@
           return w.sentid, w.id
         </item>
         <item id="spod-vprtnin-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus en het Lassy-Groot-corpus Kranten
+          -- alleen voor automatisch verwerkte corpora
 
           select count(distinct(sentid)) as zinnen, count(sentid) as items
           from (
@@ -1884,20 +1884,20 @@
     <item id="spod-parser" lbl="Parser succes">
       <item id="spod-ok" lbl="volledige parse">
         <item id="spod-ok-zin" lbl="zinnen">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence{cats:1, skips:0})
           return s
         </item>
         <item id="spod-ok-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence{cats:1, skips:0})
           return count(s) as zinnen
         </item>
       </item>
       <item id="spod-catcount" lbl="aantal geparste delen">
-        -- alleen voor het Eindhoven-corpus
+        -- alleen voor automatisch verwerkte corpora
 
         match (s:sentence)
         where s.cats is not null
@@ -1906,13 +1906,13 @@
       </item>
       <item id="spod-cats0" lbl="geen enkel deel is geparst">
         <item id="spod-cats0-zin" lbl="zinnen">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence{cats:0})
           return s
         </item>
         <item id="spod-cats0-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence{cats:0})
           return count(s) as zinnen
@@ -1920,13 +1920,13 @@
       </item>
       <item id="spod-cats1" lbl="parse bestaat uit één deel">
         <item id="spod-cats1-zin" lbl="zinnen">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence{cats:1})
           return s
         </item>
         <item id="spod-cats1-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence{cats:1})
           return count(s) as zinnen
@@ -1934,13 +1934,13 @@
       </item>
       <item id="spod-cats2" lbl="parse bestaat uit twee losse delen">
         <item id="spod-cats2-zin" lbl="zinnen">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence{cats:2})
           return s
         </item>
         <item id="spod-cats2-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence{cats:2})
           return count(s) as zinnen
@@ -1948,13 +1948,13 @@
       </item>
       <item id="spod-cats3" lbl="parse bestaat uit drie losse delen">
         <item id="spod-cats3-zin" lbl="zinnen">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence{cats:3})
           return s
         </item>
         <item id="spod-cats3-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence{cats:3})
           return count(s) as zinnen
@@ -1962,14 +1962,14 @@
       </item>
       <item id="spod-cats4" lbl="parse bestaat uit vier of meer losse delen">
         <item id="spod-cats4-zin" lbl="zinnen">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence)
           where s.cats > 3
           return s
         </item>
         <item id="spod-cats4-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence)
           where s.cats > 3
@@ -1977,7 +1977,7 @@
         </item>
       </item>
       <item id="spod-skipcount" lbl="aantal overgeslagen woorden">
-        -- alleen voor het Eindhoven-corpus
+        -- alleen voor automatisch verwerkte corpora
 
         match (s:sentence)
         where s.skips is not null
@@ -1986,13 +1986,13 @@
       </item>
       <item id="spod-skips0" lbl="geen enkel woord is overgeslagen">
         <item id="spod-skips0-zin" lbl="zinnen">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence{skips:0})
           return s
         </item>
         <item id="spod-skips0-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence{skips:0})
           return count(s) as zinnen
@@ -2000,13 +2000,13 @@
       </item>
       <item id="spod-skips1" lbl="een van de woorden is overgeslagen">
         <item id="spod-skips1-zin" lbl="zinnen">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence{skips:1})
           return s
         </item>
         <item id="spod-skips1-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence{skips:1})
           return count(s) as zinnen
@@ -2014,13 +2014,13 @@
       </item>
       <item id="spod-skips2" lbl="twee van de woorden zijn overgeslagen">
         <item id="spod-skips2-zin" lbl="zinnen">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence{skips:2})
           return s
         </item>
         <item id="spod-skips2-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence{skips:2})
           return count(s) as zinnen
@@ -2028,13 +2028,13 @@
       </item>
       <item id="spod-skips3" lbl="drie van de woorden zijn overgeslagen">
         <item id="spod-skips3-zin" lbl="zinnen">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence{skips:3})
           return s
         </item>
         <item id="spod-skips3-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence{skips:3})
           return count(s) as zinnen
@@ -2042,14 +2042,14 @@
       </item>
       <item id="spod-skips4" lbl="vier of meer van de woorden zijn overgeslagen">
         <item id="spod-skips4-zin" lbl="zinnen">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence)
           where s.skips > 3
           return s
         </item>
         <item id="spod-skips4-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence)
           where s.skips > 3
@@ -2061,14 +2061,14 @@
     <item id="spod-onbekend" lbl="Onbekende woorden">
       <item id="spod-his" lbl="&quot;alle&quot; woorden (nodes met attribuut @his)">
         <item id="spod-his-zin" lbl="woorden">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (w:nw)
           where w.his is not null
           return w
         </item>
         <item id="spod-his-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (w:nw)
           where w.his is not null
@@ -2077,13 +2077,13 @@
       </item>
       <item id="spod-normal" lbl="woorden uit het woordenboek of de namenlijst">
         <item id="spod-normal-zin" lbl="woorden">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (w:nw{his: 'normal'})
           return w
         </item>
         <item id="spod-normal-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (w:nw{his: 'normal'})
           return count(w) as woorden
@@ -2091,7 +2091,7 @@
       </item>
       <item id="spod-onbeken" lbl="woorden niet direct uit het woordenboek">
         <item id="spod-onbeken-zin" lbl="woorden">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (w:nw)
           where w.his is not null
@@ -2099,7 +2099,7 @@
           return w
         </item>
         <item id="spod-onbeken-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (w:nw)
           where w.his is not null
@@ -2109,13 +2109,13 @@
       </item>
       <item id="spod-compoun" lbl="woorden herkend als samenstelling">
         <item id="spod-compoun-zin" lbl="woorden">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (w:nw{his: 'compound'})
           return w
         </item>
         <item id="spod-compoun-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (w:nw{his: 'compound'})
           return count(w) as woorden
@@ -2123,13 +2123,13 @@
       </item>
       <item id="spod-name" lbl="woorden herkend als naam (maar niet uit namenlijst)">
         <item id="spod-name-zin" lbl="woorden">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (w:nw{his: 'name'})
           return w
         </item>
         <item id="spod-name-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (w:nw{his: 'name'})
           return count(w) as woorden
@@ -2137,7 +2137,7 @@
       </item>
       <item id="spod-noun" lbl="onbekende woorden die niet als samenstelling of naam werden herkend">
         <item id="spod-noun-zin" lbl="woorden">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (w:nw)
           where w.his is not null
@@ -2145,7 +2145,7 @@
           return w
         </item>
         <item id="spod-noun-tel" lbl="telling">
-          -- alleen voor het Eindhoven-corpus
+          -- alleen voor automatisch verwerkte corpora
 
           match (w:nw)
           where w.his is not null
