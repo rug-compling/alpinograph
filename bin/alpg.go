@@ -324,7 +324,7 @@ func doQuery(corpus, safequery string, chHeader chan []*Header, chLine chan *Lin
 			muWords.Lock()
 			n := len(wordCount)
 			muWords.Unlock()
-			if n == 0 || n > (MAXROWS*3)/4 {
+			if n == 0 || n > MAXROWS/4 {
 				if n > 0 {
 					muWords.Lock()
 					tooMuch = true

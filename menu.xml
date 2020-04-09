@@ -29,7 +29,7 @@
         return p
       </item>
       <item id="tut-bitri-mwu-van" lbl="multi-word units die eindigen met &quot;van&quot;">
-        match (n:node{cat:'mwu'})-[:rel]->(w:word{lemma:'van'})
+        match (n:node{cat:'mwu'})-[:rel{rel:'mwp'}]->(w:word{lemma:'van'})
         where n.end = w.end
         return n
       </item>
