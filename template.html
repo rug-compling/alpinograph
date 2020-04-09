@@ -64,8 +64,8 @@
           $('#tab').append(tr);
           if (hassentence) {
             $('#outputZinnen').removeClass('hide').html('<ol id="lst"></ol>');
-            $('#outputWoorden').html('<p>bezig...</p>');
-            $('#outputLemmas').html('<p>bezig...</p>');
+            $('#outputWoorden').html('<p id="wmsg">bezig...</p><div id="wtab"></div>');
+            $('#outputLemmas').html('<p id="lmsg">bezig...</p><div id="ltab"></div>');
           } else {
             $('#outputTable').removeClass('hide');
           }
@@ -96,29 +96,35 @@
           $('#outputZinnen').removeClass('hide').text('Niets gevonden');
         }
       },
-      toomuch: function () {
+      toomany: function () {
         $('#outputWoorden').html('<p>Te veel varianten</p>');
         $('#outputLemmas').html('<p>Te veel varianten</p>');
       },
       clearwords: function () {
-        $('#outputWoorden').html('<table id="tabz"><tr><th>aantal</th><th>woorden</th></tr></table>');
+        $('#wtab').html('<table id="tabw"><tr><th>aantal</th><th>woorden</th></tr></table>');
       },
       clearlemmas: function () {
-        $('#outputLemmas').html("<table id=\"tabl\"><tr><th>aantal</th><th>lemma's</th></tr></table>");
+        $('#ltab').html("<table id=\"tabl\"><tr><th>aantal</th><th>lemma's</th></tr></table>");
       },
       setwords: function (i, s) {
         var tr = $('<tr></tr>');
-        tr.append($('<td></td>').text(i));
+        tr.append($('<td></td>').html(i));
         tr.append($('<td></td>').text(s));
-        $('#tabz').append(tr);
+        $('#tabw').append(tr);
       },
       setlemmas: function (i, s) {
         var tr = $('<tr></tr>');
-        tr.append($('<td></td>').text(i));
+        tr.append($('<td></td>').html(i));
         tr.append($('<td></td>').text(s));
         $('#tabl').append(tr);
+      },
+      setwordsmsg: function (s) {
+        $('#wmsg').html(s);
+      },
+      setlemmasmsg: function (s) {
+        $('#lmsg').html(s);
       }
-    }
+   }
 
     function q(tag) {
       /*

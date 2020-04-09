@@ -26,7 +26,8 @@ import (
 )
 
 const (
-	MAXROWS = 400
+	MAXROWS  = 400
+	MAXWORDS = 20000
 )
 
 type Header struct {
@@ -63,10 +64,11 @@ var (
 	chQuitOpen = true
 	muQuit     sync.Mutex
 
-	tooMuch    = false
-	wordCount  = make(map[string]int)
-	lemmaCount = make(map[string]int)
-	muWords    sync.Mutex
+	tooMany      = false
+	tooManyWords = false
+	wordCount    = make(map[string]int)
+	lemmaCount   = make(map[string]int)
+	muWords      sync.Mutex
 
 	ctx       context.Context
 	cancel    context.CancelFunc
@@ -111,6 +113,12 @@ function ww(i, s) {
 }
 function wl(i, s) {
   window.parent._fn.setlemmas(i, s);
+}
+function mw(s) {
+  window.parent._fn.setwordsmsg(s);
+}
+function ml(s) {
+  window.parent._fn.setlemmasmsg(s);
 }
 window.parent._fn.reset();
 </script>
@@ -218,7 +226,7 @@ LOOP2:
 			break LOOP2
 		case <-ticker:
 			since(start)
-			doTables()
+			doTables(false)
 		case err := <-chErr:
 			return err
 		case line, ok := <-chLine:
@@ -232,7 +240,7 @@ LOOP2:
 			output("r(" + string(b) + ");")
 		}
 	}
-	doTables()
+	doTables(true)
 	return nil
 }
 
@@ -324,14 +332,22 @@ func doQuery(corpus, safequery string, chHeader chan []*Header, chLine chan *Lin
 			muWords.Lock()
 			n := len(wordCount)
 			muWords.Unlock()
-			if n == 0 || n > MAXROWS/4 {
+			if n == 0 || n > MAXROWS*3/4 {
 				if n > 0 {
 					muWords.Lock()
-					tooMuch = true
+					tooMany = true
 					muWords.Unlock()
-					output("window.parent._fn.toomuch();")
+					output("window.parent._fn.toomany();")
 				}
 				// rows.Close() // dit hangt
+				break
+			}
+		}
+		if count > MAXROWS {
+			muWords.Lock()
+			stop := tooManyWords
+			muWords.Unlock()
+			if stop {
 				break
 			}
 		}
@@ -627,10 +643,10 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 	} // for
 }
 
-func doTables() {
+func doTables(final bool) {
 
 	muWords.Lock()
-	tm := tooMuch
+	tm := tooMany
 	muWords.Unlock()
 	if tm {
 		return
@@ -638,6 +654,7 @@ func doTables() {
 
 	for i := 0; i < 2; i++ {
 		var count map[string]int
+		var total, subTotal, vars, subVars int
 
 		muWords.Lock()
 		if i == 0 {
@@ -671,9 +688,36 @@ func doTables() {
 		}
 		var buf bytes.Buffer
 		fmt.Fprintf(&buf, "cl%s();\n", s)
-		for _, item := range items {
-			fmt.Fprintf(&buf, "w%s(%d, %q);\n", s, item.i, item.s)
+		for j, item := range items {
+			total += item.i
+			vars = j
+			if j <= MAXROWS {
+				fmt.Fprintf(&buf, "w%s(%q, %q);\n", s, numFormat(item.i), item.s)
+				subTotal += item.i
+				subVars = j
+			}
 		}
+
+		var status string
+		if total > MAXWORDS {
+			status = "<br>afgebroken"
+			muWords.Lock()
+			tooManyWords = true
+			muWords.Unlock()
+		} else if final {
+			status = ""
+		} else {
+			status = "<br>bezig..."
+		}
+		fmt.Fprintf(&buf, "m%s('varianten: %s", s, numFormat(vars))
+		if vars > subVars {
+			fmt.Fprintf(&buf, " (%s getoond)", numFormat(subVars))
+		}
+		fmt.Fprintf(&buf, "<br>totaal: %s", numFormat(total))
+		if total > subTotal {
+			fmt.Fprintf(&buf, " (%s getoond)", numFormat(subTotal))
+		}
+		fmt.Fprintf(&buf, "%s');\n", status)
 		output(buf.String())
 	}
 }
@@ -823,4 +867,15 @@ func format(s string) string {
 	s = strings.Replace(s, "}]", "</td></tr>\n</table>\n</div>\n", 1)
 	s = "<div class=\"inner\">" + s
 	return s
+}
+
+func numFormat(i int) string {
+	s1 := fmt.Sprint(i)
+	s2 := ""
+	for n := len(s1); n > 3; n = len(s1) {
+		// U+202F = NARROW NO-BREAK SPACE
+		s2 = "&#8239;" + s1[n-3:n] + s2
+		s1 = s1[0 : n-3]
+	}
+	return s1 + s2
 }
