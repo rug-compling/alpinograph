@@ -4,6 +4,7 @@ import (
 	ag "github.com/bitnine-oss/agensgraph-golang"
 	_ "github.com/lib/pq"
 
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -45,6 +46,11 @@ type Edge struct {
 	end   string
 }
 
+type IntStr struct {
+	i int
+	s string
+}
+
 var (
 	db *sql.DB
 
@@ -56,6 +62,11 @@ var (
 	chQuit     = make(chan bool)
 	chQuitOpen = true
 	muQuit     sync.Mutex
+
+	tooMuch    = false
+	wordCount  = make(map[string]int)
+	lemmaCount = make(map[string]int)
+	muWords    sync.Mutex
 
 	ctx       context.Context
 	cancel    context.CancelFunc
@@ -88,6 +99,18 @@ func main() {
 <script type="text/javascript"><!--
 function r(s) {
   window.parent._fn.row(s);
+}
+function clw() {
+  window.parent._fn.clearwords();
+}
+function cll() {
+  window.parent._fn.clearlemmas();
+}
+function ww(i, s) {
+  window.parent._fn.setwords(i, s);
+}
+function wl(i, s) {
+  window.parent._fn.setlemmas(i, s);
 }
 window.parent._fn.reset();
 </script>
@@ -195,6 +218,7 @@ LOOP2:
 			break LOOP2
 		case <-ticker:
 			since(start)
+			doTables()
 		case err := <-chErr:
 			return err
 		case line, ok := <-chLine:
@@ -208,7 +232,7 @@ LOOP2:
 			output("r(" + string(b) + ");")
 		}
 	}
-
+	doTables()
 	return nil
 }
 
@@ -297,8 +321,19 @@ func doQuery(corpus, safequery string, chHeader chan []*Header, chLine chan *Lin
 		chRow <- scans
 		count++
 		if count == MAXROWS {
-			// rows.Close() // dit hangt
-			break
+			muWords.Lock()
+			n := len(wordCount)
+			muWords.Unlock()
+			if n == 0 || n > (MAXROWS*3)/4 {
+				if n > 0 {
+					muWords.Lock()
+					tooMuch = true
+					muWords.Unlock()
+					output("window.parent._fn.toomuch();")
+				}
+				// rows.Close() // dit hangt
+				break
+			}
 		}
 	}
 	if err := rows.Err(); err != nil {
@@ -315,6 +350,8 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 		close(chLine)
 	}()
 
+	count := 0
+	wlSeen := make(map[string]bool)
 	for {
 		select {
 		case <-chQuit:
@@ -324,6 +361,7 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 				// chRow is gesloten: klaar
 				return
 			}
+			count++
 
 			var sentid string
 
@@ -439,7 +477,9 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 			} // range scans
 
 			if sentid == "" {
-				chLine <- line
+				if count <= MAXROWS {
+					chLine <- line
+				}
 				continue
 			}
 
@@ -477,24 +517,25 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 			}
 
 			tokens := strings.Fields(line.Sentence)
-			endmap := make(map[int]bool)
+			endmap := make(map[int][2]string)
 			for id := range idmap {
 				rows, err := db.QueryContext(
 					ctx,
-					qc(corpus, fmt.Sprintf("match (:nw{sentid: '%s', id: %d})-[:rel*0..]->(w:word) return w.end", sentid, id)))
+					qc(corpus, fmt.Sprintf("match (:nw{sentid: '%s', id: %d})-[:rel*0..]->(w:word) return w.end, w.word, w.lemma", sentid, id)))
 				if err != nil {
 					chErr <- wrap(err)
 					return
 				}
 				for rows.Next() {
 					var end int
-					err := rows.Scan(&end)
+					var word, lemma string
+					err := rows.Scan(&end, &word, &lemma)
 					if err != nil {
 						// rows.Close()
 						chErr <- wrap(err)
 						return
 					}
-					endmap[end] = true
+					endmap[end] = [2]string{unescape(word), unescape(lemma)}
 					select {
 					case <-chQuit:
 						// rows.Close()
@@ -506,13 +547,26 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 					chErr <- wrap(err)
 				}
 			}
+			hasIDs := len(endmap) > 0
 			inMark := false
+			started := false
+			words := make([]string, 0)
+			lemmas := make([]string, 0)
+			ids := []string{sentid}
 			for i := 0; i < len(tokens); i++ {
-				if endmap[i+1] {
+				if wl, ok := endmap[i+1]; ok {
 					if !inMark {
 						inMark = true
 						tokens[i] = `<span class="mark">` + tokens[i]
+						if started {
+							words = append(words, "[...]")
+							lemmas = append(lemmas, "[...]")
+						}
+						started = true
 					}
+					words = append(words, wl[0])
+					lemmas = append(lemmas, wl[1])
+					ids = append(ids, fmt.Sprint(i))
 				} else {
 					if inMark {
 						inMark = false
@@ -520,8 +574,26 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 					}
 				}
 			}
+
 			if inMark {
 				tokens[len(tokens)-1] = tokens[len(tokens)-1] + `</span>`
+			}
+
+			if hasIDs {
+				idss := strings.Join(ids, " ")
+				if !wlSeen[idss] {
+					wlSeen[idss] = true
+					ww := strings.Join(words, " ")
+					ll := strings.Join(lemmas, " ")
+					muWords.Lock()
+					wordCount[ww] = wordCount[ww] + 1
+					lemmaCount[ll] = lemmaCount[ll] + 1
+					muWords.Unlock()
+				}
+			}
+
+			if count > MAXROWS {
+				continue
 			}
 
 			line.Sentence = strings.Join(tokens, " ")
@@ -553,6 +625,57 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 		} // select
 
 	} // for
+}
+
+func doTables() {
+
+	muWords.Lock()
+	tm := tooMuch
+	muWords.Unlock()
+	if tm {
+		return
+	}
+
+	for i := 0; i < 2; i++ {
+		var count map[string]int
+
+		muWords.Lock()
+		if i == 0 {
+			count = wordCount
+		} else {
+			count = lemmaCount
+		}
+		n := len(count)
+		if n == 0 {
+			muWords.Unlock()
+			continue
+		}
+		items := make([]IntStr, 0, n)
+		for key, value := range count {
+			items = append(items, IntStr{i: value, s: key})
+		}
+		muWords.Unlock()
+
+		sort.Slice(items, func(a, b int) bool {
+			if items[a].i != items[b].i {
+				return items[a].i > items[b].i
+			}
+			return items[a].s < items[b].s
+		})
+
+		var s string
+		if i == 0 {
+			s = "w"
+		} else {
+			s = "l"
+		}
+		var buf bytes.Buffer
+		fmt.Fprintf(&buf, "cl%s();\n", s)
+		for _, item := range items {
+			fmt.Fprintf(&buf, "w%s(%d, %q);\n", s, item.i, item.s)
+		}
+		output(buf.String())
+	}
 }
 
 func toINT(v interface{}) int {

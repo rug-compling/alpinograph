@@ -143,55 +143,64 @@ h1 {
   font-family: monospace;
 }
 
-#output2 table {
-  margin-top: .5em;
+#outputTable table,
+#outputWoorden table,
+#outputLemmas table {
+    margin-top: .5em;
 }
 
-#output2 table, #output2 th, #output2 td {
+#outputTable table, #outputTable th, #outputTable td,
+#outputWoorden table, #outputWoorden th, #outputWoorden td,
+#outputLemmas table, #outputLemmas th, #outputLemmas td {
   border: 1px solid black;
   border-collapse: collapse;
 }
 
-#output2 th, #output2 td {
+#outputTable th, #outputTable td,
+#outputWoorden th, #outputWoorden td,
+#outputLemmas th, #outputLemmas td {
   padding: .4em 1em;
   vertical-align: top;
 }
 
-#output2 tr > td:first-child {
+#outputTable tr > td:first-child,
+#outputWoorden tr > td:first-child,
+#outputLemmas tr > td:first-child {
   text-align: right;
 }
 
-#output2 table.inner tr > td:first-child {
+#outputTable table.inner tr > td:first-child {
   text-align: left;
 }
 
-#output2 table.inner {
-    background-color: #e0ffe0;
-    margin-bottom: 1em;
-    /* display: none; */
+#outputTable table.inner {
+  background-color: #e0ffe0;
+  margin-bottom: 1em;
+  /* display: none; */
 }
 
+
 /*
-#output2 tr:hover table.inner {
+#outputTable tr:hover table.inner {
     display: table;
 }
 */
 
-#output1 a {
+#outputZinnen a {
   color: black;
   text-decoration: none;
 }
 
-#output1 a:hover {
+#outputZinnen a:hover {
   color: #0000EE;
 }
 
-#output1 span.mark {
+#outputZinnen span.mark {
   background-color: #e0ffe0;
   font-weight: bold;
 }
 
-#output1 li {
+#outputZinnen li {
   margin: 0.4em 0px;
 }
 
@@ -224,7 +233,9 @@ div.inner {
   margin-right: 1em;
 }
 
+
 /* dit maakt selecteren vanaf begin van de tekst makkelijker */
+
 #lst li {
   padding-left: 1em;
 }

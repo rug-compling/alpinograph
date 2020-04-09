@@ -24,9 +24,13 @@
         $('#error').text('').addClass('hide');
         $('#time').text('');
         $('#butZin').addClass('hide');
+        $('#butWoord').addClass('hide');
+        $('#butLemma').addClass('hide');
         $('#butTab').addClass('hide');
-        $('#output1').text('').addClass('hide');
-        $('#output2').text('').addClass('hide');
+        $('#outputZinnen').text('').addClass('hide');
+        $('#outputWoorden').text('').addClass('hide');
+        $('#outputLemmas').text('').addClass('hide');
+        $('#outputTable').text('').addClass('hide');
         $('#runner').removeClass('hide');
         $('#wait').removeClass('hide');
         started = false;
@@ -45,11 +49,13 @@
           if (r.sentence) {
             hassentence = true;
             $('#butZin').removeClass('hide').prop('disabled', true);
+            $('#butWoord').removeClass('hide').prop('disabled', false);
+            $('#butLemma').removeClass('hide').prop('disabled', false);
             $('#butTab').removeClass('hide').prop('disabled', false);
           } else {
             hassentence = false;
           }
-          $('#output2').html('<table id="tab"></table>');
+          $('#outputTable').html('<table id="tab"></table>');
           var tr = $('<tr></tr>');
           tr.append($('<th></th>'));
           for (var i = 0; i < head.length; i++) {
@@ -57,9 +63,11 @@
           }
           $('#tab').append(tr);
           if (hassentence) {
-            $('#output1').removeClass('hide').html('<ol id="lst"></ol>');
+            $('#outputZinnen').removeClass('hide').html('<ol id="lst"></ol>');
+            $('#outputWoorden').html('<p>bezig...</p>');
+            $('#outputLemmas').html('<p>bezig...</p>');
           } else {
-            $('#output2').removeClass('hide');
+            $('#outputTable').removeClass('hide');
           }
         }
         var tr = $('<tr></tr>');
@@ -85,8 +93,30 @@
       done: function () {
         $('#wait').addClass('hide');
         if (!started && !haserror) {
-          $('#output1').removeClass('hide').text('Niets gevonden');
+          $('#outputZinnen').removeClass('hide').text('Niets gevonden');
         }
+      },
+      toomuch: function () {
+        $('#outputWoorden').html('<p>Te veel varianten</p>');
+        $('#outputLemmas').html('<p>Te veel varianten</p>');
+      },
+      clearwords: function () {
+        $('#outputWoorden').html('<table id="tabz"><tr><th>aantal</th><th>woorden</th></tr></table>');
+      },
+      clearlemmas: function () {
+        $('#outputLemmas').html("<table id=\"tabl\"><tr><th>aantal</th><th>lemma's</th></tr></table>");
+      },
+      setwords: function (i, s) {
+        var tr = $('<tr></tr>');
+        tr.append($('<td></td>').text(i));
+        tr.append($('<td></td>').text(s));
+        $('#tabz').append(tr);
+      },
+      setlemmas: function (i, s) {
+        var tr = $('<tr></tr>');
+        tr.append($('<td></td>').text(i));
+        tr.append($('<td></td>').text(s));
+        $('#tabl').append(tr);
       }
     }
 
@@ -95,9 +125,13 @@
       $('#runner').addClass('hide');
       $('#error').text('').addClass('hide');
       $('#butZin').addClass('hide');
+      $('#butWoord').addClass('hide');
+      $('#butlemma').addClass('hide');
       $('#butTab').addClass('hide');
-      $('#output1').text('').addClass('hide');
-      $('#output2').text('').addClass('hide');
+      $('#outputZinnen').text('').addClass('hide');
+      $('#outputWoorden').text('').addClass('hide');
+      $('#outputLemmas').text('').addClass('hide');
+      $('#outputTable').text('').addClass('hide');
       */
       var el = document.forms['alpgform'];
       el.elements['query'].value = qs[tag];
@@ -109,15 +143,43 @@
 
     function showZin() {
       $('#butZin').prop('disabled', true);
+      $('#butWoord').prop('disabled', false);
+      $('#butLemma').prop('disabled', false);
       $('#butTab').prop('disabled', false);
-      $('#output1').removeClass('hide');
-      $('#output2').addClass('hide');
+      $('#outputZinnen').removeClass('hide');
+      $('#outputWoorden').addClass('hide');
+      $('#outputLemmas').addClass('hide');
+      $('#outputTable').addClass('hide');
+    }
+    function showWoord() {
+      $('#butZin').prop('disabled', false);
+      $('#butWoord').prop('disabled', true);
+      $('#butLemma').prop('disabled', false);
+      $('#butTab').prop('disabled', false);
+      $('#outputZinnen').addClass('hide');
+      $('#outputWoorden').removeClass('hide');
+      $('#outputLemmas').addClass('hide');
+      $('#outputTable').addClass('hide');
+    }
+    function showLemma() {
+      $('#butZin').prop('disabled', false);
+      $('#butWoord').prop('disabled', false);
+      $('#butLemma').prop('disabled', true);
+      $('#butTab').prop('disabled', false);
+      $('#outputZinnen').addClass('hide');
+      $('#outputWoorden').addClass('hide');
+      $('#outputLemmas').removeClass('hide');
+      $('#outputTable').addClass('hide');
     }
     function showTab() {
       $('#butZin').prop('disabled', false);
+      $('#butWoord').prop('disabled', false);
+      $('#butLemma').prop('disabled', false);
       $('#butTab').prop('disabled', true);
-      $('#output1').addClass('hide');
-      $('#output2').removeClass('hide');
+      $('#outputZinnen').addClass('hide');
+      $('#outputWoorden').addClass('hide');
+      $('#outputLemmas').addClass('hide');
+      $('#outputTable').removeClass('hide');
     }
     function store() {
       var el = document.forms['alpgform'];
@@ -190,9 +252,13 @@
       <span id="time"></span><img src="images/leeg.png" alt="">
     </div>
     <button class="hide" id="butZin" onClick="showZin()">zinnen</button>
+    <button class="hide" id="butWoord" onClick="showWoord()">woorden</button>
+    <button class="hide" id="butLemma" onClick="showLemma()">lemma's</button>
     <button class="hide" id="butTab" onClick="showTab()">tabel</button>
-    <div id="output1" class="hide"></div>
-    <div id="output2" class="hide"></div>
+    <div id="outputZinnen" class="hide"></div>
+    <div id="outputWoorden" class="hide"></div>
+    <div id="outputLemmas" class="hide"></div>
+    <div id="outputTable" class="hide"></div>
   </div>
   <div id="foot">
     <a href="doc/" target="_blank">help</a>

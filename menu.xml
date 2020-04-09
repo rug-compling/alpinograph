@@ -13,18 +13,15 @@
       </item>
       <item id="tut-bitri-volgend" lbl="welk woord volgt er op &quot;in geval&quot;">
         match (:word{lemma:'in'})-[:next]->(:word{lemma:'geval'})-[:next]->(w:word)
-        return w.lemma as lemma, count(w.lemma) as aantal
-        order by aantal desc, lemma
+        return w
       </item>
       <item id="tut-bitri-tussen" lbl="welk woord staat er tussen &quot;in&quot; en &quot;van&quot;">
         match (:word{lemma:'in'})-[:next]->(n:word)-[:next]->(:word{lemma:'van'})
-        return n.lemma as lemma, count(n.lemma) as aantal
-        order by aantal desc, lemma
+        return n
       </item>
       <item id="tut-bitri-vinden" lbl="hoe vindt men het?">
         match (:word{lemma:'vinden'})-[:next]->(:word{lemma:'het'})-[:next]->(adj:word{pt:'adj'})-[:next]->(:word{lemma:'dat'})
-        return adj.lemma as lemma, count(adj.lemma) as aantal
-        order by aantal desc, lemma
+        return adj
       </item>
       <item id="tut-bitri-mwu" lbl="multi-word unit">
         -- multi-word units zitten op een node boven de woorden
@@ -34,8 +31,7 @@
       <item id="tut-bitri-mwu-van" lbl="multi-word units die eindigen met &quot;van&quot;">
         match (n:node{cat:'mwu'})-[:rel]->(w:word{lemma:'van'})
         where n.end = w.end
-        return n.word as &quot;multi-word unit&quot;, count(n) as aantal
-        order by aantal desc, &quot;multi-word unit&quot;
+        return n
       </item>
     </item>
     <item id="tut-uitdr" lbl="Uitdrukkingen en gezegdes">
@@ -106,6 +102,12 @@
         <item id="tut-ud-rel-ncc" lbl="nominalisaties van copula-constructies">
           match p = (:node{cat:'np'})-[:rel{rel:'hd'}]->(:word)&lt;-[:ud{main:'cop'}]-(:word)
           return p
+        </item>
+        <item id="tut-ud-rel-mwu" lbl="gewone woorden en multi-word units">
+          match (:word{lemma:'eten'})-[:ud{rel:'obj'}]->(w1:word)&lt;-[:rel*0..1{rel:'mwp'}]-(w)
+          where not exists ( (w)&lt;-[:rel{rel:'mwp'}]-() )
+          return w.word as woord, count(w.word) as aantal
+          order by aantal desc, woord
         </item>
       </item>
     </item>
