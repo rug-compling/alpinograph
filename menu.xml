@@ -103,11 +103,14 @@
           match p = (:node{cat:'np'})-[:rel{rel:'hd'}]->(:word)&lt;-[:ud{main:'cop'}]-(:word)
           return p
         </item>
-        <item id="tut-ud-rel-mwu" lbl="gewone woorden en multi-word units">
-          match (:word{lemma:'eten'})-[:ud{rel:'obj'}]->(w1:word)&lt;-[:rel*0..1{rel:'mwp'}]-(w)
+        <item id="tut-ud-rel-mwu" lbl="alleen multi-word units">
+          match p = (:word{lemma:'eten'})-[:ud{rel:'obj'}]->(:word)&lt;-[:rel{rel:'mwp'}]-()
+          return p
+        </item>
+        <item id="tut-ud-rel-mwu2" lbl="gewone woorden en multi-word units">
+          match p = (:word{lemma:'eten'})-[:ud{rel:'obj'}]->(:word)&lt;-[:rel*0..1{rel:'mwp'}]-(w)
           where not exists ( (w)&lt;-[:rel{rel:'mwp'}]-() )
-          return w.word as woord, count(w.word) as aantal
-          order by aantal desc, woord
+          return p
         </item>
       </item>
     </item>
