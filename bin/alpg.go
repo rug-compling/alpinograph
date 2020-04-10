@@ -68,6 +68,7 @@ var (
 	tooManyWords = false
 	wordCount    = make(map[string]int)
 	lemmaCount   = make(map[string]int)
+	dubbelen     = 0
 	muWords      sync.Mutex
 
 	ctx       context.Context
@@ -331,8 +332,9 @@ func doQuery(corpus, safequery string, chHeader chan []*Header, chLine chan *Lin
 		if count == MAXROWS {
 			muWords.Lock()
 			n := len(wordCount)
+			dub := dubbelen
 			muWords.Unlock()
-			if n == 0 || n > MAXROWS*3/4 {
+			if n == 0 || n > (MAXROWS-dub)*3/4 {
 				if n > 0 {
 					muWords.Lock()
 					tooMany = true
@@ -564,6 +566,10 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 				}
 			}
 			hasIDs := len(endmap) > 0
+			if hasIDs && count == 1 {
+				output("window.parent._fn.wordstart();\n")
+			}
+
 			inMark := false
 			started := false
 			words := make([]string, 0)
@@ -596,16 +602,18 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 			}
 
 			if hasIDs {
+				muWords.Lock()
 				idss := strings.Join(ids, " ")
 				if !wlSeen[idss] {
 					wlSeen[idss] = true
 					ww := strings.Join(words, " ")
 					ll := strings.Join(lemmas, " ")
-					muWords.Lock()
 					wordCount[ww] = wordCount[ww] + 1
 					lemmaCount[ll] = lemmaCount[ll] + 1
-					muWords.Unlock()
+				} else {
+					dubbelen++
 				}
+				muWords.Unlock()
 			}
 
 			if count > MAXROWS {

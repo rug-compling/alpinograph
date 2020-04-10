@@ -42,6 +42,12 @@
       header: function (h) {
         head = h;
       },
+      wordstart: function () {
+        $('#butWoord').removeClass('hide').prop('disabled', false);
+        $('#butLemma').removeClass('hide').prop('disabled', false);
+        $('#outputWoorden').html('<p id="wmsg">bezig...</p><div id="wtab"></div>');
+        $('#outputLemmas').html('<p id="lmsg">bezig...</p><div id="ltab"></div>');
+      },
       row: function (r) {
         if (!started) {
           started = true;
@@ -49,8 +55,6 @@
           if (r.sentence) {
             hassentence = true;
             $('#butZin').removeClass('hide').prop('disabled', true);
-            $('#butWoord').removeClass('hide').prop('disabled', false);
-            $('#butLemma').removeClass('hide').prop('disabled', false);
             $('#butTab').removeClass('hide').prop('disabled', false);
           } else {
             hassentence = false;
@@ -64,8 +68,6 @@
           $('#tab').append(tr);
           if (hassentence) {
             $('#outputZinnen').removeClass('hide').html('<ol id="lst"></ol>');
-            $('#outputWoorden').html('<p id="wmsg">bezig...</p><div id="wtab"></div>');
-            $('#outputLemmas').html('<p id="lmsg">bezig...</p><div id="ltab"></div>');
           } else {
             $('#outputTable').removeClass('hide');
           }
@@ -124,7 +126,7 @@
       setlemmasmsg: function (s) {
         $('#lmsg').html(s);
       }
-   }
+    }
 
     function q(tag) {
       /*
