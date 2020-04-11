@@ -234,7 +234,7 @@ func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.B
 	relmap := make(map[string]bool)
 	if edgelist != "" {
 		for _, edge := range strings.Split(edgelist, ",") {
-			a := strings.SplitN(edge, ".", 4)
+			a := strings.SplitN(edge, "_", 4)
 			if len(a) == 4 && a[0] == "r" {
 				relmap[a[1]+"-"+a[2]] = true
 			}
@@ -442,6 +442,17 @@ func makeGraph(corpus, sid, idlist, edgelist string) (graph *bytes.Buffer, ok bo
 	edgemap := make(map[string]bool)
 	if edgelist != "" {
 		for _, edge := range strings.Split(edgelist, ",") {
+			if edge[0] == 'e' {
+				ee := strings.Split(edge, "_")
+				if len(ee) > 3 {
+					for i := 1; i < 3; i++ {
+						if j := strings.Index(ee[i], "!"); j > 0 {
+							ee[i] = ee[i][:j]
+						}
+					}
+				}
+				edge = strings.Join(ee, "_")
+			}
 			edgemap[edge] = true
 		}
 	}
@@ -515,7 +526,7 @@ func makeGraph(corpus, sid, idlist, edgelist string) (graph *bytes.Buffer, ok bo
 			label: lbl,
 			from:  id1,
 			to:    id2,
-			key:   fmt.Sprintf("%s.%d.%d.%s", e.Label[:1], id1, id2, rel),
+			key:   fmt.Sprintf("%s_%d_%d_%s", e.Label[:1], id1, id2, rel),
 		}
 		links = append(links, link)
 	}

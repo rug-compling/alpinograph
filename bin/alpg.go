@@ -41,10 +41,12 @@ type Line struct {
 }
 
 type Edge struct {
-	label string
-	value string
-	start string
-	end   string
+	label  string
+	value  string
+	start  string
+	end    string
+	eStart string
+	eEnd   string
 }
 
 type IntStr struct {
@@ -430,15 +432,25 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 							}
 							for _, e := range p.Edges {
 								if e.Id.Valid && e.Start.Valid && e.End.Valid {
-									rel := ""
+									var rel, start, end string
 									if e.Label != "next" {
 										rel = unescape(fmt.Sprint(e.Properties["rel"]))
 									}
+									if e.Label == "eud" {
+										if s, ok := e.Properties["from"]; ok {
+											start = unescape(fmt.Sprint(s))
+										}
+										if s, ok := e.Properties["to"]; ok {
+											end = unescape(fmt.Sprint(s))
+										}
+									}
 									edges[e.Id.String()] = &Edge{
-										label: e.Label,
-										start: e.Start.String(),
-										end:   e.End.String(),
-										value: rel,
+										label:  e.Label,
+										start:  e.Start.String(),
+										end:    e.End.String(),
+										value:  rel,
+										eStart: start,
+										eEnd:   end,
 									}
 								}
 							}
@@ -467,15 +479,25 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 					if e.Scan(val) == nil {
 						line.Fields[i] = format(line.Fields[i])
 						if e.Id.Valid && e.Start.Valid && e.End.Valid {
-							rel := ""
+							var rel, start, end string
 							if e.Label != "next" {
 								rel = unescape(fmt.Sprint(e.Properties["rel"]))
 							}
+							if e.Label == "eud" {
+								if s, ok := e.Properties["from"]; ok {
+									start = unescape(fmt.Sprint(s))
+								}
+								if s, ok := e.Properties["to"]; ok {
+									end = unescape(fmt.Sprint(s))
+								}
+							}
 							edges[e.Id.String()] = &Edge{
-								label: e.Label,
-								start: e.Start.String(),
-								end:   e.End.String(),
-								value: rel,
+								label:  e.Label,
+								start:  e.Start.String(),
+								end:    e.End.String(),
+								value:  rel,
+								eStart: start,
+								eEnd:   end,
 							}
 						}
 						break
@@ -626,6 +648,7 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 			for _, edge := range edges {
 				start, ok1 := nodes[edge.start]
 				end, ok2 := nodes[edge.end]
+				var eStart, eEnd string
 				if ok1 && ok2 {
 					p := ""
 					if edge.label == "rel" {
@@ -634,12 +657,18 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 						p = "u"
 					} else if edge.label == "eud" {
 						p = "e"
+						if edge.eStart != "" {
+							eStart = "!" + edge.eStart
+						}
+						if edge.eEnd != "" {
+							eEnd = "!" + edge.eEnd
+						}
 					} else if edge.label == "pair" {
 						p = "p"
 					} else if edge.label == "next" {
 						p = "n"
 					}
-					rr = append(rr, fmt.Sprintf("%s.%d.%d.%s", p, start, end, url.PathEscape(edge.value)))
+					rr = append(rr, fmt.Sprintf("%s_%d%s_%d%s_%s", p, start, eStart, end, eEnd, url.PathEscape(edge.value)))
 				}
 			}
 			line.Args = fmt.Sprintf("c=%s&s=%s&i=%s&e=%s", corpus, url.PathEscape(sentid), IDs, strings.Join(rr, ","))
