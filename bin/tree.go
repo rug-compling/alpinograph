@@ -51,6 +51,7 @@ var (
 		"e": "eud",
 		"n": "next",
 	}
+	id2end = make(map[string]string)
 )
 
 func main() {
@@ -80,13 +81,17 @@ func main() {
 		return
 	}
 
-	row := db.QueryRow("match (s:sentence{sentid:'" + sid + "'}) return s.tokens")
-	var zin string
+	row := db.QueryRow("match (s:sentence{sentid:'" + sid + "'}) return s.tokens, s.conllu_error")
+	var zin, conlluErr string
 	if row != nil {
-		if x(row.Scan(&zin)) {
+		var ce sql.NullString
+		if x(row.Scan(&zin, &ce)) {
 			return
 		}
 		zin = html.EscapeString(unescape(zin))
+		if ce.Valid {
+			conlluErr = unescape(ce.String)
+		}
 	}
 
 	meta, ok := makeMeta(corpus, sid)
@@ -136,6 +141,11 @@ func main() {
 		}
 	}
 
+	uddiv, ok := makeUD(sid, idlist, edgelist, conlluErr)
+	if !ok {
+		return
+	}
+
 	c, ok := corpora[corpus]
 	if !ok {
 		c = corpus
@@ -159,9 +169,10 @@ sentence-ID: %s%s
 %s
 %s
 %s
+%s
 </body>
 </html>
-`, zin, zin, c, sid, parser, meta, svg, divsvg2)
+`, zin, zin, c, sid, parser, meta, svg, divsvg2, uddiv)
 
 }
 
@@ -218,6 +229,7 @@ func makeParser(corpus, sid string) (parser string, ok bool) {
 	return parser, true
 }
 
+// vult de map id2end
 func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.Buffer, ok bool) {
 
 	idmap := make(map[int]bool)
@@ -284,10 +296,13 @@ func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.B
 			nodes = append(nodes, v2)
 
 			if v2.Label == "word" {
+				id := toInt(v2.Properties["id"])
+				end := toInt(v2.Properties["end"])
 				words = append(words, Word{
-					id:  toInt(v2.Properties["id"]),
-					end: toInt(v2.Properties["end"]),
+					id:  id,
+					end: end,
 				})
+				id2end[fmt.Sprint(id)] = fmt.Sprint(end)
 			}
 		}
 
@@ -611,6 +626,30 @@ func makeGraph(corpus, sid, idlist, edgelist string) (graph *bytes.Buffer, ok bo
 	fmt.Fprint(&buf, "\n}\n")
 
 	return &buf, true
+
+}
+
+func makeUD(sid, idlist, edgelist, conlluErr string) (div string, ok bool) {
+	if conlluErr != "" {
+		return fmt.Sprintf(`<div class="err">
+Er ging iets mis met de afleiding van Universal Dependencies:
+<pre>
+%s
+</pre>
+`, html.EscapeString(conlluErr)), true
+	}
+
+	conllu, ok := getConllu(sid)
+	if !ok {
+		return "", false
+	}
+
+	svg, ok := conllu2svg(conllu, idlist, edgelist)
+	if !ok {
+		return "", false
+	}
+
+	return svg, true
 
 }
 

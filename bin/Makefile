@@ -4,7 +4,7 @@ all: alpg tree
 alpg: alpg.go
 	go build -o $@ $^
 
-tree: tree.go corpora.go
+tree: tree.go corpora.go getconllu.go conllu2svg.go fontsize.go
 	go build -o $@ $^
 
 corpora.go: mkCorpora ../corpora.txt

@@ -2,3 +2,15 @@ div.svg {
   margin: 2em 0px;
   overflow-x: auto;
 }
+
+.udcontrol {
+  margin-bottom: 200px;
+}
+.udcontrol input,
+.udcontrol label {
+  cursor: pointer;
+}
+.udcontrol label:hover {
+  color: #0000e0;
+  text-decoration: underline;
+}
