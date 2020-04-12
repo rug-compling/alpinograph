@@ -49,6 +49,12 @@ type Edge struct {
 	eEnd   string
 }
 
+type Thing struct {
+	id, from, to string
+	label        string
+	props        string
+}
+
 type IntStr struct {
 	i int
 	s string
@@ -411,9 +417,11 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 						strings.HasPrefix(sval, "[meta") ||
 						strings.HasPrefix(sval, "[doc") {
 						if p.Scan(val) == nil {
-							line.Fields[i] = format(line.Fields[i])
+							verticeThings := make([]*Thing, 0)
+							edgeThings := make([]*Thing, 0)
 							//n := len(p.Vertices) - 1
 							for _, v := range p.Vertices {
+								verticeThings = append(verticeThings, getVertex(&v))
 								if sid, ok := v.Properties["sentid"]; ok {
 									sentid = fmt.Sprint(sid)
 								}
@@ -431,6 +439,7 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 								}
 							}
 							for _, e := range p.Edges {
+								edgeThings = append(edgeThings, getEdge(&e))
 								if e.Id.Valid && e.Start.Valid && e.End.Valid {
 									var rel, start, end string
 									if e.Label != "next" {
@@ -454,12 +463,15 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 									}
 								}
 							}
+							line.Fields[i] = formatThings(verticeThings, edgeThings)
+							if line.Fields[i] == "" {
+								line.Fields[i] = html.EscapeString(unescape(sval))
+							}
 							break
 						}
 					}
 
 					if v.Scan(val) == nil {
-						line.Fields[i] = format(line.Fields[i])
 						if sid, ok := v.Properties["sentid"]; ok {
 							sentid = fmt.Sprint(sid)
 						}
@@ -473,11 +485,14 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 								}
 							}
 						}
+						line.Fields[i] = formatThings([]*Thing{getVertex(&v)}, []*Thing{})
+						if line.Fields[i] == "" {
+							line.Fields[i] = html.EscapeString(unescape(sval))
+						}
 						break
 					}
 
 					if e.Scan(val) == nil {
-						line.Fields[i] = format(line.Fields[i])
 						if e.Id.Valid && e.Start.Valid && e.End.Valid {
 							var rel, start, end string
 							if e.Label != "next" {
@@ -499,6 +514,10 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 								eStart: start,
 								eEnd:   end,
 							}
+						}
+						line.Fields[i] = formatThings([]*Thing{getEdge(&e)}, []*Thing{})
+						if line.Fields[i] == "" {
+							line.Fields[i] = html.EscapeString(unescape(sval))
 						}
 						break
 					}
@@ -678,6 +697,90 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 		} // select
 
 	} // for
+}
+
+func getVertex(v *ag.BasicVertex) *Thing {
+	return &Thing{
+		id:    v.Id.String(),
+		label: v.Label,
+		props: formatProperties(v.Properties),
+	}
+}
+
+func getEdge(e *ag.BasicEdge) *Thing {
+	return &Thing{
+		id:    e.Id.String(),
+		from:  e.Start.String(),
+		to:    e.End.String(),
+		label: e.Label,
+		props: formatProperties(e.Properties),
+	}
+}
+
+func formatThings(vv []*Thing, ee []*Thing) string {
+	vn := len(vv)
+	en := len(ee)
+	if vn != en+1 {
+		return ""
+	}
+
+	var buf bytes.Buffer
+
+	vorige := "NONE"
+	for i := 0; i < vn+en; i++ {
+		var item *Thing
+		if i%2 == 0 {
+			item = vv[i/2]
+		} else {
+			item = ee[i/2]
+		}
+		e1 := "(:"
+		e2 := ")"
+		if item.from == vorige {
+			e1 = "-[:"
+			e2 = "]-&gt;"
+		} else if item.to == vorige {
+			e1 = "&lt;-[:"
+			e2 = "]-"
+		} else if item.from != "" || item.to != "" {
+			e1 = "?-[:"
+			e2 = "]-?"
+		}
+		fmt.Fprintf(&buf, "<div class=\"inner\"><code>%s%s%s</code>%s</div>\n", e1, item.label, e2, item.props)
+		vorige = item.id
+	}
+
+	return buf.String()
+}
+
+func formatProperties(ii map[string]interface{}) string {
+	keys := make([]string, 0)
+	for key := range ii {
+		keys = append(keys, key)
+	}
+	sort.Slice(keys, func(a, b int) bool {
+		if keys[a][0] == '_' {
+			if keys[b][0] != '_' {
+				return false
+			}
+		} else {
+			if keys[b][0] == '_' {
+				return true
+			}
+		}
+		return strings.ToLower(keys[a]) < strings.ToLower(keys[b])
+	})
+	var buf bytes.Buffer
+	buf.WriteString("<table class=\"inner\">\n")
+	if len(keys) > 0 {
+		for _, key := range keys {
+			fmt.Fprintf(&buf, "<tr><td>%s</td><td>%s</td></tr>\n", html.EscapeString(key), html.EscapeString(fmt.Sprint(ii[key])))
+		}
+	} else {
+		fmt.Fprintln(&buf, "<tr><td></td></tr>")
+	}
+	buf.WriteString("</table>\n")
+	return buf.String()
 }
 
 func doTables(final bool) {
@@ -887,23 +990,6 @@ func wrap(err error) error {
 		return fmt.Errorf("%v:%v: %v", filename, lineno, err)
 	}
 	return err
-}
-
-func format(s string) string {
-	if s[0] == '[' {
-		s = s[1:]
-	} else {
-		s = s + "]"
-	}
-	s = strings.Replace(s, "]{},", "]\n<table class=\"inner\">\n<tr><td></td></tr>\n</table>\n</div>\n<div class=\"inner\">", -1)
-	s = strings.Replace(s, "]{}]", "]\n</div>\n", -1)
-	s = strings.Replace(s, "]{&#34;", "]\n<table class=\"inner\">\n<tr><td>", -1)
-	s = strings.Replace(s, ", &#34;", "</td></tr>\n<tr><td>", -1)
-	s = strings.Replace(s, "&#34;: ", "</td><td>", -1)
-	s = strings.Replace(s, "},", "</td></tr>\n</table>\n</div>\n<div class=\"inner\">\n", -1)
-	s = strings.Replace(s, "}]", "</td></tr>\n</table>\n</div>\n", 1)
-	s = "<div class=\"inner\">" + s
-	return s
 }
 
 func numFormat(i int) string {
