@@ -774,7 +774,11 @@ func formatProperties(ii map[string]interface{}) string {
 	buf.WriteString("<table class=\"inner\">\n")
 	if len(keys) > 0 {
 		for _, key := range keys {
-			fmt.Fprintf(&buf, "<tr><td>%s</td><td>%s</td></tr>\n", html.EscapeString(key), html.EscapeString(fmt.Sprint(ii[key])))
+			fmt.Fprintf(&buf,
+				"<tr><td>%s</td><td class=\"%T\">%s</td></tr>\n",
+				html.EscapeString(key),
+				ii[key],
+				html.EscapeString(fmt.Sprint(ii[key])))
 		}
 	} else {
 		fmt.Fprintln(&buf, "<tr><td></td></tr>")
