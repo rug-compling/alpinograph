@@ -18,6 +18,77 @@
     var head = {};
     var hassentence = false;
     var lineno = 0;
+    var hist = [];
+    var histp = -1;
+
+    function putHistory() {
+      try {
+        localStorage.setItem(
+          'alpinograph',
+          JSON.stringify(hist)
+        );
+      } catch (err) { }
+    }
+
+    function getHistory() {
+      try {
+        var storageContent = localStorage.getItem('alpinograph');
+        if (storageContent !== undefined) {
+          hist = JSON.parse(storageContent) || [];
+        }
+      } catch (err) { }
+      if (hist.length > 0) {
+        $('#butBack').prop('disabled', false);
+        $('#butForward').prop('disabled', false);
+      }
+    }
+
+    function addToHist(q) {
+      if (q == "") {
+        return;
+      }
+      $('#butBack').prop('disabled', false);
+      $('#butForward').prop('disabled', false);
+      histp = 0;
+      var pos = hist.indexOf(q);
+      if (pos == 0) {
+        return;
+      }
+      if (pos > 0) {
+        hist.splice(pos, 1);
+      }
+      hist.unshift(q);
+      while (hist.length > 50) {
+        hist.pop();
+      }
+      putHistory();
+    }
+
+    function back() {
+      if (hist.length == 0) {
+        histp = -1;
+        return;
+      }
+      histp++;
+      if (histp >= hist.length) {
+        histp = 0;
+      }
+      var el = document.forms['alpgform'];
+      el.elements['query'].value = hist[histp];
+    }
+
+    function forward() {
+      if (hist.length == 0) {
+        histp = -1;
+        return;
+      }
+      histp--;
+      if (histp < 0) {
+        histp = hist.length - 1;
+      }
+      var el = document.forms['alpgform'];
+      el.elements['query'].value = hist[histp];
+    }
 
     window._fn = {
       reset: function () {
@@ -195,6 +266,7 @@
       var q = el.elements['query'].value;
       var h = encodeURIComponent(q) + ',' + c;
       location.hash = h;
+      addToHist(q);
       return true;
     }
     function restore() {
@@ -215,6 +287,7 @@
     }
     $(document).ready(function () {
       restore();
+      getHistory();
     });
   </script>
 </head>
@@ -246,6 +319,8 @@
         </select>
       </p>
       <p>
+        <input type="button" disabled value="&lt;" id="butBack" onClick="back()"><input type="button" disabled
+          value="&gt;" id="butForward" onClick="forward()">
         Query:<br>
         <textarea rows="20" name="query" id="query"></textarea>
       </p>
