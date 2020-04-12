@@ -2,6 +2,7 @@
     "files.exclude": {
         "index.html": true,
         "mkMenu": true,
+        "ag/dact2agens": true,
         "bin/alpg": true,
         "bin/corpora.go": true,
         "bin/mkCorpora": true,
