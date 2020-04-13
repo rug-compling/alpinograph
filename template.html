@@ -265,8 +265,11 @@
       var c = el.elements['corpus'].value;
       var q = el.elements['query'].value;
       var h = encodeURIComponent(q) + ',' + c;
-      location.hash = h;
       addToHist(q);
+      var h = location.hash.replace('#', '');
+      if (h != '') {
+        location.hash = '';
+      }
       return true;
     }
     function restore() {
@@ -284,6 +287,27 @@
         location.hash = a[0] + ',' + a[1];
         el.submit();
       }
+    }
+    function opslaan() {
+      var el = document.forms['alpgform'];
+      var c = el.elements['corpus'].value;
+      var q = el.elements['query'].value;
+      var h = document.location + "#" +
+        encodeURIComponent(q).replace(/\(/g, '%28').replace(/\)/g, '%29') +
+        ',' + c;
+      var copyText = document.getElementById('txtOpslaan');
+      copyText.value = h;
+      $('#clip').removeClass('hide');
+      return false;
+    }
+    function clipSelect() {
+      var copyText = document.getElementById('txtOpslaan');
+      copyText.select();
+      copyText.setSelectionRange(0, 99999);
+      document.execCommand("copy");
+    }
+    function clipClose() {
+      $('#clip').addClass('hide');
     }
     $(document).ready(function () {
       restore();
@@ -325,6 +349,7 @@
         <textarea rows="20" name="query" id="query"></textarea>
       </p>
       <p>
+        <button onClick="return opslaan()" style="float:right">Kopi&euml;ren</button>
         <input type="submit" value="Doen">
         <input type="button" value="Wissen" onClick="formclear(form)">
       </p>
@@ -347,6 +372,15 @@
     <a href="doc/" target="_blank">help</a>
   </div>
   <iframe src="leeg.html" id="cframe" name="cframe" class="hide"></iframe>
+  <div id="clip" class="hide">
+    <p>
+      <input type="text" id="txtOpslaan">
+    </p>
+    <p>
+      <button onClick="clipSelect()">Naar klembord kopi&euml;ren</button>
+      <button onClick="clipClose()">Sluiten</button>
+    </p>
+  </div>
 </body>
 
 </html>

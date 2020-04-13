@@ -247,3 +247,21 @@ td.bool,
 td.float64 {
     text-align: right;
 }
+
+#clip {
+  -webkit-box-shadow: 11px 10px 12px -6px rgba(0,0,0,0.75);
+  -moz-box-shadow: 11px 10px 12px -6px rgba(0,0,0,0.75);
+  box-shadow: 11px 10px 12px -6px rgba(0,0,0,0.75);
+  z-index: 10;
+  position: fixed;
+  left: 10%;
+  right: 10%;
+  top: 10em;
+  border: 2px solid #a0a0a0;
+  background-color: #f0f0f0;
+  padding: 2em;
+}
+
+#txtOpslaan {
+  width: 100%;
+}
