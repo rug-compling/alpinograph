@@ -37,18 +37,13 @@
           hist = JSON.parse(storageContent) || [];
         }
       } catch (err) { }
-      if (hist.length > 0) {
-        $('#butBack').prop('disabled', false);
-        $('#butForward').prop('disabled', false);
-      }
+      setHistButtons();
     }
 
     function addToHist(q) {
       if (q == "") {
         return;
       }
-      $('#butBack').prop('disabled', false);
-      $('#butForward').prop('disabled', false);
       histp = 0;
       var pos = hist.indexOf(q);
       if (pos == 0) {
@@ -62,32 +57,39 @@
         hist.pop();
       }
       putHistory();
+      setHistButtons()
     }
 
-    function back() {
+    function setHistButtons() {
+      var n = hist.length;
+      if (histp < n - 1) {
+        $('#butBack').prop('disabled', false);
+      } else {
+        $('#butBack').prop('disabled', true);
+
+      }
+      if (histp > 0) {
+        $('#butForward').prop('disabled', false);
+      } else {
+        $('#butForward').prop('disabled', true);
+      }
+    }
+
+    function move(step) {
       if (hist.length == 0) {
         histp = -1;
         return;
       }
-      histp++;
+      histp += step;
       if (histp >= hist.length) {
+        histp = hist.length - 1;
+      }
+      if (histp < 0) {
         histp = 0;
       }
       var el = document.forms['alpgform'];
       el.elements['query'].value = hist[histp];
-    }
-
-    function forward() {
-      if (hist.length == 0) {
-        histp = -1;
-        return;
-      }
-      histp--;
-      if (histp < 0) {
-        histp = hist.length - 1;
-      }
-      var el = document.forms['alpgform'];
-      el.elements['query'].value = hist[histp];
+      setHistButtons();
     }
 
     window._fn = {
@@ -343,8 +345,8 @@
         </select>
       </p>
       <p>
-        <input type="button" disabled value="&lt;" id="butBack" onClick="back()"><input type="button" disabled
-          value="&gt;" id="butForward" onClick="forward()">
+        <input type="button" disabled value="&lt;" id="butBack" onClick="move(1)"><input type="button" disabled
+          value="&gt;" id="butForward" onClick="move(-1)">
         Query:<br>
         <textarea rows="20" name="query" id="query"></textarea>
       </p>
