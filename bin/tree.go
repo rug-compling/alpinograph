@@ -387,7 +387,7 @@ func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.B
 `)
 
 		for _, link := range links {
-			if link.rel != "" && link.rel != "--" {
+			if link.rel != "" /* && link.rel != "--" */ {
 				fmt.Fprintf(&buf, "    n%dn%d [label=%q];\n", link.from, link.to, link.rel)
 			}
 		}
@@ -414,7 +414,7 @@ func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.B
 
 	for _, link := range links {
 		if relmap[fmt.Sprintf("%d-%d", link.from, link.to)] {
-			if link.rel != "" && link.rel != "--" {
+			if link.rel != "" /* && link.rel != "--" */ {
 				if compact {
 					fmt.Fprintf(&buf, "    n%d -- n%d [label=%q, color=\"#000000\"];\n", link.from, link.to, " "+link.rel+"  ")
 				} else {
@@ -424,7 +424,7 @@ func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.B
 				fmt.Fprintf(&buf, "    n%d -- n%d [color=\"#000000\"];\n", link.from, link.to)
 			}
 		} else {
-			if link.rel != "" && link.rel != "--" {
+			if link.rel != "" /* && link.rel != "--" */ {
 				if compact {
 					fmt.Fprintf(&buf, "    n%d -- n%d [label=%q];\n", link.from, link.to, " "+link.rel+"  ")
 				} else {
