@@ -167,9 +167,9 @@ func main() {
 corpus: %s<br>
 sentence-ID: %s%s
 %s
-%s
-%s
-%s
+<div class="fig">%s</div>
+<div class="fig">%s</div>
+<div class="fig">%s</div>
 </body>
 </html>
 `, zin, zin, c, sid, parser, meta, svg, divsvg2, uddiv)
