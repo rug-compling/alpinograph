@@ -133,6 +133,7 @@
       macrodct = {};
       $('#macerr').text('');
       var ss = macrotxt.replace(/^\s*#.*/gm).match(/[a-zA-Z][_a-zA-Z0-9]*\s*=\s*"""(.|\n)*?"""/g);
+      if (!ss) { return; }
       for (var i = 0; i < ss.length; i++) {
         var aa = ss[i].match(/([a-zA-Z][_a-zA-Z0-9]*)\s*=\s*"""((.|\n)*?)"""/);
         macrodct[aa[1]] = aa[2];
