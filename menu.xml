@@ -517,8 +517,8 @@
 
     <item id="spod-corc" lbl="Correlatieve comparatieven">
       <item id="spod-corc-zin" lbl="zinnen">
-        match p1 = (n1:node{_deste: true})&lt;-[:rel*0..]-(n0:node)&lt;-[:rel*0..]-(n:node{cat: 'du'}),
-              p2 = (n0)-[:rel*0..]->(n2:node{_deste: true})
+        match p1 = (n1:node{_deste: true})&lt;-[:rel*0..]-(n0:node)&lt;-[:rel*0..]-(n:node{cat: 'du'})
+        match p2 = (n0)-[:rel*0..]->(n2:node{_deste: true})
         optional match p = (n0)&lt;-[:rel*0..]-(:node{cat:'du'})&lt;-[:rel*1..]-(n)
         with n1, n2, p, p1, p2
         where n1.id &lt; n2.id
@@ -528,8 +528,8 @@
       <item id="spod-corc-tel" lbl="telling">
         select count(distinct(sentid)) as zinnen, count(sentid) as items
         from (
-          match (n1:node{_deste: true})&lt;-[:rel*0..]-(n0:node)&lt;-[:rel*0..]-(n:node{cat: 'du'}),
-                (n0)-[:rel*0..]->(n2:node{_deste: true})
+          match (n1:node{_deste: true})&lt;-[:rel*0..]-(n0:node)&lt;-[:rel*0..]-(n:node{cat: 'du'})
+          match (n0)-[:rel*0..]->(n2:node{_deste: true})
           optional match p = (n0)&lt;-[:rel*0..]-(:node{cat:'du'})&lt;-[:rel*1..]-(n)
           with n, n1, n2, p
           where n1.id &lt; n2.id
