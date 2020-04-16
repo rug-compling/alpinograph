@@ -20,6 +20,8 @@
     var lineno = 0;
     var hist = [];
     var histp = -1;
+    var macrotxt = '';
+    var macrodct = {};
 
     function putHistory() {
       try {
@@ -88,7 +90,7 @@
         histp = 0;
       }
       var el = document.forms['alpgform'];
-      el.elements['query'].value = hist[histp];
+      el.elements['query1'].value = hist[histp];
       setHistButtons();
     }
 
@@ -103,12 +105,14 @@
     }
 
     function macSave() {
+      macrotxt = document.forms['alpgform'].elements['mactxt'].value;
       try {
         localStorage.setItem(
           'alpinograph_macros',
-          document.forms['alpgform'].elements['mactxt'].value
+          macrotxt
         );
       } catch (err) { }
+      parseMacros();
       disableSave();
       return false;
     }
@@ -117,11 +121,49 @@
       try {
         var storageContent = localStorage.getItem('alpinograph_macros');
         if (storageContent !== undefined) {
-          macrotxt = storageContent || "kleur = \"\"\" 'rood','groen','blauw' \"\"\"\n";
+          macrotxt = storageContent || "kleur = \"\"\"\n    'rood','groen','blauw'\n\"\"\"\n";
         }
       } catch (err) { }
+      parseMacros();
       $('#mactxt').text(macrotxt);
       $('#mactxt').val(macrotxt);
+    }
+
+    function parseMacros() {
+      macrodct = {};
+      $('#macerr').text('');
+      var ss = macrotxt.replace(/^\s*#.*/gm).match(/[a-zA-Z][_a-zA-Z0-9]*\s*=\s*"""(.|\n)*?"""/g);
+      for (var i = 0; i < ss.length; i++) {
+        var aa = ss[i].match(/([a-zA-Z][_a-zA-Z0-9]*)\s*=\s*"""((.|\n)*?)"""/);
+        macrodct[aa[1]] = aa[2];
+      }
+      var keys = [];
+      for (var key in macrodct) {
+        keys.push(key);
+      }
+      for (var i = 0; i < keys.length; i++) {
+        var going = true;
+        var count = 0;
+        while (going) {
+          count += 1;
+          var s = macrodct[keys[i]].replace(/%[a-zA-Z][_a-zA-Z0-9]*%/g, function (x) {
+            var v = macrodct[x.substr(1, x.length - 2)];
+            if (!v) {
+              $('#macerr').append($('<p></p>').text('Fout: geen definitie gevonden voor ' + x));
+            }
+            return v || "MACRONOTFOUND";
+          })
+          if (macrodct[keys[i]] == s) {
+            going = false;
+          } else if (s.length > 65535 || count == 100) {
+            $('#macerr').append($('<p></p>').text('Fout: te diepe recursie voor %' + keys[i] + '%'));
+            macrodct[keys[i]] = 'MACROTOODEEP'
+            going = false;
+          } else {
+            macrodct[keys[i]] = s;
+          }
+        }
+      }
     }
 
     function enableSave() {
@@ -307,9 +349,22 @@
     function store() {
       var el = document.forms['alpgform'];
       var c = el.elements['corpus'].value;
-      var q = el.elements['query'].value;
-      var h = encodeURIComponent(q) + ',' + c;
-      addToHist(q);
+      var q1 = el.elements['query1'].value;
+      var err = false;
+      $('#error').text('');
+      var q = q1.replace(/%[a-zA-Z][_a-zA-Z0-9]*%/g, function (x) {
+        var v = macrodct[x.substr(1, x.length - 2)];
+        if (!v) {
+          err = true
+          $('#error').append($('<p></p>').text('Fout: geen definitie gevonden voor ' + x)).removeClass('hide');
+        }
+        return v || "MACRONOTFOUND";
+      })
+      if (err) {
+        return false;
+      }
+      el.elements['query'].value = q;
+      addToHist(q1);
       var h = location.hash.replace('#', '');
       if (h != '') {
         location.hash = '';
@@ -380,6 +435,7 @@
       <div id="macros" class="hide">
         Dictionary in JSON-formaat:<br>
         <textarea rows="20" name="mactxt" id="mactxt"></textarea>
+        <div id="macerr"></div>
         <p>
           <button onClick="return macSave()" id="macrosave" disabled>Opslaan</button>
           <button onClick="return macClose()">Sluiten</button>
@@ -401,7 +457,8 @@
         <input type="button" disabled value="&lt;" id="butBack" onClick="move(1)"><input type="button" disabled
           value="&gt;" id="butForward" onClick="move(-1)">
         Query:<br>
-        <textarea rows="20" name="query" id="query"></textarea>
+        <textarea rows="20" name="query1" id="query1"></textarea>
+        <input type="hidden" name="query" id="query">
       </p>
       <p>
         <button onClick="return opslaan()" style="float:right">Opslaan</button>
