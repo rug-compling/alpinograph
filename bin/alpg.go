@@ -85,6 +85,10 @@ var (
 	muCancel  sync.Mutex
 
 	wg sync.WaitGroup
+
+	macroRE  = regexp.MustCompile(`([a-zA-Z][_a-zA-Z0-9]*)\s*=\s*"""((?s:.*?))"""`)
+	macroKY  = regexp.MustCompile(`%[a-zA-Z][_a-zA-Z0-9]*%`)
+	macroCOM = regexp.MustCompile(`(?m:^\s*#.*)`)
 )
 
 func main() {
@@ -160,6 +164,14 @@ window.parent._fn.done();
 
 	output(fmt.Sprintf("window.parent._fn.cp(%q);", corpus))
 
+	macros := parseMacros(req.FormValue("mactxt"))
+	query := macroKY.ReplaceAllStringFunc(req.FormValue("query"), func(s string) string {
+		if s, ok := macros[s[1:len(s)-1]]; ok {
+			return s
+		}
+		return "MACRO_UNDEFINED"
+	})
+
 	go func() {
 		chSignal := make(chan os.Signal, 1)
 		signal.Notify(chSignal, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
@@ -172,7 +184,7 @@ window.parent._fn.done();
 
 	start := time.Now()
 
-	err = run(corpus, req.FormValue("query"), start)
+	err = run(corpus, query, start)
 	if err != nil {
 		errout(err)
 		return
@@ -1005,4 +1017,35 @@ func numFormat(i int) string {
 		s1 = s1[0 : n-3]
 	}
 	return s1 + s2
+}
+
+func parseMacros(txt string) map[string]string {
+
+	macros := make(map[string]string)
+
+	for _, set := range macroRE.FindAllStringSubmatch(macroCOM.ReplaceAllLiteralString(txt, ""), -1) {
+		s := strings.Replace(set[2], "\r\n", "\n", -1)
+		s = strings.Replace(s, "\n\r", "\n", -1)
+		s = strings.Replace(s, "\r", "\n", -1)
+		macros[set[1]] = s
+	}
+
+	for key := range macros {
+		for {
+			rule := macroKY.ReplaceAllStringFunc(macros[key], func(s string) string {
+				return macros[s[1:len(s)-1]]
+			})
+			if rule == macros[key] {
+				break
+			}
+			if len(rule) > 100000 {
+				macros[key] = "RECURSIONLIMIT"
+				break
+			}
+			macros[key] = rule
+		}
+	}
+
+	return macros
+
 }

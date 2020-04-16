@@ -92,6 +92,48 @@
       setHistButtons();
     }
 
+    function macOpen() {
+      $('#macros').removeClass('hide');
+      return false;
+    }
+
+    function macClose() {
+      $('#macros').addClass('hide');
+      return false;
+    }
+
+    function macSave() {
+      try {
+        localStorage.setItem(
+          'alpinograph_macros',
+          document.forms['alpgform'].elements['mactxt'].value
+        );
+      } catch (err) { }
+      disableSave();
+      return false;
+    }
+
+    function macLoad() {
+      try {
+        var storageContent = localStorage.getItem('alpinograph_macros');
+        if (storageContent !== undefined) {
+          macrotxt = storageContent || "kleur = \"\"\" 'rood','groen','blauw' \"\"\"\n";
+        }
+      } catch (err) { }
+      $('#mactxt').text(macrotxt);
+      $('#mactxt').val(macrotxt);
+    }
+
+    function enableSave() {
+      $('#macrosave').removeAttr('disabled');
+      $('#macrosave').addClass('bold');
+    }
+
+    function disableSave() {
+      $('#macrosave').attr("disabled", "disabled");
+      $('#macrosave').removeClass('bold');
+    }
+
     window._fn = {
       reset: function () {
         $('#error').text('').addClass('hide');
@@ -314,6 +356,8 @@
     $(document).ready(function () {
       restore();
       getHistory();
+      macLoad();
+      $('#mactxt').on('keypress', enableSave);
     });
   </script>
 </head>
@@ -333,6 +377,14 @@
   <div id="main">
     <form id="alpgform" action="bin/alpg" method="post" accept-charset="utf-8"
       enctype="application/x-www-form-urlencoded" target="cframe" onsubmit="return store()">
+      <div id="macros" class="hide">
+        Dictionary in JSON-formaat:<br>
+        <textarea rows="20" name="mactxt" id="mactxt"></textarea>
+        <p>
+          <button onClick="return macSave()" id="macrosave" disabled>Opslaan</button>
+          <button onClick="return macClose()">Sluiten</button>
+        </p>
+      </div>
       <p>
         Corpus:
         <select name="corpus">
@@ -345,6 +397,7 @@
         </select>
       </p>
       <p>
+        <button onClick="return macOpen()" style="float:right">Macro's</button>
         <input type="button" disabled value="&lt;" id="butBack" onClick="move(1)"><input type="button" disabled
           value="&gt;" id="butForward" onClick="move(-1)">
         Query:<br>

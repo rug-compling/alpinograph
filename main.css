@@ -143,29 +143,21 @@ h1 {
   font-family: monospace;
 }
 
-#outputTable table,
-#outputWoorden table,
-#outputLemmas table {
-    margin-top: .5em;
+#outputTable table, #outputWoorden table, #outputLemmas table {
+  margin-top: .5em;
 }
 
-#outputTable table, #outputTable th, #outputTable td,
-#outputWoorden table, #outputWoorden th, #outputWoorden td,
-#outputLemmas table, #outputLemmas th, #outputLemmas td {
+#outputTable table, #outputTable th, #outputTable td, #outputWoorden table, #outputWoorden th, #outputWoorden td, #outputLemmas table, #outputLemmas th, #outputLemmas td {
   border: 1px solid #c0c0c0;
   border-collapse: collapse;
 }
 
-#outputTable th, #outputTable td,
-#outputWoorden th, #outputWoorden td,
-#outputLemmas th, #outputLemmas td {
+#outputTable th, #outputTable td, #outputWoorden th, #outputWoorden td, #outputLemmas th, #outputLemmas td {
   padding: .4em 1em;
   vertical-align: top;
 }
 
-#outputTable tr > td:first-child,
-#outputWoorden tr > td:first-child,
-#outputLemmas tr > td:first-child {
+#outputTable tr > td:first-child, #outputWoorden tr > td:first-child, #outputLemmas tr > td:first-child {
   text-align: right;
 }
 
@@ -243,15 +235,15 @@ div.inner {
 td.string {
   background-color: #a0ffa0;
 }
-td.bool,
-td.float64 {
-    text-align: right;
+
+td.bool, td.float64 {
+  text-align: right;
 }
 
-#clip {
-  -webkit-box-shadow: 11px 10px 12px -6px rgba(0,0,0,0.5);
-  -moz-box-shadow: 11px 10px 12px -6px rgba(0,0,0,0.5);
-  box-shadow: 11px 10px 12px -6px rgba(0,0,0,0.5);
+#clip, #macros {
+  -webkit-box-shadow: 11px 10px 12px -6px rgba(0, 0, 0, 0.5);
+  -moz-box-shadow: 11px 10px 12px -6px rgba(0, 0, 0, 0.5);
+  box-shadow: 11px 10px 12px -6px rgba(0, 0, 0, 0.5);
   z-index: 10;
   position: fixed;
   left: 10%;
@@ -264,4 +256,9 @@ td.float64 {
 
 #txtOpslaan {
   width: 100%;
+}
+
+.bold {
+  font-weight: bold;
+  border: 4px solid #FF6600;
 }
