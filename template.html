@@ -299,11 +299,11 @@
       $('#outputTable').text('').addClass('hide');
       */
       var el = document.forms['alpgform'];
-      el.elements['query'].value = qs[tag];
+      el.elements['query1'].value = qs[tag];
       el.scrollIntoView();
     }
     function formclear() {
-      document.forms['alpgform'].elements['query'].value = '';
+      document.forms['alpgform'].elements['query1'].value = '';
     }
 
     function showZin() {
@@ -390,9 +390,9 @@
     function opslaan() {
       var el = document.forms['alpgform'];
       var c = el.elements['corpus'].value;
-      var q = el.elements['query'].value;
+      var q1 = el.elements['query1'].value;
       var h = document.location + "#" +
-        encodeURIComponent(q).replace(/\(/g, '%28').replace(/\)/g, '%29') +
+        encodeURIComponent(q1).replace(/\(/g, '%28').replace(/\)/g, '%29') +
         ',' + c;
       var copyText = document.getElementById('txtOpslaan');
       copyText.value = h;
@@ -412,7 +412,7 @@
       restore();
       getHistory();
       macLoad();
-      $('#mactxt').on('keypress', enableSave);
+      $('#mactxt').on('input propertychange', enableSave);
     });
   </script>
 </head>
@@ -433,7 +433,6 @@
     <form id="alpgform" action="bin/alpg" method="post" accept-charset="utf-8"
       enctype="application/x-www-form-urlencoded" target="cframe" onsubmit="return store()">
       <div id="macros" class="hide">
-        Dictionary in JSON-formaat:<br>
         <textarea rows="20" name="mactxt" id="mactxt"></textarea>
         <div id="macerr"></div>
         <p>
