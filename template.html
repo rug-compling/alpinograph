@@ -127,6 +127,8 @@
       parseMacros();
       $('#mactxt').text(macrotxt);
       $('#mactxt').val(macrotxt);
+      disableSave();
+      return false;
     }
 
     function parseMacros() {
@@ -169,11 +171,13 @@
 
     function enableSave() {
       $('#macrosave').removeAttr('disabled');
+      $('#macroundo').removeAttr('disabled');
       $('#macrosave').addClass('bold');
     }
 
     function disableSave() {
       $('#macrosave').attr("disabled", "disabled");
+      $('#macroundo').attr("disabled", "disabled");
       $('#macrosave').removeClass('bold');
     }
 
@@ -438,6 +442,7 @@
         <div id="macerr"></div>
         <p>
           <button onClick="return macSave()" id="macrosave" disabled>Opslaan</button>
+          <button onClick="return macLoad()" id="macroundo" disabled>Herstellen</button>
           <button onClick="return macClose()">Sluiten</button>
         </p>
       </div>
