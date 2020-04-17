@@ -1,0 +1,114 @@
+# Macro's voor AlpinoGraph
+#
+# voorbeeld, XPath:
+#
+#     //node[@cat="pp" and @rel="mod"]
+#       //node[%looksA%]
+#       /../node[%looksN% or %clothing%]
+#
+# in AlpinoGraph:
+#
+#     match (adj:word{pos: 'adj'})<-[:rel]-(n)-[:rel]->(noun:word{pos: 'noun'})
+#     match (n)<-[:rel*]-(pp:node{cat: 'pp'})<-[:rel{rel:'mod'}]-()
+#     where noun.root in [%looksN%, %clothing%]
+#       and adj.root in [%looksA%]
+#     return adj, noun
+#
+# gebaseerd op: Word lists for extraction of physical descriptions
+#
+# reference: Corina Koolen, Andreas van Cranenburgh (2017).
+# Blue eyes and porcelain cheeks: Computational extraction of physical
+# descriptions from Dutch chick lit and literary novels.
+# Digital Scholarship in the Humanities.
+#
+# bron: https://gist.github.com/andreasvc/e3e93f9596c871c0949fee04cb557250
+
+uiterlijkN = """
+'aangezicht','aanschijn','aanzicht','aanzien','achterste','achtersteven','achterwerk','arm','arm_DIM','baard','baard_DIM',
+'bakkes','balg','been','been_DIM','beenweefsel','beharing','bek','bek_DIM','bibs','bil','bips','borst','borst_DIM','bot',
+'buik','buik_DIM','coiffure','coupe','embonpoint','facie','fieselefacie','fieselemie','frisuur','fysiognomie','fysionomie',
+'gehoororgaan','gelaat','gezicht','gezichtje','haar','haardos','haardracht','haarkrul','haarstijl','haar_DIM','heup','hol',
+'hoofdhaar','huid','huid_DIM','jukbeen','kaak','kaakbeen','kaakbeent_DIM','kaak_DIM','kaaklijn','kaaksbeen','kakebeen',
+'kakement','kap','kap_DIM','kapsel','kijkers','kin','kinnebak','kin_DIM','knie','knie_DIM','knook','kont','kont_DIM',
+'korst_DIM','krul','krul_DIM','kuif','kuif_DIM','kuil_DIM','lichaam','lichaam_DIM','lijf','lijf_DIM','lip','lip_DIM',
+'lokken','maag','mem','memmen','moel','mond','mond_DIM','muil','neus','neus_DIM','neusstuk','oog','ooghaar','oog_DIM',
+'oogwimper','oor','oor_DIM','pens','pinkhaar','ponem','poot','porem','pram','pruik','reukorgaan','rimpel','rimpeltje',
+'schraal','schoonheidsvlek_DIM','smoel','smoelwerk','snoet','snor','snorbaard','snorrebaard','snorrenbaard','snorretje',
+'snotkoker','snufferd','stelt','taille','tand','tand_DIM','tiet','tiet_DIM','toet','toet_DIM','trekken','tronen','tronie',
+'uiterlijk','uitloop','vel','voorhoofd','voorhoofd_DIM','vrouwenborst','wallen','wangbeen','wenkbrauw','wenkbrauw_DIM',
+'wimper','wimper_DIM','zitvlak','streep_DIM','gelaatskleur','huidskleur','huidvlek','huidkleur','kleur','kleurtje','lens',
+'matheid','onderdeur','pastelkleur','pasteltint','pigment','schakering','teint','wirwar'
+"""
+
+uiterlijkA = """
+'aangenaam','aantrekkelijk','aanzienlijk','aardig','adult','afgeleefd','afgemat','afgepeigerd','antiek','antraciet',
+'aquamarijn','asachtig','asgrauw','azuren','azuur','bedekt','behoorlijk','beige','bekoorlijk','benig','berlijns-blauw',
+'best','bevallig','blank','blauw','bleek','blind','bloedkoralen','blond','blozend','bont','bontgekleurd',
+'bordeaux','breedgebouwd','briljant','bronskleurig','bronzen','broodmager','bruin','buikig','caleidoscopisch','chamois',
+'charmant','chromaatgeel','chromaatgroen','cinnaber','compact','corpulent','crème','degelijk','diamanten','diep','dik','dof',
+'dol','donker','donkerbruin','doodsbleek','dun','ecru','effen','eigentijds','fel','fijn','fiks','fit','flets','fleurig',
+'flink','flinkgebouwd','fluorescent','fluorescerend','fors','forsgebouwd','fris','fuchsia','fuchsine','gedateerd','geel',
+'geelbruin','geheel','gekleurd','gematteerd','gepareld','gespierd','getaand','gezet','gezwollen','glansloos','goud',
+'goudbruin','gouden','goudkleurig','grasgroen','grauw','grauwbruin','grijs','grijsbruin','grijsgroen','grijsharig',
+'grijswit','groen','groenbruin','groengeel','grofgebouwd','groot','gulden','hard','hardblauw','heel','heerlijk','heet',
+'hel','helblauw','helder','hemelsblauw','heterogeen','honinggeel','hoog','hups','ijzeren','ijzersterk','indigo',
+'inkt','ivoor','jong','kaal','kaalhoofdig','karmijn','karmozijn','kastanjebruin','kastanjekleurig','keihard',
+'klassiek','klein','kleurig','knalblauw','knap','knokig','kobalt','koperachtig','koperen','koperkleurig','koraalrood',
+'koralen','kort','koud','krachtig','krijtwit','lam','lang','lazuren','lazuur','lekker','lelijk','leuk','licht',
+'lichtblond','lichtbruin','lichtgebouwd','lichtgekleurd','lieftallig','lijkbleek','lijkkleur','lijkwit','lijvig','lomp',
+'luchtig','luimig','mager','mat','matig','mauve','modern','monochroom','mooi','muisgrijs','net','neutraal','nieuw',
+'nieuwerwets','oker','olijfachtig','olijfgroen','omvangrijk','onaanzienlijk','ondoorzichtig','onesthetisch','ongebleekt',
+'onooglijk','onzacht','onzuiver','oranje','oranjerood','oud','oudbakken','ouderwets','paarlen','paars','parelen','parelgrijs',
+'parelvormig','pastel','perzik','pips','plezant','plomp','poederachtig','polychroom','potig','prettig','psychedelisch',
+'puik','purper','purperblauw','reebruin','reseda','robuust','roestbruin','roestig','roestkleurig','romig','rood','roodbruin',
+'roodharig','roodwangig','roomkleurig','roomwit','rosharig','rossig','roze','rozenrood','rozerood','rozig','ruig','ruw',
+'saffier','saffierblauw','saffieren','saffraangeel','scharlaken','schel','schilderachtig','schimmelkleurig','schoon' ,'sepia',
+'slank','slap','smaragd','spichtig','sportief','sprekend','sprietig','staalhard','steenhard','steenkolenzwart',
+'steenkoolzwart','steil','stemmig','sterk','stevig','stijf','strak','strogeel','taankleurig','tache de beauté','teer',
+'tekenachtig','tenger','tint','topaas','turkoois','turquoise','ultramarijn','vaal','vaalbruin','vaalgeel','vaalgrijs',
+'vaalwit','valig','veelkleurig','verdord','vermiljoen','verouderd','verschoten','verzorgd','vet','vierkant',
+'vijftigjarig','violet','vlasblond','vlek','vlinderachtig','vlot','vol','volumineus','volwassen','vormloos','vuilwit',
+'warm','wasachtig','wasbleek','waterachtig','waterig','wild','wit','woest','wuft','zacht','zeegroen','zilverachtig',
+'zilveren','zilverkleurig','zilverwit','zwaar','zwaargebouwd','zwaargeschapen','zwaarlijvig','zwart'
+"""
+
+persoon = """
+'boy','broger','chick','dame','dienares','dienstbode','dienstmeid','dienstmeisje','ding','echtgenoot','echtgenote',
+'eega','figuur','gade','gemaal','gemalin','goof','gozer','griet','heer','joch','jong','jongedame','jongejuffrouw',
+'jongen','jongetje','juf','juffrouw','kerel','kind','knaap','knul','koter','maagd','man','manlief','mannetje','mannie',
+'manspersoon','meid','meisje','meiske','meneer','mens','mevrouw','mijnheer','mop','moppie','niese','persoon','pief',
+'pik','tante','troel','vent','vrouw','Vrouwe','wijf','zoon','zoonlief'
+"""
+
+kleding = """
+'sjaal','tas','billentikker','bloes','bloesje','blouse','espadrilles','frak' ,
+'halskraag','hemd','hemd_DIM','hoed','hoed_DIM','hoofddeksel','hoofddeksel_DIM','jacquet','japon','jas','jasje','jurk',
+'jurk_DIM','kledij','kleding','kleren','kraag','kraag_DIM','laars','laars_DIM','lijf_DIM','manchet','mouw','mouw_DIM',
+'onderhemd','overhemd','overjas','pandjesjas','pijpen','rok','rokjas','rok_DIM','schoen','schoen_DIM','schuimkraag','slipjas',
+'sok','sok_DIM','trui','trui_DIM','vest','vest_DIM','ketting','ketting_DIM','parelketting','parelsnoer','oorbel','shawl',
+'sjaal_DIM','tas_DIM'
+"""
+
+statiefWW = """
+'heb','zijn','lijk','draag' 
+"""
+
+statiefWWsense = """
+'heb-aan','er-zie_uit'
+"""
+
+kijkers = """
+'kijk','zie'
+"""
+
+looksN = """ %uiterlijkN% """
+
+looksA = """ %uiterlijkA% """
+
+person = """ %persoon% """
+
+clothing = """ %kleding% """
+
+stativeVERB = """ %statiefWW% """
+
+stativeVERBsense = """ %statiefWWsense% """
