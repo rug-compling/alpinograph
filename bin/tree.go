@@ -340,16 +340,20 @@ func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.B
 
 	var buf bytes.Buffer
 
-	fmt.Fprint(&buf, `strict graph gr {
+	ranksep := ".25"
+	if compact {
+		ranksep = ".4"
+	}
+	fmt.Fprintf(&buf, `strict graph gr {
 
     // ranksep=".25 equally"
-    ranksep=".4"
+    ranksep="%s"
     nodesep=.05
     // ordering=out
 
     node [shape=box, height=0, width=0, style=filled, fontsize=12, color="#ffc0c0", fontname="Helvetica"];
 
-`)
+`, ranksep)
 
 	for _, node := range nodes {
 		if node.Label == "node" {
