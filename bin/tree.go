@@ -119,6 +119,7 @@ func main() {
 	if !ok {
 		return
 	}
+	divsvg1 := `<div class="fig">` + svg + `</div>`
 
 	var divsvg2 string
 	if idlist != "" {
@@ -127,18 +128,17 @@ func main() {
 			return
 		}
 
-		// divsvg2 = "<pre>\n" + graph.String() + "\n</pre>"
-
 		cmd = exec.Command("dot", "-Tsvg")
 		cmd.Stdin = graph
 		b, err = cmd.CombinedOutput()
 		if x(err) {
 			return
 		}
-		divsvg2, ok = postProcess(string(b))
+		svg, ok := postProcess(string(b))
 		if !ok {
 			return
 		}
+		divsvg2 = `<div class="fig">` + svg + `</div>`
 	}
 
 	uddiv, ok := makeUD(sid, idlist, edgelist, conlluErr)
@@ -167,12 +167,12 @@ func main() {
 corpus: %s<br>
 sentence-ID: %s%s
 %s
-<div class="fig">%s</div>
-<div class="fig">%s</div>
-<div class="fig">%s</div>
+%s
+%s
+%s
 </body>
 </html>
-`, zin, zin, c, sid, parser, meta, svg, divsvg2, uddiv)
+`, zin, zin, c, sid, parser, meta, divsvg1, divsvg2, uddiv)
 
 }
 
@@ -635,11 +635,12 @@ func makeGraph(corpus, sid, idlist, edgelist string) (graph *bytes.Buffer, ok bo
 
 func makeUD(sid, idlist, edgelist, conlluErr string) (div string, ok bool) {
 	if conlluErr != "" {
-		return fmt.Sprintf(`<div class="err">
+		return fmt.Sprintf(`<div style="margin-top: 2em">
 Er ging iets mis met de afleiding van Universal Dependencies:
 <pre>
 %s
 </pre>
+</div>
 `, html.EscapeString(conlluErr)), true
 	}
 
@@ -653,7 +654,7 @@ Er ging iets mis met de afleiding van Universal Dependencies:
 		return "", false
 	}
 
-	return svg, true
+	return `<div class="fig">` + svg + `</div>`, true
 
 }
 
