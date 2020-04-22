@@ -1,0 +1,3 @@
+[submodule "docs"]
+	path = docs
+	url = https://git.webhosting.rug.nl/p209327/alpinograph-docs
