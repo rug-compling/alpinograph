@@ -26,6 +26,7 @@ import (
 )
 
 const (
+	MAXSENT  = 40
 	MAXROWS  = 400
 	MAXWORDS = 20000
 )
@@ -84,6 +85,10 @@ var (
 	hasCancel = false
 	muCancel  sync.Mutex
 
+	donePaging = false
+	pagesize   = int(MAXROWS)
+	muPaging   sync.Mutex
+
 	wg sync.WaitGroup
 )
 
@@ -129,7 +134,6 @@ function mw(s) {
 function ml(s) {
   window.parent._fn.setlemmasmsg(s);
 }
-window.parent._fn.reset();
 </script>
 `
 
@@ -158,7 +162,11 @@ window.parent._fn.done();
 		return
 	}
 
-	output(fmt.Sprintf("window.parent._fn.cp(%q);", corpus))
+	paging := req.FormValue("paging") != ""
+	page := 0
+	if paging {
+		page, _ = strconv.Atoi(req.FormValue("page"))
+	}
 
 	go func() {
 		chSignal := make(chan os.Signal, 1)
@@ -172,7 +180,7 @@ window.parent._fn.done();
 
 	start := time.Now()
 
-	err = run(corpus, req.FormValue("query"), start)
+	err = run(corpus, req.FormValue("query"), paging, page, start)
 	if err != nil {
 		errout(err)
 		return
@@ -181,7 +189,7 @@ window.parent._fn.done();
 	since(start)
 }
 
-func run(corpus, query string, start time.Time) error {
+func run(corpus, query string, paging bool, page int, start time.Time) error {
 
 	safequery, err := safeQuery(query)
 	if err != nil {
@@ -199,7 +207,7 @@ func run(corpus, query string, start time.Time) error {
 	chErr := make(chan error)
 
 	go func() {
-		doQuery(corpus, safequery, chHeader, chLine, chErr)
+		doQuery(corpus, safequery, paging, page, chHeader, chLine, chErr)
 		// log("doQuery done")
 	}()
 
@@ -235,7 +243,9 @@ LOOP2:
 			break LOOP2
 		case <-ticker:
 			since(start)
-			doTables(false)
+			if !paging {
+				doTables(false)
+			}
 		case err := <-chErr:
 			return err
 		case line, ok := <-chLine:
@@ -249,7 +259,9 @@ LOOP2:
 			output("r(" + string(b) + ");")
 		}
 	}
-	doTables(true)
+	if !paging {
+		doTables(true)
+	}
 	return nil
 }
 
@@ -278,7 +290,7 @@ func safeString(s string) string {
 	return strings.Replace(strings.Replace(s, "'", "", -1), `\`, "", -1)
 }
 
-func doQuery(corpus, safequery string, chHeader chan []*Header, chLine chan *Line, chErr chan error) {
+func doQuery(corpus, safequery string, paging bool, page int, chHeader chan []*Header, chLine chan *Line, chErr chan error) {
 	var chRow chan []interface{}
 	chHeaderOpen := true
 	chRowOpen := false
@@ -315,7 +327,7 @@ func doQuery(corpus, safequery string, chHeader chan []*Header, chLine chan *Lin
 	chRowOpen = true
 
 	go func() {
-		doResults(corpus, headers, chRow, chLine, chErr)
+		doResults(corpus, paging, page, headers, chRow, chLine, chErr)
 		// log("doResults done")
 	}()
 
@@ -338,6 +350,7 @@ func doQuery(corpus, safequery string, chHeader chan []*Header, chLine chan *Lin
 		chRow <- scans
 		count++
 		if count == MAXROWS {
+			doPaging(page, true)
 			muWords.Lock()
 			n := len(wordCount)
 			dub := dubbelen
@@ -362,12 +375,13 @@ func doQuery(corpus, safequery string, chHeader chan []*Header, chLine chan *Lin
 			}
 		}
 	}
+	doPaging(page, false)
 	if err := rows.Err(); err != nil {
 		chErr <- wrap(err)
 	}
 }
 
-func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine chan *Line, chErr chan error) {
+func doResults(corpus string, paging bool, page int, header []*Header, chRow chan []interface{}, chLine chan *Line, chErr chan error) {
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -541,6 +555,15 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 				}
 				continue
 			}
+			if count == 1 {
+				muPaging.Lock()
+				pagesize = MAXSENT
+				muPaging.Unlock()
+			}
+
+			if count == MAXSENT+1 {
+				doPaging(page, true)
+			}
 
 			ints := make([]int, 0, len(idmap))
 			for key := range idmap {
@@ -657,7 +680,7 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 				muWords.Unlock()
 			}
 
-			if count > MAXROWS {
+			if count > MAXSENT {
 				continue
 			}
 
@@ -1005,4 +1028,14 @@ func numFormat(i int) string {
 		s1 = s1[0 : n-3]
 	}
 	return s1 + s2
+}
+
+func doPaging(page int, more bool) {
+	muPaging.Lock()
+	defer muPaging.Unlock()
+	if donePaging {
+		return
+	}
+	donePaging = true
+	output(fmt.Sprintf("window.parent._fn.setPaging(%d, %d, %v);", page, pagesize, more))
 }

@@ -22,6 +22,9 @@
     var histp = -1;
     var macrotxt = '';
     var macrodct = {};
+    var paging = false;
+    var page = 0;
+    var offset = 0;
 
     function putHistory() {
       try {
@@ -182,24 +185,15 @@
     }
 
     window._fn = {
-      reset: function () {
-        $('#error').text('').addClass('hide');
-        $('#time').text('');
-        $('#butZin').addClass('hide');
-        $('#butWoord').addClass('hide');
-        $('#butLemma').addClass('hide');
-        $('#butTab').addClass('hide');
-        $('#outputZinnen').text('').addClass('hide');
-        $('#outputWoorden').text('').addClass('hide');
-        $('#outputLemmas').text('').addClass('hide');
-        $('#outputTable').text('').addClass('hide');
-        $('#runner').removeClass('hide');
-        $('#wait').removeClass('hide');
-        started = false;
-        haserror = false;
-      },
-      cp: function (name) {
-        corpus = name;
+      setPaging: function (page, pagesize, more) {
+        if (page == 0 && !more) {
+          // geen pagina's
+        } else {
+          //pagina's
+        }
+        console.log(page);
+        console.log(pagesize);
+        console.log(more);
       },
       header: function (h) {
         head = h;
@@ -352,8 +346,23 @@
       $('#outputTable').removeClass('hide');
     }
     function store() {
+      $('#error').text('').addClass('hide');
+      $('#time').text('');
+      $('#butZin').addClass('hide');
+      $('#butWoord').addClass('hide');
+      $('#butLemma').addClass('hide');
+      $('#butTab').addClass('hide');
+      $('#outputZinnen').text('').addClass('hide');
+      $('#outputWoorden').text('').addClass('hide');
+      $('#outputLemmas').text('').addClass('hide');
+      $('#outputTable').text('').addClass('hide');
+      $('#runner').removeClass('hide');
+      $('#wait').removeClass('hide');
+      started = false;
+      haserror = false;
+
       var el = document.forms['alpgform'];
-      var c = el.elements['corpus'].value;
+      corpus = el.elements['corpus'].value;
       var q1 = el.elements['query1'].value;
       var err = false;
       $('#error').text('');
@@ -476,19 +485,31 @@
       <span id="wait"><img src="images/busy.gif" alt="busy"></span>
       <span id="time"></span><img src="images/leeg.png" alt="">
     </div>
+    <button class="hide" id="butTab" onClick="showTab()">tabel</button>
     <button class="hide" id="butZin" onClick="showZin()">zinnen</button>
     <button class="hide" id="butWoord" onClick="showWoord()">woorden</button>
     <button class="hide" id="butLemma" onClick="showLemma()">lemma's</button>
-    <button class="hide" id="butTab" onClick="showTab()">tabel</button>
     <div id="outputZinnen" class="hide"></div>
     <div id="outputWoorden" class="hide"></div>
     <div id="outputLemmas" class="hide"></div>
     <div id="outputTable" class="hide"></div>
+    <div id="pages" class="">
+      <form id="alpgform2" action="bin/alpg" method="post" accept-charset="utf-8"
+        enctype="application/x-www-form-urlencoded" target="cframe2" onsubmit="return page()">
+        <input type="hidden" name="corpus" id="corpus2">
+        <input type="hidden" name="query" id="query2">
+        <input type="hidden" name="page" id="page2">
+        <input type="hidden" name="paging" value="true" id="paging2">
+        <input type="submit" value="Vorige" onClick="return terug()">
+        <input type="submit" value="Volgende" onClick="return vooruit()">
+      </form>
+    </div>
   </div>
   <div id="foot">
     <a href="docs/" target="_blank">help</a>
   </div>
   <iframe src="leeg.html" id="cframe" name="cframe" class="hide"></iframe>
+  <iframe src="leeg.html" id="cframe2" name="cframe2" class="hide"></iframe>
   <div id="clip" class="hide">
     <p>
       <input type="text" id="txtOpslaan">
