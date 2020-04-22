@@ -361,6 +361,10 @@ func doQuery(corpus, safequery string, chHeader chan []*Header, chLine chan *Lin
 			return
 		}
 		chRow <- scans
+		if paging && count-offset > pagesize {
+			doPaging(true)
+			break
+		}
 		if count-offset == MAXROWS {
 			doPaging(true)
 			muWords.Lock()
@@ -869,11 +873,11 @@ func doTables(final bool) {
 		fmt.Fprintf(&buf, "cl%s();\n", s)
 		for j, item := range items {
 			total += item.i
-			vars = j
+			vars = j + 1
 			if j <= MAXROWS {
 				fmt.Fprintf(&buf, "w%s(%q, %q);\n", s, numFormat(item.i), item.s)
 				subTotal += item.i
-				subVars = j
+				subVars = j + 1
 			}
 		}
 

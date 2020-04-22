@@ -10,6 +10,9 @@
   <link rel="icon" href="../favicon.ico" type="image/ico">
   <script type="text/javascript" src="../jquery.js"></script>
   <script type="text/javascript">
+
+    // TODO: spaghetticode ontwarren
+
     var qs = {};
     PART1;
     var corpus = '';
@@ -282,13 +285,11 @@
       },
       time: function (t, p) {
         if (p == paging) {
-          console.log("time:", t, p, paging);
           $('#time').text(t);
         }
       },
       done: function (p) {
         if (p == paging) {
-          console.log("done:", p, paging);
           $('#wait').addClass('hide');
           if (!started && !haserror) {
             $('#outputZinnen').removeClass('hide').text('Niets gevonden');
