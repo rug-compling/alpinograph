@@ -1,0 +1,8 @@
+#!/bin/sh
+
+echo Content-type: text/plain
+echo
+
+cd /net/homepages/kleiweg/www/alpinograph/docs 2>&1
+git pull 2>&1
+make 2>&1
