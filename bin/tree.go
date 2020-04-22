@@ -192,7 +192,7 @@ func makeMeta(corpus, sid string) (meta string, ok bool) {
 		}
 		lines = append(lines,
 			fmt.Sprintf(
-				"[%s] %s: %s",
+				"<span class=\"var\">%s</span> %s: %s",
 				html.EscapeString(unescape(tp)),
 				html.EscapeString(unescape(name)),
 				html.EscapeString(unescape(val))))

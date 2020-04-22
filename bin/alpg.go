@@ -1,5 +1,14 @@
 package main
 
+/*
+
+TODO:
+
+Bij vervolgpagina met zinnen: stoppen zodra aantal zinnen is gevonden (of 1 meer?)
+
+
+*/
+
 import (
 	ag "github.com/bitnine-oss/agensgraph-golang"
 	_ "github.com/lib/pq"
@@ -26,8 +35,7 @@ import (
 )
 
 const (
-	// MAXSENT  = 40 // TODO
-	MAXSENT  = 400 // TODO
+	MAXSENT  = 40
 	MAXROWS  = 400
 	MAXWORDS = 20000
 )
@@ -87,7 +95,9 @@ var (
 	muCancel  sync.Mutex
 
 	donePaging = false
+	offset     = 0
 	pagesize   = int(MAXROWS)
+	paging     = false
 	muPaging   sync.Mutex
 
 	wg sync.WaitGroup
@@ -137,20 +147,6 @@ function ml(s) {
 }
 </script>
 `
-
-	defer func() {
-		chOut <- `
-<script type="text/javascript"><!--
-window.parent._fn.done();
-</script>
-</html>
-`
-		close(chOut)
-		doQuit()
-		wg.Wait()
-		// fmt.Println("<script type=\"text/javascript\">\nconsole.log(\"main done\");\n</script>")
-	}()
-
 	req, err := cgi.Request()
 	if err != nil {
 		errout(err)
@@ -163,11 +159,23 @@ window.parent._fn.done();
 		return
 	}
 
-	paging := req.FormValue("paging") != ""
-	page := 0
+	paging = req.FormValue("paging") != ""
 	if paging {
-		page, _ = strconv.Atoi(req.FormValue("page"))
+		offset, _ = strconv.Atoi(req.FormValue("offset"))
 	}
+
+	defer func() {
+		chOut <- fmt.Sprintf(`
+<script type="text/javascript"><!--
+window.parent._fn.done(%v);
+</script>
+</html>
+`, paging)
+		close(chOut)
+		doQuit()
+		wg.Wait()
+		// fmt.Println("<script type=\"text/javascript\">\nconsole.log(\"main done\");\n</script>")
+	}()
 
 	go func() {
 		chSignal := make(chan os.Signal, 1)
@@ -181,7 +189,7 @@ window.parent._fn.done();
 
 	start := time.Now()
 
-	err = run(corpus, req.FormValue("query"), paging, page, start)
+	err = run(corpus, req.FormValue("query"), start)
 	if err != nil {
 		errout(err)
 		return
@@ -190,7 +198,7 @@ window.parent._fn.done();
 	since(start)
 }
 
-func run(corpus, query string, paging bool, page int, start time.Time) error {
+func run(corpus, query string, start time.Time) error {
 
 	safequery, err := safeQuery(query)
 	if err != nil {
@@ -208,7 +216,7 @@ func run(corpus, query string, paging bool, page int, start time.Time) error {
 	chErr := make(chan error)
 
 	go func() {
-		doQuery(corpus, safequery, paging, page, chHeader, chLine, chErr)
+		doQuery(corpus, safequery, chHeader, chLine, chErr)
 		// log("doQuery done")
 	}()
 
@@ -291,7 +299,7 @@ func safeString(s string) string {
 	return strings.Replace(strings.Replace(s, "'", "", -1), `\`, "", -1)
 }
 
-func doQuery(corpus, safequery string, paging bool, page int, chHeader chan []*Header, chLine chan *Line, chErr chan error) {
+func doQuery(corpus, safequery string, chHeader chan []*Header, chLine chan *Line, chErr chan error) {
 	var chRow chan []interface{}
 	chHeaderOpen := true
 	chRowOpen := false
@@ -328,7 +336,7 @@ func doQuery(corpus, safequery string, paging bool, page int, chHeader chan []*H
 	chRowOpen = true
 
 	go func() {
-		doResults(corpus, paging, page, headers, chRow, chLine, chErr)
+		doResults(corpus, headers, chRow, chLine, chErr)
 		// log("doResults done")
 	}()
 
@@ -338,6 +346,10 @@ func doQuery(corpus, safequery string, paging bool, page int, chHeader chan []*H
 		case <-chQuit:
 			break
 		default:
+		}
+		count++
+		if count <= offset {
+			continue
 		}
 		scans := make([]interface{}, len(ctypes))
 		for i := range ctypes {
@@ -349,9 +361,8 @@ func doQuery(corpus, safequery string, paging bool, page int, chHeader chan []*H
 			return
 		}
 		chRow <- scans
-		count++
-		if count == MAXROWS {
-			doPaging(page, true)
+		if count-offset == MAXROWS {
+			doPaging(true)
 			muWords.Lock()
 			n := len(wordCount)
 			dub := dubbelen
@@ -367,7 +378,7 @@ func doQuery(corpus, safequery string, paging bool, page int, chHeader chan []*H
 				break
 			}
 		}
-		if count > MAXROWS {
+		if count-offset > MAXROWS {
 			muWords.Lock()
 			stop := tooManyWords
 			muWords.Unlock()
@@ -376,13 +387,13 @@ func doQuery(corpus, safequery string, paging bool, page int, chHeader chan []*H
 			}
 		}
 	}
-	doPaging(page, false)
+	doPaging(false)
 	if err := rows.Err(); err != nil {
 		chErr <- wrap(err)
 	}
 }
 
-func doResults(corpus string, paging bool, page int, header []*Header, chRow chan []interface{}, chLine chan *Line, chErr chan error) {
+func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine chan *Line, chErr chan error) {
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -563,7 +574,7 @@ func doResults(corpus string, paging bool, page int, header []*Header, chRow cha
 			}
 
 			if count == MAXSENT+1 {
-				doPaging(page, true)
+				doPaging(true)
 			}
 
 			ints := make([]int, 0, len(idmap))
@@ -631,7 +642,7 @@ func doResults(corpus string, paging bool, page int, header []*Header, chRow cha
 				}
 			}
 			hasIDs := len(endmap) > 0
-			if hasIDs && count == 1 {
+			if hasIDs && count == 1 && !paging {
 				output("window.parent._fn.wordstart();\n")
 			}
 
@@ -960,7 +971,7 @@ func since(start time.Time) {
 	} else {
 		s = fmt.Sprintf("%d:%02d:%02d", dur/time.Hour, (dur%time.Hour)/time.Minute, (dur%time.Minute)/time.Second)
 	}
-	output(fmt.Sprintf("window.parent._fn.time('Tijd: %s');", s))
+	output(fmt.Sprintf("window.parent._fn.time('Tijd: %s', %v);", s, paging))
 }
 
 func openDB(corpus string) error {
@@ -1031,12 +1042,12 @@ func numFormat(i int) string {
 	return s1 + s2
 }
 
-func doPaging(page int, more bool) {
+func doPaging(more bool) {
 	muPaging.Lock()
 	defer muPaging.Unlock()
 	if donePaging {
 		return
 	}
 	donePaging = true
-	output(fmt.Sprintf("window.parent._fn.setPaging(%d, %d, %v);", page, pagesize, more))
+	output(fmt.Sprintf("window.parent._fn.setPaging(%d, %d, %v);", offset-pagesize, offset+pagesize, more))
 }

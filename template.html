@@ -23,8 +23,11 @@
     var macrotxt = '';
     var macrodct = {};
     var paging = false;
-    var page = 0;
-    var offset = 0;
+    var thisOffset = 0;
+    var prevOffset = 0;
+    var nextOffset = 0;
+    var currentTab = 2;
+    var showPaging = false;
 
     function putHistory() {
       try {
@@ -184,16 +187,41 @@
       $('#macrosave').removeClass('bold');
     }
 
+    function doPage(r) {
+      $('#error').text('').addClass('hide');
+      $('#time').text('');
+      // $('#outputZinnen').text('');
+      // $('#outputTable').text('');
+      $('#runner').removeClass('hide');
+      $('#wait').removeClass('hide');
+      started = false;
+      haserror = false;
+      paging = true;
+
+      if (r < 0) {
+        thisOffset = prevOffset;
+      } else {
+        thisOffset = nextOffset;
+      }
+      var f = document.forms['alpgform2'];
+      f.elements['offset'].value = thisOffset;
+      f.submit();
+      return false;
+    }
+
     window._fn = {
-      setPaging: function (page, pagesize, more) {
-        if (page == 0 && !more) {
-          // geen pagina's
+      setPaging: function (vorige, volgende, more) {
+        if (vorige < 0 && !more) {
+          $('#pages').addClass('hide');
+          showPaging = false;
         } else {
-          //pagina's
+          $('#pages').removeClass('hide');
+          $('#butPrev').prop('disabled', vorige < 0);
+          $('#butNext').prop('disabled', !more);
+          prevOffset = vorige;
+          nextOffset = volgende;
+          showPaging = true;
         }
-        console.log(page);
-        console.log(pagesize);
-        console.log(more);
       },
       header: function (h) {
         head = h;
@@ -207,11 +235,13 @@
       row: function (r) {
         if (!started) {
           started = true;
-          lineno = 0;
+          lineno = thisOffset;
           if (r.sentence) {
             hassentence = true;
-            $('#butZin').removeClass('hide').prop('disabled', true);
-            $('#butTab').removeClass('hide').prop('disabled', false);
+            if (currentTab < 1) {
+              $('#butZin').removeClass('hide').prop('disabled', true);
+              $('#butTab').removeClass('hide').prop('disabled', false);
+            }
           } else {
             hassentence = false;
           }
@@ -223,9 +253,14 @@
           }
           $('#tab').append(tr);
           if (hassentence) {
-            $('#outputZinnen').removeClass('hide').html('<ol id="lst"></ol>');
-          } else {
-            $('#outputTable').removeClass('hide');
+            $('#outputZinnen').html('<ol id="lst"></ol>');
+          }
+          if (currentTab < 1) {
+            if (hassentence) {
+              $('#outputZinnen').removeClass('hide');
+            } else {
+              $('#outputTable').removeClass('hide');
+            }
           }
         }
         var tr = $('<tr></tr>');
@@ -237,7 +272,7 @@
         $('#tab').append(tr);
         if (hassentence) {
           var a = $('<a href="bin/tree?' + r.args + '" target="_blank"></a>').html(r.sentence);
-          $('#lst').append($('<li></li>').append(a));
+          $('#lst').append($('<li value="' + lineno + '"></li>').append(a));
         }
       },
       error: function (e) {
@@ -245,13 +280,19 @@
         $('#time').text('');
         haserror = true;
       },
-      time: function (t) {
-        $('#time').text(t);
+      time: function (t, p) {
+        if (p == paging) {
+          console.log("time:", t, p, paging);
+          $('#time').text(t);
+        }
       },
-      done: function () {
-        $('#wait').addClass('hide');
-        if (!started && !haserror) {
-          $('#outputZinnen').removeClass('hide').text('Niets gevonden');
+      done: function (p) {
+        if (p == paging) {
+          console.log("done:", p, paging);
+          $('#wait').addClass('hide');
+          if (!started && !haserror) {
+            $('#outputZinnen').removeClass('hide').text('Niets gevonden');
+          }
         }
       },
       toomany: function () {
@@ -306,6 +347,7 @@
     }
 
     function showZin() {
+      currentTab = 2;
       $('#butZin').prop('disabled', true);
       $('#butWoord').prop('disabled', false);
       $('#butLemma').prop('disabled', false);
@@ -314,8 +356,12 @@
       $('#outputWoorden').addClass('hide');
       $('#outputLemmas').addClass('hide');
       $('#outputTable').addClass('hide');
+      if (showPaging) {
+        $('#pages').removeClass('hide');
+      }
     }
     function showWoord() {
+      currentTab = 2;
       $('#butZin').prop('disabled', false);
       $('#butWoord').prop('disabled', true);
       $('#butLemma').prop('disabled', false);
@@ -324,8 +370,10 @@
       $('#outputWoorden').removeClass('hide');
       $('#outputLemmas').addClass('hide');
       $('#outputTable').addClass('hide');
+      $('#pages').addClass('hide');
     }
     function showLemma() {
+      currentTab = 3;
       $('#butZin').prop('disabled', false);
       $('#butWoord').prop('disabled', false);
       $('#butLemma').prop('disabled', true);
@@ -334,8 +382,10 @@
       $('#outputWoorden').addClass('hide');
       $('#outputLemmas').removeClass('hide');
       $('#outputTable').addClass('hide');
+      $('#pages').addClass('hide');
     }
     function showTab() {
+      currentTab = 1;
       $('#butZin').prop('disabled', false);
       $('#butWoord').prop('disabled', false);
       $('#butLemma').prop('disabled', false);
@@ -344,6 +394,9 @@
       $('#outputWoorden').addClass('hide');
       $('#outputLemmas').addClass('hide');
       $('#outputTable').removeClass('hide');
+      if (showPaging) {
+        $('#pages').removeClass('hide');
+      }
     }
     function store() {
       $('#error').text('').addClass('hide');
@@ -358,8 +411,13 @@
       $('#outputTable').text('').addClass('hide');
       $('#runner').removeClass('hide');
       $('#wait').removeClass('hide');
+      $('#pages').addClass('hide');
+      currentTab = 0;
+      thisOffset = 0;
       started = false;
       haserror = false;
+      paging = false;
+      showPaging = false;
 
       var el = document.forms['alpgform'];
       corpus = el.elements['corpus'].value;
@@ -383,6 +441,9 @@
       if (h != '') {
         location.hash = '';
       }
+      var els = document.forms['alpgform2'].elements;
+      els['corpus'].value = corpus;
+      els['query'].value = q;
       return true;
     }
     function restore() {
@@ -495,13 +556,13 @@
     <div id="outputTable" class="hide"></div>
     <div id="pages" class="hide">
       <form id="alpgform2" action="bin/alpg" method="post" accept-charset="utf-8"
-        enctype="application/x-www-form-urlencoded" target="cframe2" onsubmit="return page()">
+        enctype="application/x-www-form-urlencoded" target="cframe2">
         <input type="hidden" name="corpus" id="corpus2">
         <input type="hidden" name="query" id="query2">
-        <input type="hidden" name="page" id="page2">
+        <input type="hidden" name="offset" id="offset2">
         <input type="hidden" name="paging" value="true" id="paging2">
-        <input type="submit" value="Vorige" onClick="return terug()">
-        <input type="submit" value="Volgende" onClick="return vooruit()">
+        <input type="submit" id="butPrev" value="Vorige" onClick="return doPage(-1)">
+        <input type="submit" id="butNext" value="Volgende" onClick="return doPage(1)">
       </form>
     </div>
   </div>

@@ -262,3 +262,7 @@ td.bool, td.float64 {
   font-weight: bold;
   border: 4px solid #FF6600;
 }
+
+#pages {
+  margin-top: 1em;
+}
