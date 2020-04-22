@@ -6,7 +6,9 @@
         "bin/alpg": true,
         "bin/corpora.go": true,
         "bin/mkCorpora": true,
-        "bin/tree": true
+        "bin/tree": true,
+        "docs/*.html": true,
+        "docs/md2html": true
     },
     "editor.tabSize": 8
 }
