@@ -1,14 +1,5 @@
 package main
 
-/*
-
-TODO:
-
-Bij vervolgpagina met zinnen: stoppen zodra aantal zinnen is gevonden (of 1 meer?)
-
-
-*/
-
 import (
 	ag "github.com/bitnine-oss/agensgraph-golang"
 	_ "github.com/lib/pq"
