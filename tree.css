@@ -53,3 +53,8 @@ g.edge:hover > polygon {
 g.edge:hover > text {
   font-weight: bold;
 }
+
+.var {
+  color: grey;
+  padding-right: 1em;
+}
