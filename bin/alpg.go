@@ -26,7 +26,8 @@ import (
 )
 
 const (
-	MAXSENT  = 40
+	// MAXSENT  = 40 // TODO
+	MAXSENT  = 400 // TODO
 	MAXROWS  = 400
 	MAXWORDS = 20000
 )
