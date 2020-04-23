@@ -285,6 +285,8 @@
       error: function (e) {
         $('#error').text(e).removeClass('hide');
         $('#time').text('');
+        $('#runner').addClass('hide');
+        $('#wait').addClass('hide');
         haserror = true;
       },
       time: function (t, p) {
