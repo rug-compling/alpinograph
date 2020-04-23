@@ -266,7 +266,7 @@ LOOP2:
 
 func safeQuery(query string) (string, error) {
 
-	// TODO: is dit nog nodig?
+	// TODO: is dit nog nodig? JA!
 	// https://github.com/bitnine-oss/agensgraph/issues/496
 	query = strings.Replace(query, ":'", ": '", -1)
 
