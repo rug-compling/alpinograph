@@ -31,6 +31,7 @@
     var nextOffset = 0;
     var currentTab = 2;
     var showPaging = false;
+    var finished = false;
 
     function putHistory() {
       try {
@@ -200,6 +201,7 @@
       started = false;
       haserror = false;
       paging = true;
+      finished = false;
 
       if (r < 0) {
         thisOffset = prevOffset;
@@ -214,6 +216,8 @@
 
     window._fn = {
       setPaging: function (vorige, volgende, more) {
+        finished = true;
+        $('#wait').addClass('hide');
         if (vorige < 0 && !more) {
           $('#pages').addClass('hide');
           showPaging = false;
@@ -284,13 +288,12 @@
         haserror = true;
       },
       time: function (t, p) {
-        if (p == paging) {
+        if (p == paging && !finished) {
           $('#time').text(t);
         }
       },
       done: function (p) {
         if (p == paging) {
-          $('#wait').addClass('hide');
           if (!started && !haserror) {
             $('#outputZinnen').removeClass('hide').text('Niets gevonden');
           }
@@ -419,6 +422,7 @@
       haserror = false;
       paging = false;
       showPaging = false;
+      finished = false;
 
       var el = document.forms['alpgform'];
       corpus = el.elements['corpus'].value;
@@ -454,7 +458,7 @@
       }
       var a = h.split(',');
       var el = document.forms['alpgform'];
-      el.elements['query'].value = decodeURIComponent(a[0]);
+      el.elements['query1'].value = decodeURIComponent(a[0]);
       if (a[1]) {
         el.elements['corpus'].value = a[1];
       }

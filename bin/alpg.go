@@ -91,7 +91,8 @@ var (
 	paging     = false
 	muPaging   sync.Mutex
 
-	wg sync.WaitGroup
+	wg    sync.WaitGroup
+	start time.Time
 )
 
 func main() {
@@ -178,15 +179,13 @@ window.parent._fn.done(%v);
 		}
 	}()
 
-	start := time.Now()
+	start = time.Now()
 
 	err = run(corpus, req.FormValue("query"), start)
 	if err != nil {
 		errout(err)
 		return
 	}
-
-	since(start)
 }
 
 func run(corpus, query string, start time.Time) error {
@@ -1044,5 +1043,6 @@ func doPaging(more bool) {
 		return
 	}
 	donePaging = true
+	since(start)
 	output(fmt.Sprintf("window.parent._fn.setPaging(%d, %d, %v);", offset-pagesize, offset+pagesize, more))
 }
