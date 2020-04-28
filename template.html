@@ -21,7 +21,6 @@
 
     var started = false;
     var haserror = false;
-    var tableHeaders = [];
     var hassentence = false;
     var lineno = 0;
     var hist = [];
@@ -53,7 +52,13 @@
         }
       },
       header: function (h) {
-        tableHeaders = h;
+        $('#outputTable').html('<table id="tab"></table>');
+        var tr = $('<tr></tr>');
+        tr.append($('<th></th>'));
+        for (var i = 0; i < h.length; i++) {
+          tr.append($('<th></th>').text(h[i].name));
+        }
+        $('#tab').append(tr);
       },
       wordstart: function () {
         $('#butWoord').removeClass('hide').prop('disabled', false);
@@ -74,13 +79,6 @@
           } else {
             hassentence = false;
           }
-          $('#outputTable').html('<table id="tab"></table>');
-          var tr = $('<tr></tr>');
-          tr.append($('<th></th>'));
-          for (var i = 0; i < tableHeaders.length; i++) {
-            tr.append($('<th></th>').text(tableHeaders[i].name));
-          }
-          $('#tab').append(tr);
           if (hassentence) {
             $('#outputZinnen').html('<ol id="lst"></ol>');
           }
@@ -437,7 +435,7 @@
       var el = document.forms['form1'];
       var c = el.elements['corpus'].value;
       var q1 = el.elements['oquery'].value;
-      var h = '' + document.location;
+      var h = document.location.toString();
       if (!h.match(/#$/)) {
         h = h + '#';
       }
@@ -544,8 +542,8 @@
   </div>
 
   <div id="main">
-    <form id="form1" action="bin/alpg" method="post" accept-charset="utf-8"
-      enctype="application/x-www-form-urlencoded" target="cframe1" onsubmit="return onSubmit1()">
+    <form id="form1" action="bin/alpg" method="post" accept-charset="utf-8" enctype="application/x-www-form-urlencoded"
+      target="cframe1" onsubmit="return onSubmit1()">
       <div id="macros" class="hide">
         <textarea rows="20" name="mactxt" id="mactxt"></textarea>
         <div id="macerr"></div>
