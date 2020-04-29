@@ -121,26 +121,32 @@
           }
         }
       },
-      toomany: function () {
-        $('#outputWoorden').html('<p>Te veel varianten</p>');
-        $('#outputLemmas').html('<p>Te veel varianten</p>');
-      },
       clearwords: function () {
-        $('#wtab').html('<table id="tabw"><tr><th>aantal</th><th>woorden</th></tr></table>');
+        $('#wtab').html('<table id="tabw"><tr><th></th><th>aantal</th><th>woorden</th></tr></table>');
       },
       clearlemmas: function () {
-        $('#ltab').html("<table id=\"tabl\"><tr><th>aantal</th><th>lemma's</th></tr></table>");
+        $('#ltab').html("<table id=\"tabl\"><tr><th></th><th>aantal</th><th>lemma's</th></tr></table>");
       },
-      setwords: function (i, s) {
+      setwords: function (i, n, s) {
         var tr = $('<tr></tr>');
-        tr.append($('<td></td>').html(i));
+        tr.append($('<td></td>').html(i+'.'));
+        tr.append($('<td></td>').html(n));
         tr.append($('<td></td>').text(s));
         $('#tabw').append(tr);
       },
-      setlemmas: function (i, s) {
+      setlemmas: function (i, n, s) {
         var tr = $('<tr></tr>');
-        tr.append($('<td></td>').html(i));
+        tr.append($('<td></td>').html(i+'.'));
+        tr.append($('<td></td>').html(n));
         tr.append($('<td></td>').text(s));
+        $('#tabl').append(tr);
+      },
+      skipwords: function () {
+        var tr = $('<tr class="skip"><td colspan="3">...</td></tr>');
+        $('#tabw').append(tr);
+      },
+      skiplemmas: function () {
+        var tr = $('<tr class="skip"><td colspan="3">...</td></tr>');
         $('#tabl').append(tr);
       },
       setwordsmsg: function (s) {

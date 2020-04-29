@@ -157,8 +157,17 @@ h1 {
   vertical-align: top;
 }
 
-#outputTable tr > td:first-child, #outputWoorden tr > td:first-child, #outputLemmas tr > td:first-child {
-  text-align: right;
+#outputTable tr > td:first-child,
+#outputWoorden tr > td:first-child, #outputLemmas tr > td:first-child,
+#outputWoorden tr > td:nth-child(2), #outputLemmas tr > td:nth-child(2) {
+    text-align: right;
+}
+
+#outputWoorden tr.skip td,
+#outputLemmas tr.skip td {
+  text-align: center;
+  background-color: #e0e0e0;
+  padding: 1em 0px;
 }
 
 #outputTable table.inner tr > td:first-child {

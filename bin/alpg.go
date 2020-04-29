@@ -73,11 +73,9 @@ var (
 	chQuitOpen = true
 	muQuit     sync.Mutex
 
-	tooMany      = false
 	tooManyWords = false
 	wordCount    = make(map[string]int)
 	lemmaCount   = make(map[string]int)
-	dubbelen     = 0
 	muWords      sync.Mutex
 
 	ctx       context.Context
@@ -125,11 +123,17 @@ function clw() {
 function cll() {
   window.parent._fn.clearlemmas();
 }
-function ww(i, s) {
-  window.parent._fn.setwords(i, s);
+function ww(i, n, s) {
+  window.parent._fn.setwords(i, n, s);
 }
-function wl(i, s) {
-  window.parent._fn.setlemmas(i, s);
+function wl(i, n, s) {
+  window.parent._fn.setlemmas(i, n, s);
+}
+function sw(i, n, s) {
+  window.parent._fn.skipwords();
+}
+function sl(i, n, s) {
+  window.parent._fn.skiplemmas();
 }
 function mw(s) {
   window.parent._fn.setwordsmsg(s);
@@ -359,15 +363,8 @@ func doQuery(corpus, safequery string, chHeader chan []*Header, chLine chan *Lin
 			doPaging(true)
 			muWords.Lock()
 			n := len(wordCount)
-			dub := dubbelen
 			muWords.Unlock()
-			if n == 0 || n > (MAXROWS-dub)*3/4 {
-				if n > 0 {
-					muWords.Lock()
-					tooMany = true
-					muWords.Unlock()
-					output("window.parent._fn.toomany();")
-				}
+			if n == 0 {
 				// rows.Close() // dit hangt
 				break
 			}
@@ -680,8 +677,6 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 					ll := strings.Join(lemmas, " ")
 					wordCount[ww] = wordCount[ww] + 1
 					lemmaCount[ll] = lemmaCount[ll] + 1
-				} else {
-					dubbelen++
 				}
 				muWords.Unlock()
 			}
@@ -818,13 +813,6 @@ func formatProperties(ii map[string]interface{}) string {
 
 func doTables(final bool) {
 
-	muWords.Lock()
-	tm := tooMany
-	muWords.Unlock()
-	if tm {
-		return
-	}
-
 	for i := 0; i < 2; i++ {
 		var count map[string]int
 		var total, subTotal, vars, subVars int
@@ -861,13 +849,21 @@ func doTables(final bool) {
 		}
 		var buf bytes.Buffer
 		fmt.Fprintf(&buf, "cl%s();\n", s)
+		lim1 := len(items)
+		lim2 := 0
+		if lim1 > MAXROWS {
+			lim2 = lim1 - MAXROWS/2
+			lim1 = MAXROWS / 2
+		}
 		for j, item := range items {
 			total += item.i
-			vars = j + 1
-			if j <= MAXROWS {
-				fmt.Fprintf(&buf, "w%s(%q, %q);\n", s, numFormat(item.i), item.s)
+			vars++
+			if j == lim1 {
+				fmt.Fprintf(&buf, "s%s();\n", s)
+			} else if j < lim1 || j >= lim2 {
+				fmt.Fprintf(&buf, "w%s(%d, %q, %q);\n", s, j+1, numFormat(item.i), item.s)
 				subTotal += item.i
-				subVars = j + 1
+				subVars++
 			}
 		}
 
