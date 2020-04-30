@@ -202,7 +202,7 @@ func doRows(rq Request) {
 		case "json":
 			doJSON(row)
 		case "text":
-			doText(row)
+			doText(row, rq.Mark)
 		default:
 			doCSV(row)
 		}
@@ -221,32 +221,36 @@ func qc(corpus, query string) string {
 }
 
 func doXML(row []interface{}) {
-	// TODO
 	fmt.Println("<row>\n<cols>")
 	for _, v := range row {
 		val := *(v.(*[]byte))
 		fmt.Println("<col>" + html.EscapeString(string(val)) + "</col>")
 	}
-	fmt.Println("</cols>\n</row>")
+	fmt.Println("</cols>")
+
+	// TODO
+
+	fmt.Println("</row>")
 
 }
 
 func doJSON(row []interface{}) {
-	// TODO
+	fmt.Print("{\"cols\": [")
 	for i, v := range row {
 		if i > 0 {
 			fmt.Print(",")
 		}
 		val := *(v.(*[]byte))
-		sval := `"` + strings.Replace(string(val), `"`, `""`, -1) + `"`
-		if n := len(sval); n >= 6 && strings.HasPrefix(sval, `"""`) && strings.HasSuffix(sval, `"""`) {
-			sval = sval[2 : n-2]
-		}
-		fmt.Print(sval)
+		fmt.Printf("%q", string(val))
 	}
+	fmt.Print("]")
+
+	// TODO
+
+	fmt.Print("}")
 }
 
-func doText(row []interface{}) {
+func doText(row []interface{}, mark string) {
 	// TODO
 }
 
