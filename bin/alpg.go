@@ -603,6 +603,7 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 
 			tokens := strings.Fields(line.Sentence)
 			endmap := make(map[int][2]string)
+			// TODO: dit kan in 1 keer, zie api.go
 			for id := range idmap {
 				rows, err := db.QueryContext(
 					ctx,

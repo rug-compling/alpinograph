@@ -1,22 +1,21 @@
 package main
 
 import (
-	//ag "github.com/bitnine-oss/agensgraph-golang"
+	ag "github.com/bitnine-oss/agensgraph-golang"
 	_ "github.com/lib/pq"
-
-	//"github.com/kr/pretty"
 
 	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
-	"html"
 	"io/ioutil"
 	"net/http/cgi"
 	"os"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -25,18 +24,30 @@ type MyReadCloser struct {
 }
 
 type Request struct {
-	Corpus string `json:"corpus"`
-	Query  string `json:"query"`
-	Want   string `json:"want"` // csv -> tabel, text -> id + zin, json, xml
-	Mark   string `json:"mark"` // woordmarkering voor want=text: none, ansi, text
+	Corpus   string `json:"corpus"`
+	Query    string `json:"query"`
+	Want     string `json:"want"` // tsv -> tabel, text -> id + zin, json, xml
+	Mark     string `json:"mark"` // woordmarkering voor want=text: none, ansi, text
+	wantMark bool
+}
+
+type RowT struct {
+	XMLName  xml.Name `json:"-"                   xml:"row"`
+	Cols     []string `json:"values"              xml:"values>v"`
+	Sentence string   `json:"sentence,omitempty"  xml:"sentence,omitempty"`
+	SentID   string   `json:"sentid,omitempty"    xml:"sentid,omitempty"`
+	Marks    []int    `json:"marks,omitempty      xml:"marks>m,omitempty"`
 }
 
 var (
+	reQuote   = regexp.MustCompile(`\\.`)
 	reComment = regexp.MustCompile(`(?s:/\*.*?\*/)|--.*`)
 	db        *sql.DB
 	ctx       context.Context
 	cancel    context.CancelFunc
 	hasCancel = false
+
+	headers []string
 
 	chRow  = make(chan []interface{})
 	chErr  = make(chan error)
@@ -149,6 +160,10 @@ func doQuery(rq Request) {
 	}
 
 	ctypes, _ := rows.ColumnTypes()
+	headers = make([]string, len(ctypes))
+	for i, ct := range ctypes {
+		headers[i] = ct.Name()
+	}
 
 	for rows.Next() {
 		select {
@@ -177,12 +192,16 @@ func doRows(rq Request) {
 	switch rq.Want {
 	case "xml":
 		fmt.Printf("Content-type: text/xml; charset=utf-8\n\n<?xml version=\"1.0\"?>\n<rows>\n")
+		rq.wantMark = true
 	case "json":
-		fmt.Printf("Content-type: text/plain; charset=utf-8\n\n[\n")
+		fmt.Printf("Content-type: text/plain; charset=utf-8\n\n{\n  \"rows\": [\n")
+		rq.wantMark = true
 	case "text":
 		fmt.Printf("Content-type: text/plain; charset=utf-8\n\n")
+		rq.wantMark = rq.Mark == "text" || rq.Mark == "ansi"
+
 	default:
-		fmt.Printf("Content-type: text/csv; charset=utf-8\n\n")
+		fmt.Printf("Content-type: text/tab-separated-values; charset=utf-8\n\n")
 	}
 
 	started := false
@@ -198,13 +217,13 @@ func doRows(rq Request) {
 
 		switch rq.Want {
 		case "xml":
-			doXML(row)
+			doXML(row, rq)
 		case "json":
-			doJSON(row)
+			doJSON(row, rq)
 		case "text":
-			doText(row, rq.Mark)
+			doText(row, rq)
 		default:
-			doCSV(row)
+			doTSV(row, rq)
 		}
 	}
 
@@ -212,7 +231,7 @@ func doRows(rq Request) {
 	case "xml":
 		fmt.Printf("</rows>\n")
 	case "json":
-		fmt.Printf("\n]\n")
+		fmt.Printf("\n  ]\n}\n")
 	}
 }
 
@@ -220,53 +239,180 @@ func qc(corpus, query string) string {
 	return fmt.Sprintf("set graph_path='%s';\n%s", corpus, query)
 }
 
-func doXML(row []interface{}) {
-	fmt.Println("<row>\n<cols>")
-	for _, v := range row {
-		val := *(v.(*[]byte))
-		fmt.Println("<col>" + html.EscapeString(string(val)) + "</col>")
+func doXML(row []interface{}, rq Request) {
+	r := doRow(row, rq)
+	b, err := xml.MarshalIndent(r, "  ", "  ")
+	if err != nil {
+		chErr <- wrap(err)
+		return
 	}
-	fmt.Println("</cols>")
-
-	// TODO
-
-	fmt.Println("</row>")
+	fmt.Println(string(b))
 
 }
 
-func doJSON(row []interface{}) {
-	fmt.Print("{\"cols\": [")
+func doJSON(row []interface{}, rq Request) {
+	r := doRow(row, rq)
+	b, err := json.MarshalIndent(r, "    ", "  ")
+	if err != nil {
+		chErr <- wrap(err)
+		return
+	}
+	fmt.Print("    " + string(b))
+}
+
+func doText(row []interface{}, rq Request) {
+	r := doRow(row, rq)
+	if rq.wantMark {
+		p1 := "[[ "
+		p2 := " ]]"
+		if rq.Mark == "ansi" {
+			p1 = "\x1B[7m"
+			p2 = "\x1B[0m"
+		}
+		words := strings.Fields(r.Sentence)
+		n := len(words)
+		if p := r.Marks[0]; p > 0 && p <= n {
+			words[p-1] = p1 + words[p-1]
+		}
+		if p := r.Marks[len(r.Marks)-1]; p > 0 && p <= n {
+			words[p-1] = words[p-1] + p2
+		}
+		for i, p := range r.Marks[:len(r.Marks)-1] {
+			if p >= 0 && p < n {
+				if p+1 != r.Marks[i+1] {
+					words[p-1] = words[p-1] + p2
+				}
+			}
+		}
+		for i, p := range r.Marks[1:len(r.Marks)] {
+			if p-1 != r.Marks[i] {
+				words[p-1] = p1 + words[p-1]
+			}
+		}
+		r.Sentence = strings.Join(words, " ")
+	}
+	fmt.Printf("%s\t%s\n", r.SentID, r.Sentence)
+}
+
+func doTSV(row []interface{}, rq Request) {
 	for i, v := range row {
 		if i > 0 {
-			fmt.Print(",")
+			fmt.Print("\t")
 		}
 		val := *(v.(*[]byte))
-		fmt.Printf("%q", string(val))
-	}
-	fmt.Print("]")
-
-	// TODO
-
-	fmt.Print("}")
-}
-
-func doText(row []interface{}, mark string) {
-	// TODO
-}
-
-func doCSV(row []interface{}) {
-	for i, v := range row {
-		if i > 0 {
-			fmt.Print(",")
-		}
-		val := *(v.(*[]byte))
-		sval := `"` + strings.Replace(string(val), `"`, `""`, -1) + `"`
-		if n := len(sval); n >= 6 && strings.HasPrefix(sval, `"""`) && strings.HasSuffix(sval, `"""`) {
-			sval = sval[2 : n-2]
-		}
-		fmt.Print(sval)
+		fmt.Print(string(val))
 	}
 	fmt.Println()
+}
+
+func doRow(row []interface{}, rq Request) *RowT {
+	rt := RowT{
+		Cols: make([]string, len(row)),
+	}
+
+	ids := make(map[int]bool)
+
+	for i, v := range row {
+		val := *(v.(*[]byte))
+		sval := string(val)
+		rt.Cols[i] = sval
+		if headers[i] == `sentid` {
+			rt.SentID = unescape(sval)
+		} else if headers[i] == `id` {
+			n, err := strconv.Atoi(unescape(sval))
+			if err == nil {
+				ids[n] = true
+			}
+		}
+		isPath := false
+		if strings.HasPrefix(sval, "[sentence") ||
+			strings.HasPrefix(sval, "[node") ||
+			strings.HasPrefix(sval, "[word") ||
+			strings.HasPrefix(sval, "[meta") ||
+			strings.HasPrefix(sval, "[doc") {
+			var p ag.BasicPath
+			if p.Scan(val) == nil {
+				isPath = true
+				for _, v := range p.Vertices {
+					if sid, ok := v.Properties["sentid"]; ok {
+						rt.SentID = fmt.Sprint(sid)
+					}
+					if id, ok := v.Properties["id"]; ok {
+						if iid, err := strconv.Atoi(fmt.Sprint(id)); err == nil {
+							ids[iid] = true
+						}
+					}
+				}
+			}
+		}
+		if !isPath {
+			var v ag.BasicVertex
+			if v.Scan(val) == nil {
+				if sid, ok := v.Properties["sentid"]; ok {
+					rt.SentID = fmt.Sprint(sid)
+				}
+				if id, ok := v.Properties["id"]; ok {
+					if iid, err := strconv.Atoi(fmt.Sprint(id)); err == nil {
+						ids[iid] = true
+					}
+				}
+			}
+		}
+	}
+
+	if rt.SentID == "" {
+		return &rt
+	}
+
+	rows, err := db.QueryContext(ctx, qc(rq.Corpus, "match (s:sentence{sentid: '"+safeString(rt.SentID)+"'}) return s.tokens"))
+	if err != nil {
+		chErr <- wrap(err)
+		return &rt
+	}
+	for rows.Next() {
+		var s string
+		err := rows.Scan(&s)
+		if err != nil {
+			chErr <- wrap(err)
+			return &rt
+		}
+		rt.Sentence = unescape(s)
+	}
+
+	if !rq.wantMark || len(ids) == 0 {
+		return &rt
+	}
+
+	rt.Marks = make([]int, 0)
+
+	idlist := make([]string, 0, len(ids))
+	for key := range ids {
+		idlist = append(idlist, fmt.Sprint(key))
+	}
+
+	rows, err = db.QueryContext(
+		ctx,
+		qc(rq.Corpus, fmt.Sprintf(
+			"match (n:nw{sentid: '%s'})-[:rel*0..]->(w:word{sentid: '%s'}) where n.id in [%s] return distinct w.end as p order by p",
+			rt.SentID, rt.SentID, strings.Join(idlist, ","))))
+	if err != nil {
+		chErr <- wrap(err)
+		return &rt
+	}
+	for rows.Next() {
+		var end int
+		err := rows.Scan(&end)
+		if err != nil {
+			chErr <- wrap(err)
+			return &rt
+		}
+		rt.Marks = append(rt.Marks, end)
+	}
+	if err := rows.Err(); err != nil {
+		chErr <- wrap(err)
+	}
+
+	return &rt
 }
 
 func openDB() error {
@@ -297,6 +443,33 @@ func openDB() error {
 	hasCancel = true
 
 	return nil
+}
+
+func safeString(s string) string {
+	return strings.Replace(strings.Replace(s, "'", "", -1), `\`, "", -1)
+}
+
+func unescape(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	if s[0] != '"' || s[len(s)-1] != '"' {
+		return s
+	}
+
+	s = s[1 : len(s)-1]
+	return reQuote.ReplaceAllStringFunc(s, func(s1 string) string {
+		if s1 == `\n` {
+			return "\n"
+		}
+		if s1 == `\r` {
+			return "\r"
+		}
+		if s1 == `\t` {
+			return "\t"
+		}
+		return s1[1:]
+	})
 }
 
 func wrap(err error) error {
