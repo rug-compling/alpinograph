@@ -5,7 +5,6 @@ import (
 	_ "github.com/lib/pq"
 
 	"bytes"
-	"context"
 	"database/sql"
 	"encoding/json"
 	"encoding/xml"
@@ -19,6 +18,10 @@ import (
 	"strings"
 )
 
+const (
+	LIMIT = 100000
+)
+
 type MyReadCloser struct {
 	r *bytes.Buffer
 }
@@ -28,6 +31,7 @@ type Request struct {
 	Query    string `json:"query"`
 	Want     string `json:"want"` // tsv -> tabel, text -> id + zin, json, xml
 	Mark     string `json:"mark"` // woordmarkering voor want=text: none, ansi, text
+	Limit    int    `json:"limit"`
 	wantMark bool
 }
 
@@ -36,16 +40,13 @@ type RowT struct {
 	Cols     []string `json:"values"              xml:"values>v"`
 	Sentence string   `json:"sentence,omitempty"  xml:"sentence,omitempty"`
 	SentID   string   `json:"sentid,omitempty"    xml:"sentid,omitempty"`
-	Marks    []int    `json:"marks,omitempty      xml:"marks>m,omitempty"`
+	Marks    []int    `json:"marks,omitempty"     xml:"marks>m,omitempty"`
 }
 
 var (
 	reQuote   = regexp.MustCompile(`\\.`)
 	reComment = regexp.MustCompile(`(?s:/\*.*?\*/)|--.*`)
 	db        *sql.DB
-	ctx       context.Context
-	cancel    context.CancelFunc
-	hasCancel = false
 
 	headers []string
 
@@ -88,6 +89,11 @@ func main() {
 	} else {
 		rq.Corpus = req.FormValue("corpus")
 		rq.Query = req.FormValue("query")
+		rq.Limit, _ = strconv.Atoi(req.FormValue("limit"))
+	}
+
+	if rq.Limit < 1 || rq.Limit > LIMIT {
+		rq.Limit = LIMIT
 	}
 
 	rq.Corpus = strings.TrimSpace(strings.Replace(rq.Corpus, "'", "", -1))
@@ -153,7 +159,7 @@ func doQuery(rq Request) {
 		close(chRow)
 	}()
 
-	rows, err := db.QueryContext(ctx, qc(rq.Corpus, rq.Query))
+	rows, err := db.Query(qc(rq.Corpus, rq.Query))
 	if err != nil {
 		chErr <- wrap(err)
 		return
@@ -165,6 +171,7 @@ func doQuery(rq Request) {
 		headers[i] = ct.Name()
 	}
 
+	count := 0
 	for rows.Next() {
 		select {
 		case <-chQuit:
@@ -181,6 +188,10 @@ func doQuery(rq Request) {
 			return
 		}
 		chRow <- scans
+		count++
+		if count == rq.Limit {
+			break
+		}
 	}
 }
 
@@ -191,23 +202,23 @@ func doRows(rq Request) {
 
 	switch rq.Want {
 	case "xml":
-		fmt.Printf("Content-type: text/xml; charset=utf-8\n\n<?xml version=\"1.0\"?>\n<rows>\n")
+		Printf("Content-type: text/xml; charset=utf-8\n\n<?xml version=\"1.0\"?>\n<rows>\n")
 		rq.wantMark = true
 	case "json":
-		fmt.Printf("Content-type: text/plain; charset=utf-8\n\n{\n  \"rows\": [\n")
+		Printf("Content-type: text/plain; charset=utf-8\n\n{\n  \"rows\": [\n")
 		rq.wantMark = true
 	case "text":
-		fmt.Printf("Content-type: text/plain; charset=utf-8\n\n")
+		Printf("Content-type: text/plain; charset=utf-8\n\n")
 		rq.wantMark = rq.Mark == "text" || rq.Mark == "ansi"
 
 	default:
-		fmt.Printf("Content-type: text/tab-separated-values; charset=utf-8\n\n")
+		Printf("Content-type: text/tab-separated-values; charset=utf-8\n\n")
 	}
 
 	started := false
 	sep := ""
 	for row := range chRow {
-		fmt.Print(sep)
+		Print(sep)
 		if !started {
 			started = true
 			if rq.Want == "json" {
@@ -229,9 +240,9 @@ func doRows(rq Request) {
 
 	switch rq.Want {
 	case "xml":
-		fmt.Printf("</rows>\n")
+		Printf("</rows>\n")
 	case "json":
-		fmt.Printf("\n  ]\n}\n")
+		Printf("\n  ]\n}\n")
 	}
 }
 
@@ -246,8 +257,7 @@ func doXML(row []interface{}, rq Request) {
 		chErr <- wrap(err)
 		return
 	}
-	fmt.Println(string(b))
-
+	Println(strings.Replace(string(b), "    <marks></marks>\n", "", 1))
 }
 
 func doJSON(row []interface{}, rq Request) {
@@ -257,7 +267,7 @@ func doJSON(row []interface{}, rq Request) {
 		chErr <- wrap(err)
 		return
 	}
-	fmt.Print("    " + string(b))
+	Print("    " + string(b))
 }
 
 func doText(row []interface{}, rq Request) {
@@ -291,18 +301,18 @@ func doText(row []interface{}, rq Request) {
 		}
 		r.Sentence = strings.Join(words, " ")
 	}
-	fmt.Printf("%s\t%s\n", r.SentID, r.Sentence)
+	Printf("%s\t%s\n", r.SentID, r.Sentence)
 }
 
 func doTSV(row []interface{}, rq Request) {
 	for i, v := range row {
 		if i > 0 {
-			fmt.Print("\t")
+			Print("\t")
 		}
 		val := *(v.(*[]byte))
-		fmt.Print(string(val))
+		Print(string(val))
 	}
-	fmt.Println()
+	Println()
 }
 
 func doRow(row []interface{}, rq Request) *RowT {
@@ -364,7 +374,7 @@ func doRow(row []interface{}, rq Request) *RowT {
 		return &rt
 	}
 
-	rows, err := db.QueryContext(ctx, qc(rq.Corpus, "match (s:sentence{sentid: '"+safeString(rt.SentID)+"'}) return s.tokens"))
+	rows, err := db.Query(qc(rq.Corpus, "match (s:sentence{sentid: '"+safeString(rt.SentID)+"'}) return s.tokens"))
 	if err != nil {
 		chErr <- wrap(err)
 		return &rt
@@ -390,8 +400,7 @@ func doRow(row []interface{}, rq Request) *RowT {
 		idlist = append(idlist, fmt.Sprint(key))
 	}
 
-	rows, err = db.QueryContext(
-		ctx,
+	rows, err = db.Query(
 		qc(rq.Corpus, fmt.Sprintf(
 			"match (n:nw{sentid: '%s'})-[:rel*0..]->(w:word{sentid: '%s'}) where n.id in [%s] return distinct w.end as p order by p",
 			rt.SentID, rt.SentID, strings.Join(idlist, ","))))
@@ -439,9 +448,6 @@ func openDB() error {
 		return err
 	}
 
-	ctx, cancel = context.WithCancel(context.Background())
-	hasCancel = true
-
 	return nil
 }
 
@@ -481,7 +487,7 @@ func wrap(err error) error {
 }
 
 func errout(err error) {
-	fmt.Printf("Content-type: text/plain; charset=utf-8\n\nError: %v\n", err)
+	Printf("Content-type: text/plain; charset=utf-8\n\nError: %v\n", err)
 }
 
 func (rc MyReadCloser) Close() error {
@@ -490,4 +496,25 @@ func (rc MyReadCloser) Close() error {
 
 func (rc MyReadCloser) Read(p []byte) (n int, err error) {
 	return rc.Read(p)
+}
+
+func Print(a ...interface{}) {
+	_, err := fmt.Print(a...)
+	if err != nil {
+		chQuit <- true
+	}
+}
+
+func Println(a ...interface{}) {
+	_, err := fmt.Println(a...)
+	if err != nil {
+		chQuit <- true
+	}
+}
+
+func Printf(format string, a ...interface{}) {
+	_, err := fmt.Printf(format, a...)
+	if err != nil {
+		chQuit <- true
+	}
 }
