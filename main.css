@@ -249,7 +249,7 @@ td.bool, td.float64 {
   text-align: right;
 }
 
-#clip, #macros {
+#permalink, #macros {
   -webkit-box-shadow: 11px 10px 12px -6px rgba(0, 0, 0, 0.5);
   -moz-box-shadow: 11px 10px 12px -6px rgba(0, 0, 0, 0.5);
   box-shadow: 11px 10px 12px -6px rgba(0, 0, 0, 0.5);
@@ -263,7 +263,7 @@ td.bool, td.float64 {
   padding: 2em;
 }
 
-#txtOpslaan {
+#permatext {
   width: 100%;
 }
 
@@ -274,4 +274,40 @@ td.bool, td.float64 {
 
 #pages {
   margin-top: 1em;
+}
+
+#output > div {
+  display: none;
+}
+
+#output.error > #error {
+  display: block;
+}
+
+#output.run > #runner {
+  display: block;
+}
+
+#output.tabel #outputTabel,
+#output.tabel #buttons,
+#output.tabel #runner,
+#output.tabel #paging {
+  display: block;
+}
+
+#output.zinnen #outputZinnen,
+#output.zinnen #buttons,
+#output.zinnen #runner,
+#output.zinnen #paging {
+  display: block;
+}
+
+#output.woorden #outputWoorden,
+#output.woorden #buttons {
+  display: block;
+}
+
+#output.lemmas #outputLemmas,
+#output.lemmas #buttons {
+  display: block;
 }
