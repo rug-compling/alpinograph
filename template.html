@@ -31,8 +31,7 @@
     var thisOffset = 0;
     var prevOffset = 0;
     var nextOffset = 0;
-    var currentTab = 2;
-    var showPaging = false;
+    var currentTab = 0;
     var finished = false;
 
     window._fn = {
@@ -40,25 +39,24 @@
         finished = true;
         $('#wait').addClass('hide');
         if (vorige < 0 && !more) {
-          $('#pages').addClass('hide');
-          showPaging = false;
+          $('#form2').addClass('hide');
         } else {
-          $('#pages').removeClass('hide');
+          $('#form2').removeClass('hide');
           $('#butPrev').prop('disabled', vorige < 0);
           $('#butNext').prop('disabled', !more);
           prevOffset = vorige;
           nextOffset = volgende;
-          showPaging = true;
         }
       },
       header: function (h) {
-        $('#outputTable').html('<table id="tab"></table>');
+        $('#outputTabel').html('<table id="tab"></table>');
         var tr = $('<tr></tr>');
         tr.append($('<th></th>'));
         for (var i = 0; i < h.length; i++) {
           tr.append($('<th></th>').text(h[i].name));
         }
         $('#tab').append(tr);
+        $('#outputZinnen').html('<ol id="lst"></ol>');
       },
       wordstart: function () {
         $('#butWoord').removeClass('hide').prop('disabled', false);
@@ -72,11 +70,10 @@
           lineno = thisOffset;
           if (r.sentence) {
             hassentence = true;
+            $('#buttons > button').removeClass('hide');
           } else {
             hassentence = false;
-          }
-          if (hassentence) {
-            $('#outputZinnen').html('<ol id="lst"></ol>');
+            $('#buttons > button').addClass('hide');
           }
           if (currentTab < 1) {
             if (hassentence) {
@@ -114,7 +111,9 @@
       done: function (p) {
         if (p == paging) {
           if (!started && !haserror) {
-            $('#outputZinnen').removeClass('hide').text('Niets gevonden');
+            $('#output').attr('class', 'warning');
+            currentTab = 0;
+            $('#warning').text('Niets gevonden');
           }
         }
       },
@@ -170,19 +169,20 @@
 
     function onSubmit1() {
       $('#error').text('');
+      $('#warning').text('');
       $('#time').text('');
-      $('#outputTable').text('');
+      $('#outputTabel').text('');
       $('#outputZinnen').text('');
       $('#outputWoorden').text('');
       $('#outputLemmas').text('');
       $('#output').attr('class', 'run');
+      $('#wait').removeClass('hide');
 
       currentTab = 0;
       thisOffset = 0;
       started = false;
       haserror = false;
       paging = false;
-      showPaging = false;
       finished = false;
 
       var el = document.forms['form1'];
@@ -200,10 +200,6 @@
       if (err) {
         return false;
       }
-
-      $('#runner').removeClass('hide');
-      $('#wait').removeClass('hide');
-      $('#pages').addClass('hide');
 
       el.elements['query'].value = q;
       addToHist(q1);
@@ -223,7 +219,7 @@
       $('#error').text('').addClass('hide');
       $('#time').text('');
       $('#outputZinnen').text('');
-      $('#outputTable').text('');
+      $('#outputTabel').text('');
       $('#runner').removeClass('hide');
       $('#wait').removeClass('hide');
       started = false;
@@ -575,6 +571,7 @@
         <span id="wait"><img src="images/busy.gif" alt="busy"></span>
         <span id="time"></span><img src="images/leeg.png" alt="">
       </div>
+      <div id="warning"></div>
       <div id="buttons">
         <button id="butTab" onClick="showTab()">tabel</button>
         <button id="butZin" onClick="showZin()">zinnen</button>
