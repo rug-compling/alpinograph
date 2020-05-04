@@ -208,6 +208,14 @@
       el2['corpus'].value = el.elements['corpus'].value;
       el2['query'].value = q;
 
+      el2 = document.forms['formTabel'].elements;
+      el2['corpus'].value = el.elements['corpus'].value;
+      el2['query'].value = q;
+
+      el2 = document.forms['formZinnen'].elements;
+      el2['corpus'].value = el.elements['corpus'].value;
+      el2['query'].value = q;
+
       return true;
     }
 
@@ -495,6 +503,32 @@
       $('#butLemma').prop('disabled', true);
     }
 
+    //
+    // opslaan tabel
+    //
+
+    function saveTabelShow() {
+      $('#saveTabel').removeClass('hide');
+    }
+
+    function saveTabelClose(r) {
+      $('#saveTabel').addClass('hide');
+      return r;
+    }
+
+    //
+    // opslaan zinnen
+    //
+
+    function saveZinnenShow() {
+      $('#saveZinnen').removeClass('hide');
+    }
+
+    function saveZinnenClose(r) {
+      $('#saveZinnen').addClass('hide');
+      return r;
+    }
+
     $(document).ready(function () {
       getHistory();
       macLoad();
@@ -565,6 +599,51 @@
         <button onClick="permaClose()">Sluiten</button>
       </p>
     </div>
+    <div id="saveTabel" class="hide">
+      <form name="formTabel" action="bin/api" target="_blank" method="POST" accept-charset="utf-8"
+        onSubmit="return saveTabelClose(true)">
+        <input type="hidden" name="corpus">
+        <input type="hidden" name="query">
+        <p>
+          Formaat:
+          <select name="want">
+            <option value="tsv">tsv (tab separated values)</option>
+            <option value="json">json</option>
+            <option value="xml">xml</option>
+          </select>
+        </p>
+        <p>
+          Maximum aantal: <input type="text" name="limit" placeholder="default limiet">
+        </p>
+        <p>
+          <input type="submit" value="Opslaan">
+          <button onClick="return saveTabelClose(false)">Sluiten</button>
+        </p>
+      </form>
+    </div>
+    <div id="saveZinnen" class="hide">
+      <form name="formZinnen" action="bin/api" target="_blank" method="POST" accept-charset="utf-8"
+        onSubmit="return saveZinnenClose(true)">
+        <input type="hidden" name="want" value="text">
+        <input type="hidden" name="corpus">
+        <input type="hidden" name="query">
+        <p>
+          Woordmarkering:
+          <select name="mark">
+            <option value="none">geen</option>
+            <option value="text">haken</option>
+            <option value="ansi">kleur</option>
+          </select>
+        </p>
+        <p>
+          Maximum aantal: <input type="text" name="limit" placeholder="default limiet">
+        </p>
+        <p>
+          <input type="submit" value="Opslaan">
+          <button onClick="return saveZinnenClose(false)">Sluiten</button>
+        </p>
+      </form>
+    </div>
     <div id="output" class="none">
       <div id="error"></div>
       <div id="runner">
@@ -592,6 +671,12 @@
           <input type="submit" id="butPrev" value="Vorige" onClick="return doSubmit2(-1)">
           <input type="submit" id="butNext" value="Volgende" onClick="return doSubmit2(1)">
         </form>
+      </div>
+      <div id="saveTabelButton">
+        <button onClick="saveTabelShow()">opslaan</button>
+      </div>
+      <div id="saveZinnenButton">
+        <button onClick="saveZinnenShow()">opslaan</button>
       </div>
     </div>
   </div>

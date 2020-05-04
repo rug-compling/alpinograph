@@ -89,6 +89,8 @@ func main() {
 	} else {
 		rq.Corpus = req.FormValue("corpus")
 		rq.Query = req.FormValue("query")
+		rq.Want = req.FormValue("want")
+		rq.Mark = req.FormValue("mark")
 		rq.Limit, _ = strconv.Atoi(req.FormValue("limit"))
 	}
 
@@ -202,17 +204,33 @@ func doRows(rq Request) {
 
 	switch rq.Want {
 	case "xml":
-		Printf("Content-type: text/xml; charset=utf-8\n\n<?xml version=\"1.0\"?>\n<rows>\n")
+		Printf(`Content-type: text/xml; charset=utf-8
+Content-Disposition: attachment; filename=ag_data.xml
+
+<?xml version="1.0"?>
+<rows>
+`)
 		rq.wantMark = true
 	case "json":
-		Printf("Content-type: text/plain; charset=utf-8\n\n{\n  \"rows\": [\n")
+		Printf(`Content-type: text/plain; charset=utf-8
+Content-Disposition: attachment; filename=ag_data.json
+
+{
+  "rows": [
+`)
 		rq.wantMark = true
 	case "text":
-		Printf("Content-type: text/plain; charset=utf-8\n\n")
+		Printf(`Content-type: text/plain; charset=utf-8
+Content-Disposition: attachment; filename=ag_data.txt
+
+`)
 		rq.wantMark = rq.Mark == "text" || rq.Mark == "ansi"
 
 	default:
-		Printf("Content-type: text/tab-separated-values; charset=utf-8\n\n")
+		Printf(`Content-type: text/tab-separated-values; charset=utf-8
+Content-Disposition: attachment; filename=ag_data.tsv
+
+`)
 	}
 
 	started := false
@@ -495,7 +513,7 @@ func (rc MyReadCloser) Close() error {
 }
 
 func (rc MyReadCloser) Read(p []byte) (n int, err error) {
-	return rc.Read(p)
+	return rc.r.Read(p)
 }
 
 func Print(a ...interface{}) {

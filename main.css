@@ -244,7 +244,7 @@ td.bool, td.float64 {
   text-align: right;
 }
 
-#permalink, #macros {
+#permalink, #macros, #saveTabel, #saveZinnen, #saveWoorde, #saveLemmas {
   -webkit-box-shadow: 11px 10px 12px -6px rgba(0, 0, 0, 0.5);
   -moz-box-shadow: 11px 10px 12px -6px rgba(0, 0, 0, 0.5);
   box-shadow: 11px 10px 12px -6px rgba(0, 0, 0, 0.5);
@@ -267,7 +267,7 @@ td.bool, td.float64 {
   border: 4px solid #FF6600;
 }
 
-#paging {
+#paging, #saveTabelButton, #saveZinnenButton, #saveWoordenButton, #saveLemmasButton {
   margin-top: 1em;
 }
 
@@ -291,14 +291,16 @@ td.bool, td.float64 {
 #output.tabel #outputTabel,
 #output.tabel #buttons,
 #output.tabel #runner,
-#output.tabel #paging {
+#output.tabel #paging,
+#output.tabel #saveTabelButton {
   display: block;
 }
 
 #output.zinnen #outputZinnen,
 #output.zinnen #buttons,
 #output.zinnen #runner,
-#output.zinnen #paging {
+#output.zinnen #paging,
+#output.zinnen #saveZinnenButton {
   display: block;
 }
 
