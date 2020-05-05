@@ -141,7 +141,7 @@ func main() {
 		divsvg2 = `<div class="fig">` + svg + `</div>`
 	}
 
-	uddiv, ok := makeUD(sid, idlist, edgelist, conlluErr)
+	uddiv, hasUD, ok := makeUD(sid, idlist, edgelist, conlluErr)
 	if !ok {
 		return
 	}
@@ -151,6 +151,12 @@ func main() {
 		c = corpus
 	}
 
+	var download string
+	if hasUD {
+		download = `<input type="submit" name="want" value="Alpino met UD">
+<input type="submit" name="want" value="UD">
+`
+	}
 	fmt.Printf(`Content-type: text/html; charset=utf-8
 
 <html>
@@ -167,12 +173,21 @@ func main() {
 corpus: %s<br>
 sentence-ID: %s%s
 %s
+<p>
+<form action="download" target="_blank">
+<input type="hidden" name="corpus" value="%s">
+<input type="hidden" name="sentid" value="%s">
+Download:
+<input type="submit" name="want" value="Alpino simpel">
+%s
+</form>
+</p>
 %s
 %s
 %s
 </body>
 </html>
-`, zin, zin, c, sid, parser, meta, divsvg1, divsvg2, uddiv)
+`, zin, zin, c, sid, parser, meta, corpus, sid, download, divsvg1, divsvg2, uddiv)
 
 }
 
@@ -633,7 +648,7 @@ func makeGraph(corpus, sid, idlist, edgelist string) (graph *bytes.Buffer, ok bo
 
 }
 
-func makeUD(sid, idlist, edgelist, conlluErr string) (div string, ok bool) {
+func makeUD(sid, idlist, edgelist, conlluErr string) (div string, hasUD bool, ok bool) {
 	if conlluErr != "" {
 		return fmt.Sprintf(`<div style="margin-top: 2em">
 Er ging iets mis met de afleiding van Universal Dependencies:
@@ -641,20 +656,20 @@ Er ging iets mis met de afleiding van Universal Dependencies:
 %s
 </pre>
 </div>
-`, html.EscapeString(conlluErr)), true
+`, html.EscapeString(conlluErr)), false, true
 	}
 
 	conllu, ok := getConllu(sid)
 	if !ok {
-		return "", false
+		return "", false, false
 	}
 
 	svg, ok := conllu2svg(conllu, idlist, edgelist)
 	if !ok {
-		return "", false
+		return "", false, false
 	}
 
-	return `<div class="fig">` + svg + `</div>`, true
+	return `<div class="fig">` + svg + `</div>`, true, true
 
 }
 
