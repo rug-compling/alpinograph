@@ -14,6 +14,7 @@ import (
 	"os"
 	"regexp"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -29,8 +30,9 @@ type MyReadCloser struct {
 type Request struct {
 	Corpus   string `json:"corpus"`
 	Query    string `json:"query"`
-	Want     string `json:"want"` // tsv -> tabel, text -> id + zin, json, xml
+	Want     string `json:"want"` // tsv -> tabel, text -> id + zin, json, xml, attr
 	Mark     string `json:"mark"` // woordmarkering voor want=text: none, ansi, text
+	Attr     string `json:"attr"` // word, lemma, ...
 	Limit    int    `json:"limit"`
 	wantMark bool
 }
@@ -41,6 +43,12 @@ type RowT struct {
 	Sentence string   `json:"sentence,omitempty"  xml:"sentence,omitempty"`
 	SentID   string   `json:"sentid,omitempty"    xml:"sentid,omitempty"`
 	Marks    []int    `json:"marks,omitempty"     xml:"marks>m,omitempty"`
+	attribs  []string
+}
+
+type AttrT struct {
+	n int
+	s string
 }
 
 var (
@@ -54,6 +62,9 @@ var (
 	chErr  = make(chan error)
 	chQuit = make(chan bool)
 	chDone = make(chan bool)
+
+	attrMap  = make(map[string]int)
+	attrSeen = make(map[string]bool)
 )
 
 func main() {
@@ -91,11 +102,16 @@ func main() {
 		rq.Query = req.FormValue("query")
 		rq.Want = req.FormValue("want")
 		rq.Mark = req.FormValue("mark")
+		rq.Attr = req.FormValue("attr")
 		rq.Limit, _ = strconv.Atoi(req.FormValue("limit"))
 	}
 
-	if rq.Limit < 1 || rq.Limit > LIMIT {
+	if rq.Limit < 1 || rq.Limit > LIMIT || rq.Want == "attr" {
 		rq.Limit = LIMIT
+	}
+
+	if rq.Attr == "" {
+		rq.Attr = "word"
 	}
 
 	rq.Corpus = strings.TrimSpace(strings.Replace(rq.Corpus, "'", "", -1))
@@ -220,12 +236,18 @@ Content-Disposition: attachment; filename=ag_data.json
 `)
 		rq.wantMark = true
 	case "text":
-		Printf(`Content-type: text/plain; charset=utf-8
-Content-Disposition: attachment; filename=ag_data.txt
+		Printf(`Content-type: text/tab-separated-values; charset=utf-8
+Content-Disposition: attachment; filename=ag_data.tsv
 
 `)
 		rq.wantMark = rq.Mark == "text" || rq.Mark == "ansi"
 
+	case "attr":
+		Printf(`Content-type: text/tab-separated-values; charset=utf-8
+Content-Disposition: attachment; filename=ag_data.tsv
+
+`)
+		rq.wantMark = true
 	default:
 		Printf(`Content-type: text/tab-separated-values; charset=utf-8
 Content-Disposition: attachment; filename=ag_data.tsv
@@ -251,6 +273,8 @@ Content-Disposition: attachment; filename=ag_data.tsv
 			doJSON(row, rq)
 		case "text":
 			doText(row, rq)
+		case "attr":
+			doAttr(row, rq)
 		default:
 			doTSV(row, rq)
 		}
@@ -261,6 +285,8 @@ Content-Disposition: attachment; filename=ag_data.tsv
 		Printf("</rows>\n")
 	case "json":
 		Printf("\n  ]\n}\n")
+	case "attr":
+		outputAttr()
 	}
 }
 
@@ -290,7 +316,7 @@ func doJSON(row []interface{}, rq Request) {
 
 func doText(row []interface{}, rq Request) {
 	r := doRow(row, rq)
-	if rq.wantMark {
+	if rq.wantMark && len(r.Marks) > 0 {
 		p1 := "[[ "
 		p2 := " ]]"
 		if rq.Mark == "ansi" {
@@ -331,6 +357,29 @@ func doTSV(row []interface{}, rq Request) {
 		Print(string(val))
 	}
 	Println()
+}
+
+func doAttr(row []interface{}, rq Request) {
+	r := doRow(row, rq)
+	if len(r.Marks) == 0 {
+		return
+	}
+
+	k := fmt.Sprint(r.SentID, "\t", r.Marks)
+	if attrSeen[k] {
+		return
+	}
+	attrSeen[k] = true
+
+	ss := []string{unescape(r.attribs[0])}
+	for i := 1; i < len(r.Marks); i++ {
+		if r.Marks[i] != r.Marks[i-1]+1 {
+			ss = append(ss, "[...]")
+		}
+		ss = append(ss, unescape(r.attribs[i]))
+	}
+	s := strings.Join(ss, " ")
+	attrMap[s] = attrMap[s] + 1
 }
 
 func doRow(row []interface{}, rq Request) *RowT {
@@ -412,6 +461,7 @@ func doRow(row []interface{}, rq Request) *RowT {
 	}
 
 	rt.Marks = make([]int, 0)
+	rt.attribs = make([]string, 0)
 
 	idlist := make([]string, 0, len(ids))
 	for key := range ids {
@@ -420,26 +470,51 @@ func doRow(row []interface{}, rq Request) *RowT {
 
 	rows, err = db.Query(
 		qc(rq.Corpus, fmt.Sprintf(
-			"match (n:nw{sentid: '%s'})-[:rel*0..]->(w:word{sentid: '%s'}) where n.id in [%s] return distinct w.end as p order by p",
-			rt.SentID, rt.SentID, strings.Join(idlist, ","))))
+			"match (n:nw{sentid: '%s'})-[:rel*0..]->(w:word{sentid: '%s'}) where n.id in [%s] return distinct w.end as p, w.%q order by p",
+			rt.SentID, rt.SentID, strings.Join(idlist, ","), rq.Attr)))
 	if err != nil {
 		chErr <- wrap(err)
 		return &rt
 	}
 	for rows.Next() {
 		var end int
-		err := rows.Scan(&end)
+		var attr sql.NullString
+		err := rows.Scan(&end, &attr)
 		if err != nil {
 			chErr <- wrap(err)
 			return &rt
 		}
+		var a string
+		if attr.Valid {
+			a = attr.String
+		}
+		if a == "" {
+			a = "NULL"
+		}
 		rt.Marks = append(rt.Marks, end)
+		rt.attribs = append(rt.attribs, a)
 	}
 	if err := rows.Err(); err != nil {
 		chErr <- wrap(err)
 	}
 
 	return &rt
+}
+
+func outputAttr() {
+	aa := make([]AttrT, 0, len(attrMap))
+	for key, val := range attrMap {
+		aa = append(aa, AttrT{n: val, s: key})
+	}
+	sort.Slice(aa, func(a, b int) bool {
+		if aa[a].n != aa[b].n {
+			return aa[a].n > aa[b].n
+		}
+		return aa[a].s < aa[b].s
+	})
+	for _, a := range aa {
+		Printf("%d\t%s\n", a.n, a.s)
+	}
 }
 
 func openDB() error {

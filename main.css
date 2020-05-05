@@ -244,7 +244,7 @@ td.bool, td.float64 {
   text-align: right;
 }
 
-#permalink, #macros, #saveTabel, #saveZinnen, #saveWoorde, #saveLemmas {
+#permalink, #macros, #saveTabel, #saveZinnen, #saveWoorde, #saveLemmas, #saveAttr {
   -webkit-box-shadow: 11px 10px 12px -6px rgba(0, 0, 0, 0.5);
   -moz-box-shadow: 11px 10px 12px -6px rgba(0, 0, 0, 0.5);
   box-shadow: 11px 10px 12px -6px rgba(0, 0, 0, 0.5);
@@ -306,12 +306,14 @@ td.bool, td.float64 {
 
 #output.woorden #outputWoorden,
 #output.woorden #runner,
-#output.woorden #buttons {
-  display: block;
+#output.woorden #buttons,
+#output.woorden #saveWoordenButton {
+    display: block;
 }
 
 #output.lemmas #outputLemmas,
 #output.lemmas #runner,
-#output.lemmas #buttons {
-  display: block;
+#output.lemmas #buttons,
+#output.lemmas #saveLemmasButton {
+    display: block;
 }

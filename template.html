@@ -216,6 +216,10 @@
       el2['corpus'].value = el.elements['corpus'].value;
       el2['query'].value = q;
 
+      el2 = document.forms['formAttr'].elements;
+      el2['corpus'].value = el.elements['corpus'].value;
+      el2['query'].value = q;
+
       return true;
     }
 
@@ -529,6 +533,20 @@
       return r;
     }
 
+    //
+    // opslaan attributen
+    //
+
+    function saveAttrShow(attr) {
+      document.forms['formAttr'].elements['attr'].value = attr;
+      $('#saveAttr').removeClass('hide');
+    }
+
+    function saveAttrClose(r) {
+      $('#saveAttr').addClass('hide');
+      return r;
+    }
+
     $(document).ready(function () {
       getHistory();
       macLoad();
@@ -554,8 +572,8 @@
   <div id="main">
     <iframe src="leeg.html" id="cframe1" name="cframe1" class="hide"></iframe>
     <iframe src="leeg.html" id="cframe2" name="cframe2" class="hide"></iframe>
-    <form id="form1" action="bin/alpg" method="post" accept-charset="utf-8" enctype="application/x-www-form-urlencoded"
-      target="cframe1" onsubmit="return onSubmit1()">
+    <form id="form1" action="bin/alpg" method="post" accept-charset="utf-8" target="cframe1"
+      onsubmit="return onSubmit1()">
       <p>
         Corpus:
         <select name="corpus">
@@ -613,7 +631,7 @@
           </select>
         </p>
         <p>
-          Maximum aantal: <input type="text" name="limit" placeholder="default limiet">
+          Maximum aantal: <input type="text" name="limit" placeholder="standaardlimiet">
         </p>
         <p>
           <input type="submit" value="Opslaan">
@@ -644,6 +662,21 @@
         </p>
       </form>
     </div>
+    <div id="saveAttr" class="hide">
+      <form id="formAttr" action="bin/api" method="post" accept-charset="utf-8" target="_blank"
+        onSubmit="return saveAttrClose(true)">
+        <input type="hidden" name="corpus">
+        <input type="hidden" name="query">
+        <input type="hidden" name="want" value="attr">
+        <p>
+          Attribuut: <input type="text" name="attr">
+        </p>
+        <p>
+          <input type="submit" value="Opslaan">
+          <button onClick="return saveAttrClose(false)">Sluiten</button>
+        </p>
+      </form>
+    </div>
     <div id="output" class="none">
       <div id="error"></div>
       <div id="runner">
@@ -662,8 +695,7 @@
       <div id="outputWoorden"></div>
       <div id="outputLemmas"></div>
       <div id="paging">
-        <form id="form2" action="bin/alpg" method="post" accept-charset="utf-8"
-          enctype="application/x-www-form-urlencoded" target="cframe2">
+        <form id="form2" action="bin/alpg" method="post" accept-charset="utf-8" target="cframe2">
           <input type="hidden" name="corpus" id="corpus2">
           <input type="hidden" name="query" id="query2">
           <input type="hidden" name="offset" id="offset2">
@@ -678,7 +710,14 @@
       <div id="saveZinnenButton">
         <button onClick="saveZinnenShow()">opslaan</button>
       </div>
+      <div id="saveWoordenButton">
+        <button onClick="saveAttrShow('word')">opslaan</button>
+      </div>
+      <div id="saveLemmasButton">
+        <button onClick="saveAttrShow('lemma')">opslaan</button>
+      </div>
     </div>
+  </div>
   </div>
   <div id="foot">
     <a href="https://alpinograph.readthedocs.io/" target="_blank">help</a>
