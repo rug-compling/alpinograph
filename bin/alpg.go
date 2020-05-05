@@ -135,11 +135,11 @@ function sw(i, n, s) {
 function sl(i, n, s) {
   window.parent._fn.skiplemmas();
 }
-function mw(s) {
-  window.parent._fn.setwordsmsg(s);
+function mw(s, done) {
+  window.parent._fn.setwordsmsg(s, done);
 }
-function ml(s) {
-  window.parent._fn.setlemmasmsg(s);
+function ml(s, done) {
+  window.parent._fn.setlemmasmsg(s, done);
 }
 </script>
 `
@@ -887,7 +887,7 @@ func doTables(final bool) {
 		if total > subTotal {
 			fmt.Fprintf(&buf, " (%s getoond)", numFormat(subTotal))
 		}
-		fmt.Fprintf(&buf, "%s');\n", status)
+		fmt.Fprintf(&buf, "%s', %v);\n", status, total > MAXWORDS || final)
 		output(buf.String())
 	}
 }

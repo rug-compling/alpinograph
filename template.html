@@ -145,12 +145,18 @@
         var tr = $('<tr class="skip"><td colspan="3">...</td></tr>');
         $('#tabl').append(tr);
       },
-      setwordsmsg: function (s) {
+      setwordsmsg: function (s, done) {
         $('#wmsg').html(s);
+        if (done) {
+          $('#wordBtn').removeClass('hide');
+        }
       },
-      setlemmasmsg: function (s) {
+      setlemmasmsg: function (s, done) {
         $('#lmsg').html(s);
-      }
+        if (done) {
+          $('#lemmaBtn').removeClass('hide');
+        }
+     }
     }
 
     //
@@ -177,6 +183,8 @@
       $('#outputLemmas').text('');
       $('#output').attr('class', 'run');
       $('#wait').removeClass('hide');
+      $('#wordBtn').addClass('hide');
+      $('#lemmaBtn').addClass('hide');
 
       currentTab = 0;
       thisOffset = 0;
@@ -711,10 +719,10 @@
         <button onClick="saveZinnenShow()">opslaan</button>
       </div>
       <div id="saveWoordenButton">
-        <button onClick="saveAttrShow('word')">opslaan</button>
+        <button class="hide" id="wordBtn" onClick="saveAttrShow('word')">opslaan</button>
       </div>
       <div id="saveLemmasButton">
-        <button onClick="saveAttrShow('lemma')">opslaan</button>
+        <button class="hide" id="lemmaBtn" onClick="saveAttrShow('lemma')">opslaan</button>
       </div>
     </div>
   </div>
