@@ -470,8 +470,8 @@ func doRow(row []interface{}, rq Request) *RowT {
 
 	rows, err = db.Query(
 		qc(rq.Corpus, fmt.Sprintf(
-			"match (n:nw{sentid: '%s'})-[:rel*0..]->(w:word{sentid: '%s'}) where n.id in [%s] return distinct w.end as p, w.%q order by p",
-			rt.SentID, rt.SentID, strings.Join(idlist, ","), rq.Attr)))
+			"match (n:nw{sentid: '%s'})-[:rel*0..]->(w:word{sentid: '%s'}) where n.id in [%s] return distinct w.end as p, w.\"%s\" order by p",
+			rt.SentID, rt.SentID, strings.Join(idlist, ","), strings.Replace(rq.Attr, `"`, `""`, -1))))
 	if err != nil {
 		chErr <- wrap(err)
 		return &rt
