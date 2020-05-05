@@ -70,10 +70,10 @@
           lineno = thisOffset;
           if (r.sentence) {
             hassentence = true;
-            $('#buttons > button').removeClass('hide');
+            $('#butTab').removeClass('hide');
+            $('#butZin').removeClass('hide');
           } else {
             hassentence = false;
-            $('#buttons > button').addClass('hide');
           }
           if (currentTab < 1) {
             if (hassentence) {
@@ -185,6 +185,7 @@
       $('#wait').removeClass('hide');
       $('#wordBtn').addClass('hide');
       $('#lemmaBtn').addClass('hide');
+      $('#buttons > button').addClass('hide');
 
       currentTab = 0;
       thisOffset = 0;
