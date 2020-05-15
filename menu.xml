@@ -1,6 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <menu>
 
+  <item id="idx" lbl="Index">
+    <item id="idx-doc" lbl="Corpusinformatie">
+      match (d:doc)
+      return d
+    </item>
+    <item id="idx-node" lbl="Attributen van nodes">
+      match (f:feature{v: 'node'})
+      return f.name as attribuut, f.count as aantal
+      order by attribuut
+    </item>
+    <item id="idx-word" lbl="Attributen van woorden">
+      match (f:feature{v: 'word'})
+      return f.name as attribuut, f.count as aantal
+      order by attribuut
+    </item>
+    <item id="idx-meta" lbl="Soorten metadata">
+      match (f:feature{v: 'meta'})
+      return f.name as metadata, f.count as aantal
+      order by metadata
+    </item>
+  </item>
+
   <item id="tut" lbl="Tutorial">
     <item id="tut-bitri" lbl="Bigrammen en trigrammen en zo">
       <item id="tut-bitri-bi" lbl="bigram: in geval">

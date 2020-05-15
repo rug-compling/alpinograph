@@ -1686,7 +1686,8 @@ func getFiles() {
 
 func featureCount(item, jsn string) {
 	var j map[string]interface{}
-	x(json.Unmarshal([]byte(jsn), &j))
+	jsn = strings.Replace(jsn, `\\`, `\`, -1)
+	x(json.Unmarshal([]byte(jsn), &j), jsn)
 	for key := range j {
 		featureMap[item][key] = featureMap[item][key] + 1
 	}
