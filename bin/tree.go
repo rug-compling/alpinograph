@@ -153,8 +153,8 @@ func main() {
 
 	var download string
 	if hasUD {
-		download = `<input type="submit" name="want" value="Alpino met UD">
-<input type="submit" name="want" value="UD">
+		download = `<input type="submit" name="want" value="Alpino met UD (XML)">
+<input type="submit" name="want" value="UD (CoNLL-U)">
 `
 	}
 	fmt.Printf(`Content-type: text/html; charset=utf-8
@@ -177,8 +177,8 @@ sentence-ID: %s%s
 <form action="download" target="_blank">
 <input type="hidden" name="corpus" value="%s">
 <input type="hidden" name="sentid" value="%s">
-Download:
-<input type="submit" name="want" value="Alpino simpel">
+Opslaan:
+<input type="submit" name="want" value="Alpino simpel (XML)">
 %s
 </form>
 </p>

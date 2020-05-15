@@ -7,6 +7,7 @@ import (
 	"github.com/rug-compling/alud/v2"
 
 	"bytes"
+	"encoding/json"
 	"encoding/xml"
 	"flag"
 	"fmt"
@@ -209,6 +210,12 @@ var (
 
 	chDoc  = make(chan Doc)
 	chArch = make(chan string)
+
+	featureMap = map[string]map[string]int{
+		"meta": make(map[string]int),
+		"node": make(map[string]int),
+		"word": make(map[string]int),
+	}
 )
 
 func usage() {
@@ -435,6 +442,7 @@ LOOP:
 					q(m.Name),
 					q(m.Type),
 					qt(m.Value, m.Type))
+				featureMap["meta"][m.Name] = featureMap["meta"][m.Name] + 1
 			}
 		}
 
@@ -599,6 +607,12 @@ LOOP:
 	fmt.Printf("select pg_catalog.setval('%s.next_id_seq', %d, true);\n", corpus, nNext)
 	fmt.Printf("select pg_catalog.setval('%s.pair_id_seq', %d, true);\n", corpus, nPair)
 
+	for nw, features := range featureMap {
+		for key, value := range features {
+			fmt.Printf("CREATE (:feature{v: '%s', name: '%s', count: %d});\n", nw, sq(key), value)
+		}
+	}
+
 	fmt.Print(`create property index on sentence("sentid");
 create property index on sentence("cats");
 create property index on sentence("skips");
@@ -705,8 +719,7 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 		if isDeste(node) {
 			deste = `, "_deste": true`
 		}
-		fmt.Fprintf(fpNode, "%s\t{\"sentid\": %s, \"id\": %d, \"begin\": %d, \"end\": %d, \"_n_words\": %d%s%s%s%s%s%s}\n",
-			node.aid,
+		jsn := fmt.Sprintf("{\"sentid\": %s, \"id\": %d, \"begin\": %d, \"end\": %d, \"_n_words\": %d%s%s%s%s%s%s}",
 			q(sentid),
 			node.Id,
 			node.Begin,
@@ -718,6 +731,8 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 			np,
 			vorfeld,
 			deste)
+		fmt.Fprintf(fpNode, "%s\t%s\n", node.aid, jsn)
+		featureCount("node", jsn)
 		if node.NodeList != nil {
 			for _, n := range node.NodeList {
 				doNode1(sentid, n, last, feats)
@@ -743,8 +758,7 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 		if isVorfeld(node) {
 			vorfeld = `, "_vorfeld": true`
 		}
-		fmt.Fprintf(fpWord, "%s\t{\"sentid\": %s, \"id\": %d, \"begin\": %d, \"end\": %d, \"_n_words\": %d%s%s%s%s}\n",
-			node.aid,
+		jsn := fmt.Sprintf("{\"sentid\": %s, \"id\": %d, \"begin\": %d, \"end\": %d, \"_n_words\": %d%s%s%s%s}",
 			q(sentid),
 			node.Id,
 			node.Begin,
@@ -754,6 +768,8 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 			feats[node.Begin],
 			np,
 			vorfeld)
+		fmt.Fprintf(fpWord, "%s\t%s\n", node.aid, jsn)
+		featureCount("word", jsn)
 	}
 }
 
@@ -1469,33 +1485,6 @@ func isNP(node *Node) bool {
 		return false
 	}
 
-	/*
-	   //node[( ( @cat="np"
-	              or
-	              ( @lcat="np"
-	                and
-	                not(@rel=("hd","mwp"))
-	              )
-	              or
-	              ( @pt="n"
-	                and not(@rel="hd")
-	              )
-	              or
-	              ( @pt="vnw"
-	                and
-	                @pdtype="pron"
-	                and
-	                not(@rel="hd")
-	              )
-	              or
-	              ( @cat="mwu"
-	                and
-	                not(@rel="hd")
-	                and
-	                @rel=("su","obj1","obj2","app")
-	              )
-	            )
-	*/
 	if node.Cat == "np" {
 		return true
 	}
@@ -1647,6 +1636,10 @@ func escape(s string) string {
 	return strings.Replace(fmt.Sprintf("%q", s), "'", "''", -1)
 }
 
+func sq(s string) string {
+	return strings.Replace(strings.Replace(s, "'", "''", -1), `\`, `\\`, -1)
+}
+
 func basename(name string) string {
 	corpus := filepath.Base(name)
 	n := len(corpus)
@@ -1689,4 +1682,12 @@ func getFiles() {
 		}
 	}
 	close(chDoc)
+}
+
+func featureCount(item, jsn string) {
+	var j map[string]interface{}
+	x(json.Unmarshal([]byte(jsn), &j))
+	for key := range j {
+		featureMap[item][key] = featureMap[item][key] + 1
+	}
 }
