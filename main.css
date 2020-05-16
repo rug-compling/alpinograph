@@ -291,16 +291,16 @@ td.bool, td.float64 {
 #output.tabel #outputTabel,
 #output.tabel #buttons,
 #output.tabel #runner,
-#output.tabel #paging,
-#output.tabel #saveTabelButton {
+body.ready #output.tabel #paging,
+body.ready #output.tabel #saveTabelButton {
   display: block;
 }
 
 #output.zinnen #outputZinnen,
 #output.zinnen #buttons,
 #output.zinnen #runner,
-#output.zinnen #paging,
-#output.zinnen #saveZinnenButton {
+body.ready #output.zinnen #paging,
+body.ready #output.zinnen #saveZinnenButton {
   display: block;
 }
 

@@ -36,6 +36,7 @@ type Header struct {
 }
 
 type Line struct {
+	LineNo   int      `json:"lineno,emitempty"`
 	Fields   []string `json:"fields,omitempty"`
 	Sentence string   `json:"sentence,omitempty"`
 	Args     string   `json:"args,omitempty"`
@@ -394,7 +395,9 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 	}()
 
 	count := 0
+	scSeen := make(map[string]bool)
 	wlSeen := make(map[string]bool)
+RESULTS:
 	for {
 		select {
 		case <-chQuit:
@@ -406,6 +409,12 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 			}
 			count++
 
+			sc := fmt.Sprint(scans...)
+			if scSeen[sc] {
+				continue RESULTS
+			}
+			scSeen[sc] = true
+
 			var sentid string
 
 			idmap := make(map[int]bool)
@@ -413,6 +422,7 @@ func doResults(corpus string, header []*Header, chRow chan []interface{}, chLine
 			nodes := make(map[string]int)
 
 			line := &Line{
+				LineNo: count,
 				Fields: make([]string, len(scans)),
 			}
 			for i, v := range scans {
@@ -870,7 +880,7 @@ func doTables(final bool) {
 
 		var status string
 		if total > MAXWORDS {
-			status = "<br>afgebroken"
+			status = "<br>limiet bereikt"
 			muWords.Lock()
 			tooManyWords = true
 			muWords.Unlock()

@@ -22,7 +22,6 @@
     var started = false;
     var haserror = false;
     var hassentence = false;
-    var lineno = 0;
     var hist = [];
     var histp = -1;
     var macrotxt = '';
@@ -37,6 +36,7 @@
     window._fn = {
       setPaging: function (vorige, volgende, more) {
         finished = true;
+        $('body').addClass('ready');
         $('#wait').addClass('hide');
         if (vorige < 0 && !more) {
           $('#form2').addClass('hide');
@@ -67,7 +67,6 @@
       row: function (r) {
         if (!started) {
           started = true;
-          lineno = thisOffset;
           if (r.sentence) {
             hassentence = true;
             $('#butTab').removeClass('hide');
@@ -84,7 +83,7 @@
           }
         }
         var tr = $('<tr></tr>');
-        lineno = lineno + 1;
+        var lineno = thisOffset + r.lineno;
         tr.append($('<td></td>').text('' + lineno + '.'));
         for (var i = 0; i < r.fields.length; i++) {
           tr.append($('<td></td>').html(r.fields[i]));
@@ -156,7 +155,7 @@
         if (done) {
           $('#lemmaBtn').removeClass('hide');
         }
-     }
+      }
     }
 
     //
@@ -174,6 +173,7 @@
     }
 
     function onSubmit1() {
+      $('body').removeClass('ready');
       $('#error').text('');
       $('#warning').text('');
       $('#time').text('');
@@ -237,6 +237,7 @@
     //
 
     function doSubmit2(r) {
+      $('body').removeClass('ready');
       $('#error').text('').addClass('hide');
       $('#time').text('');
       $('#outputZinnen').text('');
