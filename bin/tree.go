@@ -491,7 +491,7 @@ func makeGraph(corpus, sid, idlist, edgelist string) (graph *bytes.Buffer, ok bo
 		}
 	}
 
-	rows, err := db.Query("match (n1{sentid:'" + sid + "'})-[r]->(n2{sentid:'" + sid + "'}) where n1.id in [" + idlist + "] or n2.id in [" + idlist + "] return distinct n1, r, n2")
+	rows, err := db.Query("match (n1)-[r]->(n2:nw{sentid:'" + sid + "'}) where n1.id in [" + idlist + "] or n2.id in [" + idlist + "] return distinct n1, r, n2")
 	if x(err) {
 		return
 	}

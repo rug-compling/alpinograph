@@ -35,7 +35,7 @@ func getConllu(sentid string) (conllu string, ok bool) {
 	euds := make(map[int][]*UDLink)
 	copied := make(map[int]int)
 
-	rows, err := db.Query("match (n1{sentid:'" + sentid + "'})-[r:ud]->(n2) return n1, r, n2")
+	rows, err := db.Query("match (n1)-[r:ud]->(n2:word{sentid:'" + sentid + "'}) return n1, r, n2")
 	if x(err) {
 		return "", false
 	}
@@ -99,7 +99,7 @@ func getConllu(sentid string) (conllu string, ok bool) {
 		return "", false
 	}
 
-	rows, err = db.Query("match (n1{sentid:'" + sentid + "'})-[r:eud]->(n2) return n1, r, n2")
+	rows, err = db.Query("match (n1)-[r:eud]->(n2:word{sentid:'" + sentid + "'}) return n1, r, n2")
 	if x(err) {
 		return "", false
 	}

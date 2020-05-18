@@ -69,7 +69,7 @@ func getConllu(corpus, sentid string, comments bool) (string, error) {
 	euds := make(map[int][]*Link)
 	copied := make(map[int]int)
 
-	rows, err := db.Query("match (n1{sentid:'" + sentid + "'})-[r:ud]->(n2) return n1, r, n2")
+	rows, err := db.Query("match (n1)-[r:ud]->(n2:word{sentid:'" + sentid + "'}) return n1, r, n2")
 	if err != nil {
 		return "", wrap(err, 2)
 	}
@@ -133,7 +133,7 @@ func getConllu(corpus, sentid string, comments bool) (string, error) {
 		return "", wrap(err, 1)
 	}
 
-	rows, err = db.Query("match (n1{sentid:'" + sentid + "'})-[r:eud]->(n2) return n1, r, n2")
+	rows, err = db.Query("match (n1)-[r:eud]->(n2:word{sentid:'" + sentid + "'}) return n1, r, n2")
 	if err != nil {
 		return "", wrap(err, 2)
 	}
