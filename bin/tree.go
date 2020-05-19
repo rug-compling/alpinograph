@@ -11,11 +11,13 @@ import (
 	"net/http/cgi"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"sort"
 	"strconv"
 	"strings"
+	// "time"
 )
 
 type Edge struct {
@@ -43,6 +45,7 @@ type Node struct {
 var (
 	reQuote = regexp.MustCompile(`\\.`)
 	db      *sql.DB
+	debug   bool
 
 	names = map[string]string{
 		"r": "rel",
@@ -55,6 +58,12 @@ var (
 )
 
 func main() {
+
+	fmt.Print(`Content-type: text/html; charset=utf-8
+
+<html>
+<head>
+`)
 
 	req, err := cgi.Request()
 	if x(err) {
@@ -71,6 +80,7 @@ func main() {
 	idlist := strings.TrimSpace(req.FormValue("i"))
 	edgelist := strings.TrimSpace(req.FormValue("e"))
 	compact := req.FormValue("style") != "high"
+	debug = req.FormValue("debug") != ""
 
 	if x(openDB()) {
 		return
@@ -81,7 +91,10 @@ func main() {
 		return
 	}
 
+	// start := time.Now()
+	// conlog("match (s:sentence{sentid:'" + sid + "'}) return s.tokens, s.conllu_error")
 	row := db.QueryRow("match (s:sentence{sentid:'" + sid + "'}) return s.tokens, s.conllu_error")
+	// conlog("row: ", time.Since(start))
 	var zin, conlluErr string
 	if row != nil {
 		var ce sql.NullString
@@ -157,11 +170,7 @@ func main() {
 <input type="submit" name="want" value="UD (CoNLL-U)">
 `
 	}
-	fmt.Printf(`Content-type: text/html; charset=utf-8
-
-<html>
-<head>
-<title>%s</title>
+	fmt.Printf(`<title>%s</title>
 <link rel="stylesheet" type="text/css" href="../tree.css">
 <link rel="stylesheet" type="text/css" href="../tooltip.css" />
 <link rel="icon" href="../../favicon.ico" type="image/ico">
@@ -195,12 +204,16 @@ func makeMeta(corpus, sid string) (meta string, ok bool) {
 
 	lines := make([]string, 0)
 
+	// start := time.Now()
+	// conlog("match (m:meta{sentid:'" + sid + "'}) return m.name, m.type, m.value")
 	rows, err := db.Query("match (m:meta{sentid:'" + sid + "'}) return m.name, m.type, m.value")
+	// conlog("started: ", time.Since(start))
 	if x(err) {
 		return
 	}
 
 	for rows.Next() {
+		// conlog("row: ", time.Since(start))
 		var name, tp, val string
 		if x(rows.Scan(&name, &tp, &val)) {
 			return
@@ -212,7 +225,9 @@ func makeMeta(corpus, sid string) (meta string, ok bool) {
 				html.EscapeString(unescape(name)),
 				html.EscapeString(unescape(val))))
 	}
+	// conlog("rows: ", time.Since(start))
 	x(rows.Err())
+	// conlog("done: ", time.Since(start))
 
 	if len(lines) == 0 {
 		return "", true
@@ -222,18 +237,24 @@ func makeMeta(corpus, sid string) (meta string, ok bool) {
 
 func makeParser(corpus, sid string) (parser string, ok bool) {
 
+	// start := time.Now()
+	// conlog("match (s:sentence{sentid:'" + sid + "'}) return s.cats, s.skips")
 	rows, err := db.Query("match (s:sentence{sentid:'" + sid + "'}) return s.cats, s.skips")
+	// conlog("started: ", time.Since(start))
 	if x(err) {
 		return
 	}
 
 	var c, s sql.NullInt64
 	for rows.Next() {
+		// conlog("row: ", time.Since(start))
 		if x(rows.Scan(&c, &s)) {
 			return
 		}
 	}
+	// conlog("rows: ", time.Since(start))
 	x(rows.Err())
+	// conlog("done: ", time.Since(start))
 	if c.Valid {
 		parser = fmt.Sprintf("<br>\ncats: %d", c.Int64)
 	}
@@ -268,7 +289,10 @@ func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.B
 		}
 	}
 
+	// start := time.Now()
+	// conlog("match (n1:node{sentid:'" + sid + "'})-[r:rel]->(n2:nw) return n1, r, n2 order by n1.id, n2.id")
 	rows, err := db.Query("match (n1:node{sentid:'" + sid + "'})-[r:rel]->(n2:nw) return n1, r, n2 order by n1.id, n2.id")
+	// conlog("started: ", time.Since(start))
 	if x(err) {
 		return
 	}
@@ -279,6 +303,7 @@ func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.B
 
 	seen := make(map[int]bool)
 	for rows.Next() {
+		// conlog("row: ", time.Since(start))
 		var n1, r, n2 []byte
 		if x(rows.Scan(&n1, &r, &n2)) {
 			return
@@ -333,9 +358,11 @@ func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.B
 		}
 		links = append(links, link)
 	}
+	// conlog("rows: ", time.Since(start))
 	if x(rows.Err()) {
 		return
 	}
+	// conlog("done: ", time.Since(start))
 
 	if len(nodes) == 0 {
 		fmt.Println("Niet gevonden")
@@ -491,7 +518,10 @@ func makeGraph(corpus, sid, idlist, edgelist string) (graph *bytes.Buffer, ok bo
 		}
 	}
 
-	rows, err := db.Query("match (n1)-[r]->(n2:nw{sentid:'" + sid + "'}) where n1.id in [" + idlist + "] or n2.id in [" + idlist + "] return distinct n1, r, n2")
+	// start := time.Now()
+	// conlog("match (n1{sentid:'" + sid + "'})-[r]->(n2:nw{sentid:'" + sid + "'}) where n1.id in [" + idlist + "] or n2.id in [" + idlist + "] return distinct n1, r, n2")
+	rows, err := db.Query("match (n1{sentid:'" + sid + "'})-[r]->(n2:nw{sentid:'" + sid + "'}) where n1.id in [" + idlist + "] or n2.id in [" + idlist + "] return distinct n1, r, n2")
+	// conlog("started: ", time.Since(start))
 	if x(err) {
 		return
 	}
@@ -502,6 +532,7 @@ func makeGraph(corpus, sid, idlist, edgelist string) (graph *bytes.Buffer, ok bo
 
 	seen := make(map[int]bool)
 	for rows.Next() {
+		// conlog("row: ", time.Since(start))
 		var n1, r, n2 []byte
 		if x(rows.Scan(&n1, &r, &n2)) {
 			return
@@ -564,9 +595,11 @@ func makeGraph(corpus, sid, idlist, edgelist string) (graph *bytes.Buffer, ok bo
 		}
 		links = append(links, link)
 	}
+	// conlog("rows: ", time.Since(start))
 	if x(rows.Err()) {
 		return
 	}
+	// conlog("done: ", time.Since(start))
 
 	if len(nodes) == 0 {
 		fmt.Println("Niet gevonden")
@@ -821,7 +854,7 @@ func x(err error, msg ...interface{}) bool {
 	var b bytes.Buffer
 	_, filename, lineno, ok := runtime.Caller(1)
 	if ok {
-		b.WriteString(fmt.Sprintf("%v:%v: %v", filename, lineno, err))
+		b.WriteString(fmt.Sprintf("%v:%v: %v", filepath.Base(filename), lineno, err))
 	} else {
 		b.WriteString(err.Error())
 	}
@@ -831,10 +864,29 @@ func x(err error, msg ...interface{}) bool {
 			b.WriteString(fmt.Sprintf(" %v", m))
 		}
 	}
-	fmt.Print(`Content-type: text/plain; charset=utf-8
-
-`)
-
-	fmt.Println(b.String())
+	fmt.Printf(`<title>error</title>
+</head>
+<body>
+<h1>error</h1>
+%s
+</body>
+</html>
+`, html.EscapeString(b.String()))
 	return true
+}
+
+func conlog(s ...interface{}) {
+	if !debug {
+		return
+	}
+	var b bytes.Buffer
+	_, filename, lineno, ok := runtime.Caller(1)
+	if ok {
+		b.WriteString(fmt.Sprintf("%v:%v: ", filepath.Base(filename), lineno))
+	}
+	fmt.Fprint(&b, s...)
+	fmt.Printf(`<script type="text/javascript">
+console.log(%q);
+</script>
+`, b.String())
 }
