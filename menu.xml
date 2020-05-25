@@ -1186,12 +1186,10 @@
           return n.sentid, n.id
         </item>
         <item id="spod-ppinp-tel" lbl="telling">
-          select count(distinct(sentid)) as zinnen, count(sentid) as items
-          from (
-            match (n1)&lt;-[:rel{rel: 'hd'}]-(n:node{cat: 'pp'})-[:rel{rel: 'obj1'}]->(n2)
-            where n1.begin = n.begin and n2.end = n.end
-            return distinct n.sentid, n.id
-          ) as foo
+          match (n1)&lt;-[:rel{rel: 'hd'}]-(n:node{cat: 'pp'})-[:rel{rel: 'obj1'}]->(n2)
+          where n1.begin = n.begin and n2.end = n.end
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
       </item>
       <item id="spod-ppirp" lbl="interne structuur, +R-pronomen + P">
@@ -1201,12 +1199,10 @@
           return n.sentid, n.id
         </item>
         <item id="spod-ppirp-tel" lbl="telling">
-          select count(distinct(sentid)) as zinnen, count(sentid) as items
-          from (
-            match (n1)&lt;-[:rel{rel: 'hd'}]-(n:node{cat: 'pp'})-[:rel{rel: 'obj1'}]->(w:word{pt: 'vnw'})
-            where w.begin = n.begin and n1.end = n.end
-            return distinct n.sentid, n.id
-          ) as foo
+          match (n1)&lt;-[:rel{rel: 'hd'}]-(n:node{cat: 'pp'})-[:rel{rel: 'obj1'}]->(w:word{pt: 'vnw'})
+          where w.begin = n.begin and n1.end = n.end
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
       </item>
       <item id="spod-ppimwu" lbl="interne structuur, complex voorzetsel">
@@ -1215,11 +1211,9 @@
           return n.sentid, n.id
         </item>
         <item id="spod-ppimwu-tel" lbl="telling">
-          select count(distinct(sentid)) as zinnen, count(sentid) as items
-          from (
-            match (:node{cat: 'mwu'})&lt;-[:rel{rel: 'hd'}]-(n:node{cat: 'pp'})
-            return distinct n.sentid, n.id
-          ) as foo
+          match (:node{cat: 'mwu'})&lt;-[:rel{rel: 'hd'}]-(n:node{cat: 'pp'})
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
       </item>
     </item>
@@ -1232,12 +1226,10 @@
           return n.sentid, n.id
         </item>
         <item id="spod-vwuit-tel" lbl="telling">
-          select count(distinct(sentid)) as zinnen, count(sentid) as items
-          from (
-            match (n:node)&lt;-[:rel{rel: 'svp'}]-()
-            where n.cat is not null
-            return distinct n.sentid, n.id
-          ) as foo
+          match (n:node)&lt;-[:rel{rel: 'svp'}]-()
+          where n.cat is not null
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
       </item>
       <item id="spod-groen" lbl="groene werkwoordsvolgorde">
@@ -1249,14 +1241,12 @@
           return w.sentid, w.id
         </item>
         <item id="spod-groen-tel" lbl="telling">
-          select count(distinct(sentid)) as zinnen, count(sentid) as items
-          from (
-            match (w:word{wvorm: 'vd'})&lt;-[:rel{rel: 'hd'}]-(:node)&lt;-[:rel{rel: 'vc'}]-(:node)-[:rel{rel: 'hd'}]->(x)
-            where w.begin &lt; x.begin
-              and not exists( (w)&lt;-[:rel*2]-(:node{sentid: w.sentid, cat: 'smain'}) )
-              and not exists( (w)&lt;-[:rel*2]-(:node{sentid: w.sentid, cat: 'sv1'}) )
-            return distinct w.sentid, w.id
-          ) as foo
+          match (w:word{wvorm: 'vd'})&lt;-[:rel{rel: 'hd'}]-(:node)&lt;-[:rel{rel: 'vc'}]-(:node)-[:rel{rel: 'hd'}]->(x)
+          where w.begin &lt; x.begin
+            and not exists( (w)&lt;-[:rel*2]-(:node{sentid: w.sentid, cat: 'smain'}) )
+            and not exists( (w)&lt;-[:rel*2]-(:node{sentid: w.sentid, cat: 'sv1'}) )
+          with distinct w.sentid as sentid, w.id as id
+          return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
       </item>
       <item id="spod-rood" lbl="rode werkwoordsvolgorde">
@@ -1271,17 +1261,15 @@
           return n.sentid, n.id
         </item>
         <item id="spod-rood-tel" lbl="telling">
-          select count(distinct(sentid)) as zinnen, count(sentid) as items
-          from (
-            match (n:word{wvorm: 'vd'})&lt;-[:rel{rel: 'hd'}]-()&lt;-[:rel]-()-[:rel{rel: 'hd'}]->(w:word{pt: 'ww'})
-            optional match (n)&lt;-[:rel]-()&lt;-[:rel]-(n2:node{cat: 'smain'})
-            optional match (n)&lt;-[:rel]-()&lt;-[:rel]-(n3:node{cat: 'sv1'})
-            with n, n2, n3, w
-            where n.begin > w.begin
-              and n2 is null
-              and n3 is null
-            return distinct n.sentid, n.id
-          ) as foo
+          match (n:word{wvorm: 'vd'})&lt;-[:rel{rel: 'hd'}]-()&lt;-[:rel]-()-[:rel{rel: 'hd'}]->(w:word{pt: 'ww'})
+          optional match (n)&lt;-[:rel]-()&lt;-[:rel]-(n2:node{cat: 'smain'})
+          optional match (n)&lt;-[:rel]-()&lt;-[:rel]-(n3:node{cat: 'sv1'})
+          with n, n2, n3, w
+          where n.begin > w.begin
+            and n2 is null
+            and n3 is null
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
       </item>
       <item id="spod-wwclus" lbl="werkwoordsclusters">
@@ -1293,14 +1281,12 @@
           return n.sentid, n.id
         </item>
         <item id="spod-wwclus-tel" lbl="telling">
-          select count(distinct(sentid)) as zinnen, count(sentid) as items
-          from (
-            match (n1:nw)&lt;-[:rel]-(n:node)&lt;-[:rel{rel: 'vc'}]-(n0:node)-[:rel{rel: 'hd'}]->(n2:word{pt: 'ww'})
-            where n.cat in ['ti','inf','ppart']
-              and not(n0.cat in ['smain','sv1']) -- dit hoeft niet per se n0 te zijn???
-              and n1.begin &lt; n2.begin
-            return distinct n.sentid, n.id
-          ) as foo
+          match (n1:nw)&lt;-[:rel]-(n:node)&lt;-[:rel{rel: 'vc'}]-(n0:node)-[:rel{rel: 'hd'}]->(n2:word{pt: 'ww'})
+          where n.cat in ['ti','inf','ppart']
+            and not(n0.cat in ['smain','sv1']) -- dit hoeft niet per se n0 te zijn???
+            and n1.begin &lt; n2.begin
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
       </item>
       <item id="spod-accinf" lbl="accusativus cum infinitivo">
@@ -1316,14 +1302,12 @@
         <item id="spod-accinf-tel" lbl="telling">
           -- niet voor Corpus Gesproken Nederlands
 
-          select count(distinct(sentid)) as zinnen, count(sentid) as items
-          from (
-            match (x)&lt;-[:rel]-(n:node{cat: 'inf'})&lt;-[:rel{rel: 'vc'}]-(n1)-[:rel{rel: 'hd'}]->(w:word{pt: 'ww'})
-            match (n)-[:rel{rel: 'su'}]->()&lt;-[:rel{rel: 'obj1'}]-(n1)
-            where not n1.cat in ['smain','sv1']
-              and x.begin &lt; w.begin
-            return distinct n.sentid, n.id
-          ) as foo
+          match (x)&lt;-[:rel]-(n:node{cat: 'inf'})&lt;-[:rel{rel: 'vc'}]-(n1)-[:rel{rel: 'hd'}]->(w:word{pt: 'ww'})
+          match (n)-[:rel{rel: 'su'}]->()&lt;-[:rel{rel: 'obj1'}]-(n1)
+          where not n1.cat in ['smain','sv1']
+            and x.begin &lt; w.begin
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
       </item>
       <item id="spod-passive" lbl="passief">
@@ -1338,13 +1322,11 @@
         <item id="spod-passive-tel" lbl="telling">
           -- niet voor Corpus Gesproken Nederlands
 
-          select count(distinct(sentid)) as zinnen, count(sentid) as items
-          from (
-            match (n1:nw)&lt;-[:rel{rel: 'obj1'}]-(ni)&lt;-[:rel*0..1]-(n:node)&lt;-[:rel{rel: 'vc'}]-()&lt;-[:rel]-(n0)
-            match (n0)-[:rel{rel: 'su'}]->(n1)
-            where (ni = n and n.cat = 'ppart' or ni != n and n.cat = 'ti')
-            return distinct n.sentid, n.id
-          ) as foo
+          match (n1:nw)&lt;-[:rel{rel: 'obj1'}]-(ni)&lt;-[:rel*0..1]-(n:node)&lt;-[:rel{rel: 'vc'}]-()&lt;-[:rel]-(n0)
+          match (n0)-[:rel{rel: 'su'}]->(n1)
+          where (ni = n and n.cat = 'ppart' or ni != n and n.cat = 'ti')
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
       </item>
       <item id="spod-nppas" lbl="niet-persoonlijke passief">
@@ -1396,50 +1378,48 @@
         <item id="spod-nppas-tel" lbl="telling">
           -- niet voor Corpus Gesproken Nederlands
 
-          select count(distinct(sentid)) as zinnen, count(sentid) as items
-          from (
-            match (n:nw)&lt;-[:rel{rel: 'vc'}]-()
-            match (n)&lt;-[:rel]-()-[:rel{rel: 'hd'}]->(n1)
-            match (n)&lt;-[:rel]-(n2)
-            optional match (pn:node{cat: 'sv1'})-[:rel]->(n)
-            optional match (pn)-[:rel{rel: 'su'}]->(px1)
-            optional match (pn)-[:rel{rel: 'hd'}]->(px2)
-            with n, n1, n2, pn, px1, px2
-            where (n1.sc in ['passive','te_passive']
-               or (n1.pt = 'ww'
-                 and (
-                   ( n.cat = 'ppart'
-                     and not exists ((n)-[:rel{rel: 'obj1'}]->())
-                     and not exists ((n)-[:rel{rel: 'su'}]->())
-                     and not exists ((n)-[:rel{rel: 'vc'}]->())
-                     and not exists ((n)-[:rel{rel: 'predc'}]->()) )
-                   or ( n.cat = 'ti'
-                     and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'obj1'}]->())
-                     and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'su'}]->())
-                     and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'vc'}]->())
-                     and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'predc'}]->()) )
-                 ))
-            ) and (
-              -- n2 is een parent van n
-              not exists((n2)-[:rel{rel: 'su'}]->())
-              and (
-                n2.cat in ['smain','ssub']
-                or (
-                  n2.cat = 'sv1'
-                  and not (
-                    -- imperatief
-                    pn is not null
-                      and px1 is null
-                      and not (px2.stype   is not null and not px2.stype = 'imparative')
-                      and not ((px2.tense  is not null and px2.tense = 'past') or
-                               (px2.pvagr  is not null and px2.pvagr in ['mv','met-t']) or
-                               (px2.pvtijd is not null and px2.pvtijd = 'verl') or
-                               (px2.lemma  is not null and px2.lemma in ['zijn','kunnen','willen','moeten','mogen','zullen','denken','geloven','vinden','hebben']) )
-                    -- einde imperatief
-                  )))
-            )
-            return distinct n.sentid, n.id
-          ) as foo
+          match (n:nw)&lt;-[:rel{rel: 'vc'}]-()
+          match (n)&lt;-[:rel]-()-[:rel{rel: 'hd'}]->(n1)
+          match (n)&lt;-[:rel]-(n2)
+          optional match (pn:node{cat: 'sv1'})-[:rel]->(n)
+          optional match (pn)-[:rel{rel: 'su'}]->(px1)
+          optional match (pn)-[:rel{rel: 'hd'}]->(px2)
+          with n, n1, n2, pn, px1, px2
+          where (n1.sc in ['passive','te_passive']
+             or (n1.pt = 'ww'
+               and (
+                 ( n.cat = 'ppart'
+                   and not exists ((n)-[:rel{rel: 'obj1'}]->())
+                   and not exists ((n)-[:rel{rel: 'su'}]->())
+                   and not exists ((n)-[:rel{rel: 'vc'}]->())
+                   and not exists ((n)-[:rel{rel: 'predc'}]->()) )
+                 or ( n.cat = 'ti'
+                   and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'obj1'}]->())
+                   and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'su'}]->())
+                   and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'vc'}]->())
+                   and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'predc'}]->()) )
+               ))
+          ) and (
+            -- n2 is een parent van n
+            not exists((n2)-[:rel{rel: 'su'}]->())
+            and (
+              n2.cat in ['smain','ssub']
+              or (
+                n2.cat = 'sv1'
+                and not (
+                  -- imperatief
+                  pn is not null
+                    and px1 is null
+                    and not (px2.stype   is not null and not px2.stype = 'imparative')
+                    and not ((px2.tense  is not null and px2.tense = 'past') or
+                             (px2.pvagr  is not null and px2.pvagr in ['mv','met-t']) or
+                             (px2.pvtijd is not null and px2.pvtijd = 'verl') or
+                             (px2.lemma  is not null and px2.lemma in ['zijn','kunnen','willen','moeten','mogen','zullen','denken','geloven','vinden','hebben']) )
+                  -- einde imperatief
+                )))
+          )
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
       </item>
     </item>
@@ -1456,12 +1436,10 @@
         <item id="spod-vpart-tel" lbl="telling">
           -- alleen voor automatisch verwerkte corpora
 
-          select count(distinct(sentid)) as zinnen, count(sentid) as items
-          from (
-            match (w:word)
-            where w.sc starts with 'part_'
-            return distinct w.sentid, w.id
-          ) as foo
+          match (w:word)
+          where w.sc starts with 'part_'
+          with distinct w.sentid as sentid, w.id as id
+          return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
       </item>
       <item id="spod-vpartex" lbl="Werkwoorden met een scheidbaar partikel, partikel gescheiden van het werkwoord">
@@ -1476,13 +1454,11 @@
         <item id="spod-vpartex-tel" lbl="telling">
           -- alleen voor automatisch verwerkte corpora
 
-          select count(distinct(sentid)) as zinnen, count(sentid) as items
-          from (
-            match (w:word)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)
-            where w.sc starts with 'part_'
-              and w2.frame starts with 'particle'
-            return distinct w.sentid, w.id
-          ) as foo
+          match (w:word)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)
+          where w.sc starts with 'part_'
+            and w2.frame starts with 'particle'
+          with distinct w.sentid as sentid, w.id as id
+          return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
       </item>
       <item id="spod-vpartin" lbl="Werkwoorden met een scheidbaar partikel, partikel geïncorporeerd in het werkwoord">
@@ -1526,13 +1502,11 @@
         <item id="spod-vprtn-tel" lbl="telling">
           -- alleen voor automatisch verwerkte corpora
 
-          select count(distinct(sentid)) as zinnen, count(sentid) as items
-          from (
-            match (w:word)
-            where w.sc starts with 'part_'
-              and (w.wvorm is null or w.wvorm != 'pv')
-            return distinct w.sentid, w.id
-          ) as foo
+          match (w:word)
+          where w.sc starts with 'part_'
+            and (w.wvorm is null or w.wvorm != 'pv')
+          with distinct w.sentid as sentid, w.id as id
+          return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
       </item>
       <item id="spod-vprtnex" lbl="Niet-finiete werkwoorden met een scheidbaar partikel, partikel gescheiden van het werkwoord">
@@ -1548,14 +1522,12 @@
         <item id="spod-vprtnex-tel" lbl="telling">
           -- alleen voor automatisch verwerkte corpora
 
-          select count(distinct(sentid)) as zinnen, count(sentid) as items
-          from (
-            match (w:word)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)
-            where w.sc starts with 'part_'
-              and (w.wvorm is null or w.wvorm != 'pv')
-              and w2.frame starts with 'particle'
-            return distinct w.sentid, w.id
-          ) as foo
+          match (w:word)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)
+          where w.sc starts with 'part_'
+            and (w.wvorm is null or w.wvorm != 'pv')
+            and w2.frame starts with 'particle'
+          with distinct w.sentid as sentid, w.id as id
+          return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
       </item>
       <item id="spod-vprtnin" lbl="Niet-finiete werkwoorden met een scheidbaar partikel, partikel geïncorporeerd in het werkwoord">
@@ -1659,12 +1631,10 @@
           return n.sentid, n.id
         </item>
         <item id="spod-nptsub-tel" lbl="telling">
-          select count(distinct(sentid)) as zinnen, count(sentid) as items
-          from (
-            match (n:nw{_vorfeld: true, _np: true})&lt;-[r:rel]-()
-            where r.rel in ['su','sup'] and r.id is null
-            return distinct n.sentid, n.id
-          ) as foo
+          match (n:nw{_vorfeld: true, _np: true})&lt;-[r:rel]-()
+          where r.rel in ['su','sup'] and r.id is null
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
       </item>
       <item id="spod-nptnsub" lbl="np-topic is geen subject">
@@ -1757,16 +1727,14 @@
           return n.sentid, n.id
         </item>
         <item id="spod-nlocext-tel" lbl="telling">
-          select count(distinct(sentid)) as zinnen, count(sentid) as items
-          from (
-            match (n:nw)&lt;-[r:rel]-(nn)
-            match (nn)-[:rel*1..]->(:node{sentid:n.sentid, cat:'ssub'})-[:rel*1..]->(n0:node{sentid: n.sentid, cat: 'ssub'})-[:rel*1..]->(n)
-            optional match (n0)&lt;-[:rel]-()&lt;-[:rel{rel: 'obcomp'}]-(n2)
-            with r, n, n0, n2
-            where r.rel in ['whd','rhd']
-              and n2 is null
-            return distinct n.sentid, n.id
-          ) as foo
+          match (n:nw)&lt;-[r:rel]-(nn)
+          match (nn)-[:rel*1..]->(:node{sentid:n.sentid, cat:'ssub'})-[:rel*1..]->(n0:node{sentid: n.sentid, cat: 'ssub'})-[:rel*1..]->(n)
+          optional match (n0)&lt;-[:rel]-()&lt;-[:rel{rel: 'obcomp'}]-(n2)
+          with r, n, n0, n2
+          where r.rel in ['whd','rhd']
+            and n2 is null
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
       </item>
     </item>
