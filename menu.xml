@@ -456,14 +456,14 @@
       <item id="spod-relssub" lbl="relatieve bijzinnen">
         <item id="spod-relssub-zin" lbl="zinnen">
           match (n:node{cat: 'rel'})-[:rel{rel: 'body'}]->(n1:node)-[r:rel*0..1]->(n2:node{cat: 'ssub'})
-          where n1 = n2
+          where length(r) = 0
              or n1.cat = 'conj' and r[0].rel = 'cnj'
              or n1.cat = 'du'
           return n.sentid, n.id, n2.id
         </item>
         <item id="spod-relssub-tel" lbl="telling">
           match (n:node{cat: 'rel'})-[:rel{rel: 'body'}]->(n1:node)-[r:rel*0..1]->(n2:node{cat: 'ssub'})
-          where n1 = n2
+          where length(r) = 0
              or n1.cat = 'conj' and r[0].rel = 'cnj'
              or n1.cat = 'du'
           with distinct n.sentid as sentid, n.id as id
@@ -1314,17 +1314,17 @@
         <item id="spod-passive-zin" lbl="zinnen">
           -- niet voor Corpus Gesproken Nederlands
 
-          match (n1:nw)&lt;-[:rel{rel: 'obj1'}]-(ni)&lt;-[:rel*0..1]-(n:node)&lt;-[:rel{rel: 'vc'}]-()&lt;-[:rel]-(n0)
+          match (n1:nw)&lt;-[:rel{rel: 'obj1'}]-()&lt;-[r:rel*0..1]-(n:node)&lt;-[:rel{rel: 'vc'}]-()&lt;-[:rel]-(n0)
           match (n0)-[:rel{rel: 'su'}]->(n1)
-          where (ni = n and n.cat = 'ppart' or ni != n and n.cat = 'ti')
+          where (length(r) = 0 and n.cat = 'ppart' or length(r) = 1 and n.cat = 'ti')
           return n.sentid, n.id
         </item>
         <item id="spod-passive-tel" lbl="telling">
           -- niet voor Corpus Gesproken Nederlands
 
-          match (n1:nw)&lt;-[:rel{rel: 'obj1'}]-(ni)&lt;-[:rel*0..1]-(n:node)&lt;-[:rel{rel: 'vc'}]-()&lt;-[:rel]-(n0)
+          match (n1:nw)&lt;-[:rel{rel: 'obj1'}]-()&lt;-[r:rel*0..1]-(n:node)&lt;-[:rel{rel: 'vc'}]-()&lt;-[:rel]-(n0)
           match (n0)-[:rel{rel: 'su'}]->(n1)
-          where (ni = n and n.cat = 'ppart' or ni != n and n.cat = 'ti')
+          where (length(r) = 0 and n.cat = 'ppart' or length(r) = 1 and n.cat = 'ti')
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
