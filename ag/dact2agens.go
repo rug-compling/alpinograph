@@ -819,23 +819,27 @@ func doNode2(node *Node) {
 	for _, n := range node.NodeList {
 		if n.Cat != "" {
 			nRel++
-			fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s%s}\n",
+			fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"primary\": true%s}\n",
 				idRel, nRel,
 				node.aid,
 				n.aid,
 				q(n.Rel),
 				relExtra(n))
+			featureMap["rel"]["rel"] = featureMap["rel"]["rel"] + 1
+			featureMap["rel"]["primary"] = featureMap["rel"]["primary"] + 1
 			doNode2(n)
 			continue
 		}
 		if n.Word != "" {
 			nRel++
-			fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s%s}\n",
+			fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"primary\": true%s}\n",
 				idRel, nRel,
 				node.aid,
 				n.aid,
 				q(n.Rel),
 				relExtra(n))
+			featureMap["rel"]["rel"] = featureMap["rel"]["rel"] + 1
+			featureMap["rel"]["primary"] = featureMap["rel"]["primary"] + 1
 		}
 	}
 }
