@@ -16,6 +16,11 @@
       return f.name as attribuut, f.count as aantal
       order by attribuut
     </item>
+    <item id="idx-rel" lbl="Attributen van relaties">
+      match (f:feature{v: 'rel'})
+      return f.name as attribuut, f.count as aantal
+      order by attribuut
+    </item>
     <item id="idx-meta" lbl="Soorten metadata">
       match (f:feature{v: 'meta'})
       return f.name as metadata, f.count as aantal
