@@ -51,91 +51,101 @@ type SentType struct {
 }
 
 type Node struct {
-	used         bool
-	aid          string
-	wordcount    int
-	level        int
-	parents      []*Node `xml:"node"`
-	Aform        string  `xml:"aform,attr"`
-	Begin        int     `xml:"begin,attr"`
-	Buiging      string  `xml:"buiging,attr"`
-	Case         string  `xml:"case,attr"`
-	Cat          string  `xml:"cat,attr"`
-	Comparative  string  `xml:"comparative,attr"`
-	Conjtype     string  `xml:"conjtype,attr"`
-	Def          string  `xml:"def,attr"`
-	Dial         string  `xml:"dial,attr"`
-	Dscmanual    string  `xml:"dscmanual,attr"`
-	Dscsense     string  `xml:"dscsense,attr"`
-	End          int     `xml:"end,attr"`
-	Frame        string  `xml:"frame,attr"`
-	Gen          string  `xml:"gen,attr"`
-	Genus        string  `xml:"genus,attr"`
-	Getal        string  `xml:"getal,attr"`
-	GetalN       string  `xml:"getal-n,attr"` // hier een minus
-	Graad        string  `xml:"graad,attr"`
-	His          string  `xml:"his,attr"`
-	His1         string  `xml:"his_1,attr"`
-	His2         string  `xml:"his_2,attr"`
-	His11        string  `xml:"his_1_1,attr"`
-	His12        string  `xml:"his_1_2,attr"`
-	His21        string  `xml:"his_2_1,attr"`
-	His22        string  `xml:"his_2_2,attr"`
-	His111       string  `xml:"his_1_1_1,attr"`
-	His112       string  `xml:"his_1_1_2,attr"`
-	His121       string  `xml:"his_1_2_1,attr"`
-	His122       string  `xml:"his_1_2_2,attr"`
-	His211       string  `xml:"his_2_1_1,attr"`
-	His212       string  `xml:"his_2_1_2,attr"`
-	His221       string  `xml:"his_2_2_1,attr"`
-	His222       string  `xml:"his_2_2_2,attr"`
-	Id           int     `xml:"id,attr"`
-	Iets         string  `xml:"iets,attr"`
-	Index        string  `xml:"index,attr"`
+	used      bool
+	aid       string
+	wordcount int
+	level     int
+	parents   []*Node `xml:"node"`
+
+	Aform        string `xml:"aform,attr"`
+	Begin        int    `xml:"begin,attr"`
+	Buiging      string `xml:"buiging,attr"`
+	Case         string `xml:"case,attr"`
+	Cat          string `xml:"cat,attr"`
+	Comparative  string `xml:"comparative,attr"`
+	Conjtype     string `xml:"conjtype,attr"`
+	Def          string `xml:"def,attr"`
+	Dial         string `xml:"dial,attr"`
+	Dscmanual    string `xml:"dscmanual,attr"`
+	Dscsense     string `xml:"dscsense,attr"`
+	End          int    `xml:"end,attr"`
+	Frame        string `xml:"frame,attr"`
+	Gen          string `xml:"gen,attr"`
+	Genus        string `xml:"genus,attr"`
+	Getal        string `xml:"getal,attr"`
+	GetalN       string `xml:"getal-n,attr"` // hier een minus
+	Graad        string `xml:"graad,attr"`
+	His          string `xml:"his,attr"`
+	His1         string `xml:"his_1,attr"`
+	His2         string `xml:"his_2,attr"`
+	His11        string `xml:"his_1_1,attr"`
+	His12        string `xml:"his_1_2,attr"`
+	His21        string `xml:"his_2_1,attr"`
+	His22        string `xml:"his_2_2,attr"`
+	His111       string `xml:"his_1_1_1,attr"`
+	His112       string `xml:"his_1_1_2,attr"`
+	His121       string `xml:"his_1_2_1,attr"`
+	His122       string `xml:"his_1_2_2,attr"`
+	His211       string `xml:"his_2_1_1,attr"`
+	His212       string `xml:"his_2_1_2,attr"`
+	His221       string `xml:"his_2_2_1,attr"`
+	His222       string `xml:"his_2_2_2,attr"`
+	Id           int    `xml:"id,attr"`
+	Iets         string `xml:"iets,attr"`
+	Index        string `xml:"index,attr"`
 	index        int
-	Infl         string  `xml:"infl,attr"`
-	Lcat         string  `xml:"lcat,attr"`
-	Lemma        string  `xml:"lemma,attr"`
-	Lwtype       string  `xml:"lwtype,attr"`
-	MwuRoot      string  `xml:"mwu_root,attr"`
-	MwuSense     string  `xml:"mwu_sense,attr"`
-	Naamval      string  `xml:"naamval,attr"`
-	Neclass      string  `xml:"neclass,attr"`
-	Npagr        string  `xml:"npagr,attr"`
-	Ntype        string  `xml:"ntype,attr"`
-	Num          string  `xml:"num,attr"`
-	Numtype      string  `xml:"numtype,attr"`
-	Pb           string  `xml:"pb,attr"`
-	Pdtype       string  `xml:"pdtype,attr"`
-	Per          string  `xml:"per,attr"`
-	Personalized string  `xml:"personalized,attr"`
-	Persoon      string  `xml:"persoon,attr"`
-	Pos          string  `xml:"pos,attr"`
-	Positie      string  `xml:"positie,attr"`
-	Postag       string  `xml:"postag,attr"`
-	Pron         string  `xml:"pron,attr"`
-	Pt           string  `xml:"pt,attr"`
-	Pvagr        string  `xml:"pvagr,attr"`
-	Pvtijd       string  `xml:"pvtijd,attr"`
-	Refl         string  `xml:"refl,attr"`
-	Rel          string  `xml:"rel,attr"`
-	Rnum         string  `xml:"rnum,attr"`
-	Root         string  `xml:"root,attr"`
-	Sc           string  `xml:"sc,attr"`
-	Sense        string  `xml:"sense,attr"`
-	Special      string  `xml:"special,attr"`
-	Spectype     string  `xml:"spectype,attr"`
-	Status       string  `xml:"status,attr"`
-	Stype        string  `xml:"stype,attr"`
-	Tense        string  `xml:"tense,attr"`
-	Vform        string  `xml:"vform,attr"`
-	Vwtype       string  `xml:"vwtype,attr"`
-	Vztype       string  `xml:"vztype,attr"`
-	Wh           string  `xml:"wh,attr"`
-	Wk           string  `xml:"wk,attr"`
-	Word         string  `xml:"word,attr"`
-	Wvorm        string  `xml:"wvorm,attr"`
-	NodeList     []*Node `xml:"node"`
+	Infl         string `xml:"infl,attr"`
+	Lcat         string `xml:"lcat,attr"`
+	Lemma        string `xml:"lemma,attr"`
+	Lwtype       string `xml:"lwtype,attr"`
+	MwuRoot      string `xml:"mwu_root,attr"`
+	MwuSense     string `xml:"mwu_sense,attr"`
+	Naamval      string `xml:"naamval,attr"`
+	Neclass      string `xml:"neclass,attr"`
+	Npagr        string `xml:"npagr,attr"`
+	Ntype        string `xml:"ntype,attr"`
+	Num          string `xml:"num,attr"`
+	Numtype      string `xml:"numtype,attr"`
+	Pb           string `xml:"pb,attr"`
+	Pdtype       string `xml:"pdtype,attr"`
+	Per          string `xml:"per,attr"`
+	Personalized string `xml:"personalized,attr"`
+	Persoon      string `xml:"persoon,attr"`
+	Pos          string `xml:"pos,attr"`
+	Positie      string `xml:"positie,attr"`
+	Postag       string `xml:"postag,attr"`
+	Pron         string `xml:"pron,attr"`
+	Pt           string `xml:"pt,attr"`
+	Pvagr        string `xml:"pvagr,attr"`
+	Pvtijd       string `xml:"pvtijd,attr"`
+	Refl         string `xml:"refl,attr"`
+	Rel          string `xml:"rel,attr"`
+	Rnum         string `xml:"rnum,attr"`
+	Root         string `xml:"root,attr"`
+	Sc           string `xml:"sc,attr"`
+	Sense        string `xml:"sense,attr"`
+	Special      string `xml:"special,attr"`
+	Spectype     string `xml:"spectype,attr"`
+	Status       string `xml:"status,attr"`
+	Stype        string `xml:"stype,attr"`
+	Tense        string `xml:"tense,attr"`
+	Vform        string `xml:"vform,attr"`
+	Vwtype       string `xml:"vwtype,attr"`
+	Vztype       string `xml:"vztype,attr"`
+	Wh           string `xml:"wh,attr"`
+	Wk           string `xml:"wk,attr"`
+	Word         string `xml:"word,attr"`
+	Wvorm        string `xml:"wvorm,attr"`
+
+	Nattr    []*NRattr `xml:"nattr,omitempty"`
+	Rattr    []*NRattr `xml:"rattr,omitempty"`
+	NodeList []*Node   `xml:"node"`
+}
+
+type NRattr struct {
+	Type  string `xml:"type,attr"`
+	Name  string `xml:"name,attr"`
+	Value string `xml:"value,attr"`
 }
 
 // Een dependency relation
@@ -215,7 +225,10 @@ var (
 		"meta": make(map[string]int),
 		"node": make(map[string]int),
 		"word": make(map[string]int),
+		"rel":  make(map[string]int),
 	}
+	nattrMap = make(map[string]bool)
+	rattrMap = make(map[string]bool)
 )
 
 func usage() {
@@ -424,11 +437,14 @@ LOOP:
 			q(sentid), q(alpino.Sentence.Sent), alpino.Node0.End, buf.String())
 
 		nRel++
-		fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s}\n",
+		fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"primary\": true%s}\n",
 			idRel, nRel,
 			lblSentence,
 			alpino.Node0.aid,
-			q(alpino.Node0.Rel))
+			q(alpino.Node0.Rel),
+			relExtra(alpino.Node0))
+		featureMap["rel"]["rel"] = featureMap["rel"]["rel"] + 1
+		featureMap["rel"]["primary"] = featureMap["rel"]["primary"] + 1
 
 		doNode1(sentid, alpino.Node0, alpino.Node0.End, feats)
 
@@ -470,12 +486,16 @@ LOOP:
 					for _, n := range node.NodeList {
 						if n.Index != "" && n.Word == "" && n.Cat == "" {
 							nRel++
-							fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"id\": %d}\n",
+							fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"primary\": false, \"id\": %d%s}\n",
 								idRel, nRel,
 								node.aid,
 								indexen[n.Index],
 								q(n.Rel),
-								n.Id)
+								n.Id,
+								relExtra(n))
+							featureMap["rel"]["rel"] = featureMap["rel"]["rel"] + 1
+							featureMap["rel"]["primary"] = featureMap["rel"]["primary"] + 1
+							featureMap["rel"]["id"] = featureMap["rel"]["id"] + 1
 						}
 						f(n)
 					}
@@ -647,6 +667,7 @@ create property index on node("_deste");
 create property index on node("_np");
 create property index on node("_vorfeld");
 create property index on rel("id");
+create property index on rel("primary");
 create property index on rel("rel");
 create property index on pair("rel");
 create property index on ud("rel");
@@ -660,6 +681,17 @@ create property index on meta("sentid");
 create property index on meta("name");
 create property index on meta("value");
 `)
+	}
+
+	for name := range nattrMap {
+		fmt.Printf(`create property index on node(%q);
+create property index on word(%q);
+`, name, name)
+	}
+
+	for name := range rattrMap {
+		fmt.Printf(`create property index on rel(%q);
+`, name)
 	}
 
 	fmt.Printf(`create (:doc{alud_version: '%s'});
@@ -702,6 +734,11 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 			if val := getAttr(name, node); val != "" {
 				fmt.Fprintf(&buf, `, "%s": %s`, name, q(val))
 			}
+		}
+		for _, nattr := range node.Nattr {
+			name := attrName(nattr.Name)
+			fmt.Fprintf(&buf, `, %q: %s`, name, qt(nattr.Value, nattr.Type))
+			nattrMap[name] = true
 		}
 		lvl := ""
 		if node.level > 0 {
@@ -747,6 +784,11 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 				fmt.Fprintf(&buf, `, "%s": %s`, name, q(val))
 			}
 		}
+		for _, nattr := range node.Nattr {
+			name := attrName(nattr.Name)
+			fmt.Fprintf(&buf, `, %q: %s`, name, qt(nattr.Value, nattr.Type))
+			nattrMap[name] = true
+		}
 		if node.End == last {
 			fmt.Fprint(&buf, ", \"last\": true")
 		}
@@ -777,21 +819,23 @@ func doNode2(node *Node) {
 	for _, n := range node.NodeList {
 		if n.Cat != "" {
 			nRel++
-			fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s}\n",
+			fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s%s}\n",
 				idRel, nRel,
 				node.aid,
 				n.aid,
-				q(n.Rel))
+				q(n.Rel),
+				relExtra(n))
 			doNode2(n)
 			continue
 		}
 		if n.Word != "" {
 			nRel++
-			fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s}\n",
+			fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s%s}\n",
 				idRel, nRel,
 				node.aid,
 				n.aid,
-				q(n.Rel))
+				q(n.Rel),
+				relExtra(n))
 		}
 	}
 }
@@ -1422,6 +1466,15 @@ func qt(s string, stype string) string {
 	if stype == "int" || stype == "float" {
 		return s
 	}
+	if stype == "bool" {
+		switch strings.ToLower(s) {
+		// geen waarde opgegeven, dat default is ook true
+		case "true", "yes", "on", "1", "y", "t", "":
+			return "true"
+		default:
+			return "false"
+		}
+	}
 	return q(s)
 }
 
@@ -1691,4 +1744,22 @@ func featureCount(item, jsn string) {
 	for key := range j {
 		featureMap[item][key] = featureMap[item][key] + 1
 	}
+}
+
+func relExtra(node *Node) string {
+	if node.Rattr == nil || len(node.Rattr) == 0 {
+		return ""
+	}
+	var buf bytes.Buffer
+	for _, rattr := range node.Rattr {
+		name := attrName(rattr.Name)
+		rattrMap[name] = true
+		fmt.Fprintf(&buf, `, %q: %s`, name, qt(rattr.Value, rattr.Type))
+		featureMap["rel"][name] = featureMap["rel"][name] + 1
+	}
+	return buf.String()
+}
+
+func attrName(name string) string {
+	return "x_" + strings.Replace(name, "-", "_", -1)
 }

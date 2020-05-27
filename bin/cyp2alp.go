@@ -44,85 +44,94 @@ type SentType struct {
 
 type NodeT struct {
 	parent       int
-	Aform        string   `xml:"aform,attr,omitempty" json:"aform,attr"`
-	Begin        int      `xml:"begin,attr" json:"begin,attr"`
-	Buiging      string   `xml:"buiging,attr,omitempty" json:"buiging,attr"`
-	Case         string   `xml:"case,attr,omitempty" json:"case,attr"`
-	Cat          string   `xml:"cat,attr,omitempty" json:"cat,attr"`
-	Comparative  string   `xml:"comparative,attr,omitempty" json:"comparative,attr"`
-	Conjtype     string   `xml:"conjtype,attr,omitempty" json:"conjtype,attr"`
-	Def          string   `xml:"def,attr,omitempty" json:"def,attr"`
-	Dial         string   `xml:"dial,attr,omitempty" json:"dial,attr"`
-	Dscmanual    string   `xml:"dscmanual,attr,omitempty" json:"dscmanual,attr"`
-	Dscsense     string   `xml:"dscsense,attr,omitempty" json:"dscsense,attr"`
-	End          int      `xml:"end,attr" json:"end,attr"`
-	Frame        string   `xml:"frame,attr,omitempty" json:"frame,attr"`
-	Gen          string   `xml:"gen,attr,omitempty" json:"gen,attr"`
-	Genus        string   `xml:"genus,attr,omitempty" json:"genus,attr"`
-	Getal        string   `xml:"getal,attr,omitempty" json:"getal,attr"`
-	GetalN       string   `xml:"getal-n,attr,omitempty" json:"getal_n,attr"` // hier een minus voor xml, underscore voor json
-	Graad        string   `xml:"graad,attr,omitempty" json:"graad,attr"`
-	His          string   `xml:"his,attr,omitempty" json:"his,attr"`
-	His1         string   `xml:"his_1,attr,omitempty" json:"his_1,attr"`
-	His2         string   `xml:"his_2,attr,omitempty" json:"his_2,attr"`
-	His11        string   `xml:"his_1_1,attr,omitempty" json:"his_1_1,attr"`
-	His12        string   `xml:"his_1_2,attr,omitempty" json:"his_1_2,attr"`
-	His21        string   `xml:"his_2_1,attr,omitempty" json:"his_2_1,attr"`
-	His22        string   `xml:"his_2_2,attr,omitempty" json:"his_2_2,attr"`
-	His111       string   `xml:"his_1_1_1,attr,omitempty" json:"his_1_1_1,attr"`
-	His112       string   `xml:"his_1_1_2,attr,omitempty" json:"his_1_1_2,attr"`
-	His121       string   `xml:"his_1_2_1,attr,omitempty" json:"his_1_2_1,attr"`
-	His122       string   `xml:"his_1_2_2,attr,omitempty" json:"his_1_2_2,attr"`
-	His211       string   `xml:"his_2_1_1,attr,omitempty" json:"his_2_1_1,attr"`
-	His212       string   `xml:"his_2_1_2,attr,omitempty" json:"his_2_1_2,attr"`
-	His221       string   `xml:"his_2_2_1,attr,omitempty" json:"his_2_2_1,attr"`
-	His222       string   `xml:"his_2_2_2,attr,omitempty" json:"his_2_2_2,attr"`
-	Id           int      `xml:"id,attr" json:"id,attr"`
-	Iets         string   `xml:"iets,attr,omitempty" json:"iets,attr"`
-	Index        string   `xml:"index,attr,omitempty" json:"index,attr"`
-	Infl         string   `xml:"infl,attr,omitempty" json:"infl,attr"`
-	Lcat         string   `xml:"lcat,attr,omitempty" json:"lcat,attr"`
-	Lemma        string   `xml:"lemma,attr,omitempty" json:"lemma,attr"`
-	Lwtype       string   `xml:"lwtype,attr,omitempty" json:"lwtype,attr"`
-	MwuRoot      string   `xml:"mwu_root,attr,omitempty" json:"mwu_root,attr"`
-	MwuSense     string   `xml:"mwu_sense,attr,omitempty" json:"mwu_sense,attr"`
-	Naamval      string   `xml:"naamval,attr,omitempty" json:"naamval,attr"`
-	Neclass      string   `xml:"neclass,attr,omitempty" json:"neclass,attr"`
-	Npagr        string   `xml:"npagr,attr,omitempty" json:"npagr,attr"`
-	Ntype        string   `xml:"ntype,attr,omitempty" json:"ntype,attr"`
-	Num          string   `xml:"num,attr,omitempty" json:"num,attr"`
-	Numtype      string   `xml:"numtype,attr,omitempty" json:"numtype,attr"`
-	Pb           string   `xml:"pb,attr,omitempty" json:"pb,attr"`
-	Pdtype       string   `xml:"pdtype,attr,omitempty" json:"pdtype,attr"`
-	Per          string   `xml:"per,attr,omitempty" json:"per,attr"`
-	Personalized string   `xml:"personalized,attr,omitempty" json:"personalized,attr"`
-	Persoon      string   `xml:"persoon,attr,omitempty" json:"persoon,attr"`
-	Pos          string   `xml:"pos,attr,omitempty" json:"pos,attr"`
-	Positie      string   `xml:"positie,attr,omitempty" json:"positie,attr"`
-	Postag       string   `xml:"postag,attr,omitempty" json:"postag,attr"`
-	Pron         string   `xml:"pron,attr,omitempty" json:"pron,attr"`
-	Pt           string   `xml:"pt,attr,omitempty" json:"pt,attr"`
-	Pvagr        string   `xml:"pvagr,attr,omitempty" json:"pvagr,attr"`
-	Pvtijd       string   `xml:"pvtijd,attr,omitempty" json:"pvtijd,attr"`
-	Refl         string   `xml:"refl,attr,omitempty" json:"refl,attr"`
-	Rel          string   `xml:"rel,attr,omitempty" json:"rel,attr"`
-	Rnum         string   `xml:"rnum,attr,omitempty" json:"rnum,attr"`
-	Root         string   `xml:"root,attr,omitempty" json:"root,attr"`
-	Sc           string   `xml:"sc,attr,omitempty" json:"sc,attr"`
-	Sense        string   `xml:"sense,attr,omitempty" json:"sense,attr"`
-	Special      string   `xml:"special,attr,omitempty" json:"special,attr"`
-	Spectype     string   `xml:"spectype,attr,omitempty" json:"spectype,attr"`
-	Status       string   `xml:"status,attr,omitempty" json:"status,attr"`
-	Stype        string   `xml:"stype,attr,omitempty" json:"stype,attr"`
-	Tense        string   `xml:"tense,attr,omitempty" json:"tense,attr"`
-	Vform        string   `xml:"vform,attr,omitempty" json:"vform,attr"`
-	Vwtype       string   `xml:"vwtype,attr,omitempty" json:"vwtype,attr"`
-	Vztype       string   `xml:"vztype,attr,omitempty" json:"vztype,attr"`
-	Wh           string   `xml:"wh,attr,omitempty" json:"wh,attr"`
-	Wk           string   `xml:"wk,attr,omitempty" json:"wk,attr"`
-	Word         string   `xml:"word,attr,omitempty" json:"word,attr"`
-	Wvorm        string   `xml:"wvorm,attr,omitempty" json:"wvorm,attr"`
-	NodeList     []*NodeT `xml:"node,omitempty"`
+	Aform        string `xml:"aform,attr,omitempty" json:"aform,attr"`
+	Begin        int    `xml:"begin,attr" json:"begin,attr"`
+	Buiging      string `xml:"buiging,attr,omitempty" json:"buiging,attr"`
+	Case         string `xml:"case,attr,omitempty" json:"case,attr"`
+	Cat          string `xml:"cat,attr,omitempty" json:"cat,attr"`
+	Comparative  string `xml:"comparative,attr,omitempty" json:"comparative,attr"`
+	Conjtype     string `xml:"conjtype,attr,omitempty" json:"conjtype,attr"`
+	Def          string `xml:"def,attr,omitempty" json:"def,attr"`
+	Dial         string `xml:"dial,attr,omitempty" json:"dial,attr"`
+	Dscmanual    string `xml:"dscmanual,attr,omitempty" json:"dscmanual,attr"`
+	Dscsense     string `xml:"dscsense,attr,omitempty" json:"dscsense,attr"`
+	End          int    `xml:"end,attr" json:"end,attr"`
+	Frame        string `xml:"frame,attr,omitempty" json:"frame,attr"`
+	Gen          string `xml:"gen,attr,omitempty" json:"gen,attr"`
+	Genus        string `xml:"genus,attr,omitempty" json:"genus,attr"`
+	Getal        string `xml:"getal,attr,omitempty" json:"getal,attr"`
+	GetalN       string `xml:"getal-n,attr,omitempty" json:"getal_n,attr"` // hier een minus voor xml, underscore voor json
+	Graad        string `xml:"graad,attr,omitempty" json:"graad,attr"`
+	His          string `xml:"his,attr,omitempty" json:"his,attr"`
+	His1         string `xml:"his_1,attr,omitempty" json:"his_1,attr"`
+	His2         string `xml:"his_2,attr,omitempty" json:"his_2,attr"`
+	His11        string `xml:"his_1_1,attr,omitempty" json:"his_1_1,attr"`
+	His12        string `xml:"his_1_2,attr,omitempty" json:"his_1_2,attr"`
+	His21        string `xml:"his_2_1,attr,omitempty" json:"his_2_1,attr"`
+	His22        string `xml:"his_2_2,attr,omitempty" json:"his_2_2,attr"`
+	His111       string `xml:"his_1_1_1,attr,omitempty" json:"his_1_1_1,attr"`
+	His112       string `xml:"his_1_1_2,attr,omitempty" json:"his_1_1_2,attr"`
+	His121       string `xml:"his_1_2_1,attr,omitempty" json:"his_1_2_1,attr"`
+	His122       string `xml:"his_1_2_2,attr,omitempty" json:"his_1_2_2,attr"`
+	His211       string `xml:"his_2_1_1,attr,omitempty" json:"his_2_1_1,attr"`
+	His212       string `xml:"his_2_1_2,attr,omitempty" json:"his_2_1_2,attr"`
+	His221       string `xml:"his_2_2_1,attr,omitempty" json:"his_2_2_1,attr"`
+	His222       string `xml:"his_2_2_2,attr,omitempty" json:"his_2_2_2,attr"`
+	Id           int    `xml:"id,attr" json:"id,attr"`
+	Iets         string `xml:"iets,attr,omitempty" json:"iets,attr"`
+	Index        string `xml:"index,attr,omitempty" json:"index,attr"`
+	Infl         string `xml:"infl,attr,omitempty" json:"infl,attr"`
+	Lcat         string `xml:"lcat,attr,omitempty" json:"lcat,attr"`
+	Lemma        string `xml:"lemma,attr,omitempty" json:"lemma,attr"`
+	Lwtype       string `xml:"lwtype,attr,omitempty" json:"lwtype,attr"`
+	MwuRoot      string `xml:"mwu_root,attr,omitempty" json:"mwu_root,attr"`
+	MwuSense     string `xml:"mwu_sense,attr,omitempty" json:"mwu_sense,attr"`
+	Naamval      string `xml:"naamval,attr,omitempty" json:"naamval,attr"`
+	Neclass      string `xml:"neclass,attr,omitempty" json:"neclass,attr"`
+	Npagr        string `xml:"npagr,attr,omitempty" json:"npagr,attr"`
+	Ntype        string `xml:"ntype,attr,omitempty" json:"ntype,attr"`
+	Num          string `xml:"num,attr,omitempty" json:"num,attr"`
+	Numtype      string `xml:"numtype,attr,omitempty" json:"numtype,attr"`
+	Pb           string `xml:"pb,attr,omitempty" json:"pb,attr"`
+	Pdtype       string `xml:"pdtype,attr,omitempty" json:"pdtype,attr"`
+	Per          string `xml:"per,attr,omitempty" json:"per,attr"`
+	Personalized string `xml:"personalized,attr,omitempty" json:"personalized,attr"`
+	Persoon      string `xml:"persoon,attr,omitempty" json:"persoon,attr"`
+	Pos          string `xml:"pos,attr,omitempty" json:"pos,attr"`
+	Positie      string `xml:"positie,attr,omitempty" json:"positie,attr"`
+	Postag       string `xml:"postag,attr,omitempty" json:"postag,attr"`
+	Pron         string `xml:"pron,attr,omitempty" json:"pron,attr"`
+	Pt           string `xml:"pt,attr,omitempty" json:"pt,attr"`
+	Pvagr        string `xml:"pvagr,attr,omitempty" json:"pvagr,attr"`
+	Pvtijd       string `xml:"pvtijd,attr,omitempty" json:"pvtijd,attr"`
+	Refl         string `xml:"refl,attr,omitempty" json:"refl,attr"`
+	Rel          string `xml:"rel,attr,omitempty" json:"rel,attr"`
+	Rnum         string `xml:"rnum,attr,omitempty" json:"rnum,attr"`
+	Root         string `xml:"root,attr,omitempty" json:"root,attr"`
+	Sc           string `xml:"sc,attr,omitempty" json:"sc,attr"`
+	Sense        string `xml:"sense,attr,omitempty" json:"sense,attr"`
+	Special      string `xml:"special,attr,omitempty" json:"special,attr"`
+	Spectype     string `xml:"spectype,attr,omitempty" json:"spectype,attr"`
+	Status       string `xml:"status,attr,omitempty" json:"status,attr"`
+	Stype        string `xml:"stype,attr,omitempty" json:"stype,attr"`
+	Tense        string `xml:"tense,attr,omitempty" json:"tense,attr"`
+	Vform        string `xml:"vform,attr,omitempty" json:"vform,attr"`
+	Vwtype       string `xml:"vwtype,attr,omitempty" json:"vwtype,attr"`
+	Vztype       string `xml:"vztype,attr,omitempty" json:"vztype,attr"`
+	Wh           string `xml:"wh,attr,omitempty" json:"wh,attr"`
+	Wk           string `xml:"wk,attr,omitempty" json:"wk,attr"`
+	Word         string `xml:"word,attr,omitempty" json:"word,attr"`
+	Wvorm        string `xml:"wvorm,attr,omitempty" json:"wvorm,attr"`
+
+	Nattr    []*NRattr `xml:"nattr,omitempty"`
+	Rattr    []*NRattr `xml:"rattr,omitempty"`
+	NodeList []*NodeT  `xml:"node,omitempty"`
+}
+
+type NRattr struct {
+	Type  string `xml:"type,attr"`
+	Name  string `xml:"name,attr"`
+	Value string `xml:"value,attr"`
 }
 
 type jsSentence struct {
