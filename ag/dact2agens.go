@@ -185,6 +185,7 @@ var (
 	x         = util.CheckErr
 	reCopied  = regexp.MustCompile(`CopiedFrom=([0-9]+)`)
 	reSpecial = regexp.MustCompile(`["\n\\]`)
+	reNoName  = regexp.MustCompile(`[^a-zA-Z0-9]+`)
 
 	refnodes []*Node   // reset per zin
 	deprels  []*Deprel // reset per zin
@@ -227,8 +228,8 @@ var (
 		"word": make(map[string]int),
 		"rel":  make(map[string]int),
 	}
-	nattrMap = make(map[string]bool)
-	rattrMap = make(map[string]bool)
+	nattrMap = make(map[string][2]string)
+	rattrMap = make(map[string][2]string)
 )
 
 func usage() {
@@ -629,7 +630,7 @@ LOOP:
 
 	for nw, features := range featureMap {
 		for key, value := range features {
-			fmt.Printf("CREATE (:feature{v: '%s', name: '%s', count: %d});\n", nw, sq(key), value)
+			fmt.Printf("create (:feature{v: '%s', name: '%s', count: %d});\n", nw, sq(key), value)
 		}
 	}
 
@@ -683,15 +684,17 @@ create property index on meta("value");
 `)
 	}
 
-	for name := range nattrMap {
+	for name, attr := range nattrMap {
 		fmt.Printf(`create property index on node(%q);
 create property index on word(%q);
-`, name, name)
+create (:nattr{name: '%s', type: '%s', oriname: '%s'});
+`, name, name, sq(name), sq(attr[1]), sq(attr[0]))
 	}
 
-	for name := range rattrMap {
+	for name, attr := range rattrMap {
 		fmt.Printf(`create property index on rel(%q);
-`, name)
+create (:rattr{name: '%s', type: '%s', oriname: '%s'});
+`, name, sq(name), sq(attr[1]), sq(attr[0]))
 	}
 
 	fmt.Printf(`create (:doc{alud_version: '%s'});
@@ -738,7 +741,7 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 		for _, nattr := range node.Nattr {
 			name := attrName(nattr.Name)
 			fmt.Fprintf(&buf, `, %q: %s`, name, qt(nattr.Value, nattr.Type))
-			nattrMap[name] = true
+			nattrMap[name] = [2]string{nattr.Name, nattr.Type}
 		}
 		lvl := ""
 		if node.level > 0 {
@@ -787,7 +790,7 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 		for _, nattr := range node.Nattr {
 			name := attrName(nattr.Name)
 			fmt.Fprintf(&buf, `, %q: %s`, name, qt(nattr.Value, nattr.Type))
-			nattrMap[name] = true
+			nattrMap[name] = [2]string{nattr.Name, nattr.Type}
 		}
 		if node.End == last {
 			fmt.Fprint(&buf, ", \"last\": true")
@@ -1757,13 +1760,13 @@ func relExtra(node *Node) string {
 	var buf bytes.Buffer
 	for _, rattr := range node.Rattr {
 		name := attrName(rattr.Name)
-		rattrMap[name] = true
 		fmt.Fprintf(&buf, `, %q: %s`, name, qt(rattr.Value, rattr.Type))
 		featureMap["rel"][name] = featureMap["rel"][name] + 1
+		rattrMap[name] = [2]string{rattr.Name, rattr.Type}
 	}
 	return buf.String()
 }
 
 func attrName(name string) string {
-	return "x_" + strings.Replace(name, "-", "_", -1)
+	return "x_" + reNoName.ReplaceAllLiteralString(name, "_")
 }

@@ -3,6 +3,7 @@ package main
 import (
 	_ "github.com/lib/pq"
 
+	"bytes"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -141,8 +142,9 @@ type jsSentence struct {
 }
 
 type jsRel struct {
-	Rel string      `json:"rel"`
-	Id  json.Number `json:"id"`
+	Rel   string      `json:"rel"`
+	Id    json.Number `json:"id"`
+	Rattr []*NRattr
 }
 
 type jsMeta struct {
@@ -151,14 +153,74 @@ type jsMeta struct {
 	Value interface{} `json:"value"`
 }
 
+type jsAttr struct {
+	Name    string `json:"name"`
+	Type    string `json:"type"`
+	Oriname string `json:"oriname"`
+}
+
+var (
+	nattrMap = make(map[string][2]string)
+	rattrMap = make(map[string][2]string)
+)
+
 func cyp2alp(sentid string) string {
 
-	s := ""
-	t := ""
-	rows, err := db.Query("match (s:sentence{sentid: '" + sentid + "'}), (n:node{sentid: '" + sentid + "', id: 0}) return to_json(s) -> 'properties', to_json(n) -> 'properties'")
+	rows, err := db.Query("match (a:nattr) return to_json(a) -> 'properties'")
 	x(err)
 	for rows.Next() {
-		x(rows.Scan(&s, &t))
+		var a string
+		x(rows.Scan(&a))
+
+		var attr jsAttr
+		x(json.Unmarshal([]byte(a), &attr))
+		nattrMap[attr.Name] = [2]string{attr.Oriname, attr.Type}
+	}
+	x(rows.Err())
+
+	rows, err = db.Query("match (a:rattr) return to_json(a) -> 'properties'")
+	x(err)
+	for rows.Next() {
+		var a string
+		x(rows.Scan(&a))
+
+		var attr jsAttr
+		x(json.Unmarshal([]byte(a), &attr))
+		rattrMap[attr.Name] = [2]string{attr.Oriname, attr.Type}
+	}
+	x(rows.Err())
+
+	rows, err = db.Query("match (a:nattr) return to_json(a) -> 'properties'")
+	x(err)
+	for rows.Next() {
+		var a string
+		x(rows.Scan(&a))
+
+		var attr jsAttr
+		x(json.Unmarshal([]byte(a), &attr))
+		nattrMap[attr.Name] = [2]string{attr.Oriname, attr.Type}
+	}
+	x(rows.Err())
+
+	rows, err = db.Query("match (a:rattr) return to_json(a) -> 'properties'")
+	x(err)
+	for rows.Next() {
+		var a string
+		x(rows.Scan(&a))
+
+		var attr jsAttr
+		x(json.Unmarshal([]byte(a), &attr))
+		rattrMap[attr.Name] = [2]string{attr.Oriname, attr.Type}
+	}
+	x(rows.Err())
+
+	rl := ""
+	s := ""
+	t := ""
+	rows, err = db.Query("match (s:sentence{sentid: '" + sentid + "'})-[r:rel]->(n:node{sentid: '" + sentid + "', id: 0}) return to_json(s) -> 'properties', to_json(r) -> 'properties', to_json(n) -> 'properties'")
+	x(err)
+	for rows.Next() {
+		x(rows.Scan(&s, &rl, &t))
 	}
 	if s == "" {
 		x(fmt.Errorf("Not found: %s", sentid))
@@ -168,7 +230,12 @@ func cyp2alp(sentid string) string {
 	x(json.Unmarshal([]byte(s), &sentence))
 
 	var top NodeT
-	x(json.Unmarshal([]byte(t), &top))
+	x(unmarshal([]byte(t), &top))
+
+	var rel jsRel
+	x(unmarshal([]byte(rl), &rel))
+	top.Rel = rel.Rel
+	top.Rattr = rel.Rattr
 
 	alpino := &Alpino_ds{
 		Version: "1.10",
@@ -205,13 +272,13 @@ func cyp2alp(sentid string) string {
 		x(rows.Scan(&r, &n1, &n2))
 
 		var rel jsRel
-		x(json.Unmarshal([]byte(r), &rel))
+		x(unmarshal([]byte(r), &rel))
 
 		p, err := strconv.Atoi(n1)
 		x(err)
 
 		var node NodeT
-		x(json.Unmarshal([]byte(n2), &node))
+		x(unmarshal([]byte(n2), &node))
 
 		if id, e := rel.Id.Int64(); e == nil {
 			nodes[int(id)] = &NodeT{
@@ -220,6 +287,7 @@ func cyp2alp(sentid string) string {
 				End:    node.End,
 				Rel:    rel.Rel,
 				Id:     int(id),
+				Rattr:  rel.Rattr,
 			}
 			if _, ok := links[node.Id]; !ok {
 				links[node.Id] = make([]int, 0)
@@ -228,6 +296,7 @@ func cyp2alp(sentid string) string {
 		} else {
 			node.parent = p
 			node.Rel = rel.Rel
+			node.Rattr = rel.Rattr
 			nodes[node.Id] = &node
 		}
 
@@ -312,6 +381,67 @@ func cyp2alp(sentid string) string {
 	xml = strings.Replace(xml, "></parser>", "/>", -1)
 	xml = strings.Replace(xml, "></node>", "/>", -1)
 	xml = strings.Replace(xml, "></meta>", "/>", -1)
+	xml = strings.Replace(xml, "></nattr>", "/>", -1)
+	xml = strings.Replace(xml, "></rattr>", "/>", -1)
 
 	return xml
+}
+
+func unmarshal(data []byte, v interface{}) error {
+
+	if len(nattrMap) == 0 && len(rattrMap) == 0 {
+		return json.Unmarshal(data, v)
+	}
+
+	dec := json.NewDecoder(bytes.NewReader(data))
+	dec.DisallowUnknownFields()
+	err := dec.Decode(v)
+	if err == nil {
+		return nil
+	}
+	err = json.Unmarshal(data, v)
+	if err != nil {
+		return err
+	}
+	var m map[string]interface{}
+	err = json.Unmarshal(data, &m)
+	if err != nil {
+		return err
+	}
+
+	for key, value := range m {
+		if strings.HasPrefix(key, "x_") {
+			switch t := v.(type) {
+			case *jsRel:
+				if t.Rattr == nil {
+					t.Rattr = make([]*NRattr, 0)
+				}
+				r, ok := rattrMap[key]
+				if !ok {
+					return fmt.Errorf("unknown Rattr %s", key)
+				}
+				t.Rattr = append(t.Rattr, &NRattr{
+					Name:  r[0],
+					Type:  r[1],
+					Value: fmt.Sprint(value),
+				})
+			case *NodeT:
+				if t.Nattr == nil {
+					t.Nattr = make([]*NRattr, 0)
+				}
+				n, ok := nattrMap[key]
+				if !ok {
+					return fmt.Errorf("unknown Nattr %s", key)
+				}
+				t.Nattr = append(t.Nattr, &NRattr{
+					Name:  n[0],
+					Type:  n[1],
+					Value: fmt.Sprint(value),
+				})
+			default:
+				return fmt.Errorf("unknown type %T", v)
+			}
+		}
+	}
+	return nil
 }
