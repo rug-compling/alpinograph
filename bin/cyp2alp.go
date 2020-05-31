@@ -3,7 +3,6 @@ package main
 import (
 	_ "github.com/lib/pq"
 
-	"bytes"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -389,20 +388,15 @@ func cyp2alp(sentid string) string {
 
 func unmarshal(data []byte, v interface{}) error {
 
-	if len(nattrMap) == 0 && len(rattrMap) == 0 {
-		return json.Unmarshal(data, v)
-	}
-
-	dec := json.NewDecoder(bytes.NewReader(data))
-	dec.DisallowUnknownFields()
-	err := dec.Decode(v)
-	if err == nil {
-		return nil
-	}
-	err = json.Unmarshal(data, v)
+	err := json.Unmarshal(data, v)
 	if err != nil {
 		return err
 	}
+
+	if len(nattrMap) == 0 && len(rattrMap) == 0 {
+		return nil
+	}
+
 	var m map[string]interface{}
 	err = json.Unmarshal(data, &m)
 	if err != nil {
