@@ -166,52 +166,30 @@ var (
 func cyp2alp(sentid string) string {
 
 	rows, err := db.Query("match (a:nattr) return to_json(a) -> 'properties'")
-	x(err)
-	for rows.Next() {
-		var a string
-		x(rows.Scan(&a))
+	if err == nil {
+		for rows.Next() {
+			var a string
+			x(rows.Scan(&a))
 
-		var attr jsAttr
-		x(json.Unmarshal([]byte(a), &attr))
-		nattrMap[attr.Name] = [2]string{attr.Oriname, attr.Type}
+			var attr jsAttr
+			x(json.Unmarshal([]byte(a), &attr))
+			nattrMap[attr.Name] = [2]string{attr.Oriname, attr.Type}
+		}
+		x(rows.Err())
 	}
-	x(rows.Err())
 
 	rows, err = db.Query("match (a:rattr) return to_json(a) -> 'properties'")
-	x(err)
-	for rows.Next() {
-		var a string
-		x(rows.Scan(&a))
+	if err == nil {
+		for rows.Next() {
+			var a string
+			x(rows.Scan(&a))
 
-		var attr jsAttr
-		x(json.Unmarshal([]byte(a), &attr))
-		rattrMap[attr.Name] = [2]string{attr.Oriname, attr.Type}
+			var attr jsAttr
+			x(json.Unmarshal([]byte(a), &attr))
+			rattrMap[attr.Name] = [2]string{attr.Oriname, attr.Type}
+		}
+		x(rows.Err())
 	}
-	x(rows.Err())
-
-	rows, err = db.Query("match (a:nattr) return to_json(a) -> 'properties'")
-	x(err)
-	for rows.Next() {
-		var a string
-		x(rows.Scan(&a))
-
-		var attr jsAttr
-		x(json.Unmarshal([]byte(a), &attr))
-		nattrMap[attr.Name] = [2]string{attr.Oriname, attr.Type}
-	}
-	x(rows.Err())
-
-	rows, err = db.Query("match (a:rattr) return to_json(a) -> 'properties'")
-	x(err)
-	for rows.Next() {
-		var a string
-		x(rows.Scan(&a))
-
-		var attr jsAttr
-		x(json.Unmarshal([]byte(a), &attr))
-		rattrMap[attr.Name] = [2]string{attr.Oriname, attr.Type}
-	}
-	x(rows.Err())
 
 	rl := ""
 	s := ""
