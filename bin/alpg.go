@@ -31,6 +31,16 @@ const (
 	MAXWORDS = 20000
 )
 
+type gbool struct {
+	b bool
+	l sync.RWMutex
+}
+
+type gint struct {
+	i int
+	l sync.RWMutex
+}
+
 type Header struct {
 	Name string `json:"name"`
 }
@@ -69,26 +79,23 @@ var (
 	reQuote   = regexp.MustCompile(`\\.`)
 	reComment = regexp.MustCompile(`(?s:/\*.*?\*/)|--.*`)
 
-	chOut      = make(chan string)
-	chQuit     = make(chan bool)
-	chQuitOpen = true
-	muQuit     sync.Mutex
+	chOut    = make(chan string)
+	chQuit   = make(chan bool)
+	onceQuit sync.Once
 
-	tooManyWords = false
+	tooManyWords = &gbool{}
 	wordCount    = make(map[string]int)
 	lemmaCount   = make(map[string]int)
 	muWords      sync.Mutex
 
 	ctx       context.Context
 	cancel    context.CancelFunc
-	hasCancel = false
-	muCancel  sync.Mutex
+	hasCancel = gbool{}
 
-	donePaging = false
 	offset     = 0
-	pagesize   = int(MAXROWS)
+	pagesize   = &gint{i: MAXROWS}
 	paging     = false
-	muPaging   sync.Mutex
+	oncePaging sync.Once
 
 	wg    sync.WaitGroup
 	start time.Time
@@ -356,7 +363,7 @@ func doQuery(corpus, safequery string, chHeader chan []*Header, chLine chan *Lin
 			return
 		}
 		chRow <- scans
-		if paging && count-offset > pagesize {
+		if paging && count-offset > pagesize.get() {
 			doPaging(true)
 			break
 		}
@@ -371,10 +378,7 @@ func doQuery(corpus, safequery string, chHeader chan []*Header, chLine chan *Lin
 			}
 		}
 		if count-offset > MAXROWS {
-			muWords.Lock()
-			stop := tooManyWords
-			muWords.Unlock()
-			if stop {
+			if tooManyWords.get() {
 				break
 			}
 		}
@@ -408,6 +412,10 @@ RESULTS:
 				return
 			}
 			count++
+
+			if count == pagesize.get()+1 {
+				doPaging(true)
+			}
 
 			sc := fmt.Sprint(scans...)
 			if scSeen[sc] {
@@ -569,13 +577,7 @@ RESULTS:
 				continue
 			}
 			if count == 1 {
-				muPaging.Lock()
-				pagesize = MAXSENT
-				muPaging.Unlock()
-			}
-
-			if count == MAXSENT+1 {
-				doPaging(true)
+				pagesize.set(MAXSENT)
 			}
 
 			ints := make([]int, 0, len(idmap))
@@ -881,9 +883,7 @@ func doTables(final bool) {
 		var status string
 		if total > MAXWORDS {
 			status = "<br>limiet bereikt"
-			muWords.Lock()
-			tooManyWords = true
-			muWords.Unlock()
+			tooManyWords.set(true)
 		} else if final {
 			status = ""
 		} else {
@@ -942,22 +942,17 @@ func unescape(s string) string {
 }
 
 func doQuit() {
-	muQuit.Lock()
-	if chQuitOpen {
+	onceQuit.Do(func() {
 		close(chQuit)
-		chQuitOpen = false
-	}
-	muQuit.Unlock()
+	})
 	doCancel()
 }
 
 func doCancel() {
-	muCancel.Lock()
-	if hasCancel {
+	if hasCancel.get() {
 		cancel()
-		hasCancel = false
+		hasCancel.set(false)
 	}
-	muCancel.Unlock()
 }
 
 func since(start time.Time) {
@@ -1002,7 +997,7 @@ func openDB(corpus string) error {
 	}
 
 	ctx, cancel = context.WithCancel(context.Background())
-	hasCancel = true
+	hasCancel.set(true)
 
 	return nil
 }
@@ -1046,12 +1041,35 @@ func numFormat(i int) string {
 }
 
 func doPaging(more bool) {
-	muPaging.Lock()
-	defer muPaging.Unlock()
-	if donePaging {
-		return
-	}
-	donePaging = true
-	since(start)
-	output(fmt.Sprintf("window.parent._fn.setPaging(%d, %d, %v);", offset-pagesize, offset+pagesize, more))
+	oncePaging.Do(func() {
+		since(start)
+		p := pagesize.get()
+		output(fmt.Sprintf("window.parent._fn.setPaging(%d, %d, %v);", offset-p, offset+p, more))
+	})
+}
+
+func (g *gint) set(i int) {
+	g.l.Lock()
+	g.i = i
+	g.l.Unlock()
+}
+
+func (g *gint) get() int {
+	g.l.RLock()
+	i := g.i
+	g.l.RUnlock()
+	return i
+}
+
+func (g *gbool) set(b bool) {
+	g.l.Lock()
+	g.b = b
+	g.l.Unlock()
+}
+
+func (g *gbool) get() bool {
+	g.l.RLock()
+	b := g.b
+	g.l.RUnlock()
+	return b
 }
