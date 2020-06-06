@@ -1,5 +1,5 @@
 
-all: dact2agens
+all: alpino2agens
 
 % : %.go
 	go build $<
