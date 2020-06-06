@@ -6,12 +6,17 @@ import (
 	"github.com/pebbe/util"
 	"github.com/rug-compling/alud/v2"
 
+	"archive/tar"
+	"archive/zip"
+	"bufio"
 	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"encoding/xml"
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -234,9 +239,22 @@ var (
 
 func usage() {
 	fmt.Fprintf(os.Stderr, `
-Usage: %s [-t title] file.(dact|index|data.dz) [file...]
 
-Option -t is required if there is more than one input file.
+Usage: %s [-t title] filename [filename...]
+Usage: find . -name '*.xml' | %s -t title
+
+Option -t is optional when there is exactly one input filename as argument
+
+Valid filename extension in both cases:
+
+  .dact
+  .data.dz
+  .xml
+  .xml.gz
+  .tar      must contain xml-files
+  .tar.gz   must contain xml-files
+  .tgz      must contain xml-files
+  .zip      must contain xml-files
 
 `, os.Args[0])
 }
@@ -246,7 +264,7 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
-	if flag.NArg() == 0 || (flag.NArg() > 1 && *opt_t == "") {
+	if (flag.NArg() == 0 && util.IsTerminal(os.Stdin)) || (flag.NArg() != 1 && *opt_t == "") {
 		usage()
 		return
 	}
@@ -1706,42 +1724,126 @@ func basename(name string) string {
 	if strings.HasSuffix(corpus, ".dact") {
 		return corpus[:n-5]
 	}
-	if strings.HasSuffix(corpus, ".index") {
-		return corpus[:n-6]
-	}
 	if strings.HasSuffix(corpus, ".data.dz") {
 		return corpus[:n-8]
+	}
+	if strings.HasSuffix(corpus, ".xml") {
+		return corpus[:n-4]
+	}
+	if strings.HasSuffix(corpus, ".xml.gz") {
+		return corpus[:n-7]
+	}
+	if strings.HasSuffix(corpus, ".tar") {
+		return corpus[:n-4]
+	}
+	if strings.HasSuffix(corpus, ".tar.gz") {
+		return corpus[:n-7]
+	}
+	if strings.HasSuffix(corpus, ".tgz") {
+		return corpus[:n-4]
+	}
+	if strings.HasSuffix(corpus, ".zip") {
+		return corpus[:n-4]
 	}
 	return corpus
 }
 
 func getFiles() {
+	if !util.IsTerminal(os.Stdin) {
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			filename := strings.TrimSpace(scanner.Text())
+			chArch <- filename
+			doFile(filename)
+		}
+		x(scanner.Err())
+	}
 	for _, filename := range flag.Args() {
 		chArch <- filename
-		if strings.HasSuffix(filename, ".dact") {
-			db, err := dbxml.OpenRead(filename)
-			x(err)
-			docs, err := db.All()
-			x(err)
-			for docs.Next() {
-				chDoc <- Doc{name: docs.Name(), data: []byte(docs.Content())}
-			}
-			db.Close()
-		} else if strings.HasSuffix(filename, ".index") || strings.HasSuffix(filename, ".data.dz") {
-			corpus, err := compactcorpus.Open(filename)
-			x(err)
-			it, err := corpus.NewRange()
-			x(err)
-			for it.HasNext() {
-				name, data := it.Next()
-				chDoc <- Doc{name: name, data: data}
-			}
-		} else {
-			// TODO: .xml .xml.gz
-			x(fmt.Errorf("Unknown file type for %s", filename))
-		}
+		doFile(filename)
 	}
 	close(chDoc)
+}
+
+func doFile(filename string) {
+	if strings.HasSuffix(filename, ".dact") {
+		db, err := dbxml.OpenRead(filename)
+		x(err)
+		docs, err := db.All()
+		x(err)
+		for docs.Next() {
+			chDoc <- Doc{name: docs.Name(), data: []byte(docs.Content())}
+		}
+		x(docs.Error())
+		db.Close()
+	} else if strings.HasSuffix(filename, ".index") || strings.HasSuffix(filename, ".data.dz") {
+		corpus, err := compactcorpus.Open(filename)
+		x(err)
+		it, err := corpus.NewRange()
+		x(err)
+		for it.HasNext() {
+			name, data := it.Next()
+			chDoc <- Doc{name: name, data: data}
+		}
+	} else if strings.HasSuffix(filename, ".xml") {
+		data, err := ioutil.ReadFile(filename)
+		x(err)
+		chDoc <- Doc{name: filename, data: data}
+	} else if strings.HasSuffix(filename, ".xml.gz") {
+		fp, err := os.Open(filename)
+		x(err)
+		r, err := gzip.NewReader(fp)
+		data, err := ioutil.ReadAll(r)
+		x(r.Close())
+		x(fp.Close())
+		chDoc <- Doc{name: filename, data: data}
+	} else if strings.HasSuffix(filename, ".tar") {
+		fp, err := os.Open(filename)
+		x(err)
+		r := tar.NewReader(fp)
+		for {
+			h, err := r.Next()
+			if err == io.EOF {
+				break
+			}
+			x(err)
+			data, err := ioutil.ReadAll(r)
+			x(err)
+			chDoc <- Doc{name: h.Name, data: data}
+		}
+		x(fp.Close())
+	} else if strings.HasSuffix(filename, ".tar.gz") || strings.HasSuffix(filename, ".tgz") {
+		fp, err := os.Open(filename)
+		x(err)
+		rz, err := gzip.NewReader(fp)
+		r := tar.NewReader(rz)
+		for {
+			h, err := r.Next()
+			if err == io.EOF {
+				break
+			}
+			x(err)
+			data, err := ioutil.ReadAll(r)
+			x(err)
+			chDoc <- Doc{name: h.Name, data: data}
+		}
+		x(rz.Close())
+		x(fp.Close())
+	} else if strings.HasSuffix(filename, ".zip") {
+		r, err := zip.OpenReader(filename)
+		x(err)
+		for _, f := range r.File {
+			fp, err := f.Open()
+			x(err)
+			data, err := ioutil.ReadAll(fp)
+			x(err)
+			x(fp.Close())
+			chDoc <- Doc{name: f.Name, data: data}
+		}
+		x(r.Close())
+	} else {
+		x(fmt.Errorf("Unknown file type for %s", filename))
+	}
 }
 
 func featureCount(item, jsn string) {

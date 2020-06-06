@@ -28,7 +28,7 @@ starten:
 Invoer corpus, voorbeeld:
 
     . pw
-    ./dact2agens alpinotreebank.dact | agens -b -q
+    ./alpino2agens alpinotreebank.dact | agens -b -q
 
 Uitvoer:
 
