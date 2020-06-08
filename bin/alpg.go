@@ -974,11 +974,11 @@ func openDB(corpus string) error {
 
 	var login string
 	if s := os.Getenv("CONTEXT_DOCUMENT_ROOT"); strings.HasPrefix(s, "/home/peter") {
-		login = "port=9333 user=peter dbname=peter sslmode=disable"
+		login = "port=9333 user=guest password=guest dbname=peter sslmode=disable"
 	} else if strings.HasPrefix(s, "/var/www/html") {
-		login = "port=5432 user=user password=user dbname=user sslmode=disable"
+		login = "port=5432 user=guest password=guest dbname=user sslmode=disable"
 	} else {
-		login = "user=guest password=guest port=19033 dbname=p209327 sslmode=disable"
+		login = "port=19033 user=guest password=guest dbname=p209327 sslmode=disable"
 		if h, _ := os.Hostname(); !strings.HasPrefix(h, "haytabo") {
 			login += " host=haytabo.let.rug.nl"
 		}
