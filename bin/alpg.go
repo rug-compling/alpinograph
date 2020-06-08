@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
+	"io/ioutil"
 	"net/http/cgi"
 	"net/url"
 	"os"
@@ -972,19 +973,12 @@ func since(start time.Time) {
 
 func openDB(corpus string) error {
 
-	var login string
-	if s := os.Getenv("CONTEXT_DOCUMENT_ROOT"); strings.HasPrefix(s, "/home/peter") {
-		login = "port=9333 user=guest password=guest dbname=peter sslmode=disable"
-	} else if strings.HasPrefix(s, "/var/www/html") {
-		login = "port=5432 user=guest password=guest dbname=user sslmode=disable"
-	} else {
-		login = "port=19033 user=guest password=guest dbname=p209327 sslmode=disable"
-		if h, _ := os.Hostname(); !strings.HasPrefix(h, "haytabo") {
-			login += " host=haytabo.let.rug.nl"
-		}
+	b, err := ioutil.ReadFile("login")
+	if err != nil {
+		return err
 	}
+	login := strings.TrimSpace(string(b))
 
-	var err error
 	db, err = sql.Open("postgres", login)
 	if err != nil {
 		return err
@@ -1003,7 +997,7 @@ func openDB(corpus string) error {
 }
 
 func qc(corpus, query string) string {
-	return fmt.Sprintf("set graph_path='%s';\n%s", corpus, query)
+	return fmt.Sprintf("begin; savepoint s; set graph_path='%s'; %s; rollback to savepoint s; commit;", corpus, query)
 }
 
 func output(s string) {

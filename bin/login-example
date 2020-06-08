@@ -1,0 +1,1 @@
+dbname=myname user=myname password=mypass sslmode=disable

@@ -715,11 +715,7 @@ create (:rattr{name: '%s', type: '%s', oriname: '%s'});
 `, name, sq(name), sq(attr[1]), sq(attr[0]))
 	}
 
-	fmt.Printf(`create (:doc{alud_version: '%s'});
-GRANT USAGE ON SCHEMA %s TO guest;
-GRANT SELECT ON ALL TABLES IN SCHEMA %s TO guest;
-ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT SELECT ON TABLES TO guest;
-`, alud.VersionID(), corpus, corpus, corpus)
+	fmt.Printf("create (:doc{alud_version: '%s'});\n", alud.VersionID())
 
 }
 
