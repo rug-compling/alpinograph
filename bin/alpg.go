@@ -318,7 +318,7 @@ func doQuery(corpus, safequery string, chHeader chan []*Header, chLine chan *Lin
 		}
 	}()
 
-	rows, err := db.QueryContext(ctx, qsave(corpus, safequery))
+	rows, err := db.QueryContext(ctx, qsafe(corpus, safequery))
 	if err != nil {
 		chErr <- wrap(err)
 		return
@@ -1000,8 +1000,8 @@ func qc(corpus, query string) string {
 	return fmt.Sprintf("set graph_path='%s';\n%s", corpus, query)
 }
 
-func qsave(corpus, query string) string {
-	return fmt.Sprintf("begin; savepoint s; set graph_path='%s';\n%s;\nrollback to savepoint s; commit", corpus, query)
+func qsafe(corpus, query string) string {
+	return fmt.Sprintf("begin; set graph_path='%s';\n%s;\nrollback", corpus, query)
 }
 
 func output(s string) {
