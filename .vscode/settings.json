@@ -2,13 +2,11 @@
     "files.exclude": {
         "index.html": true,
         "mkMenu": true,
-        "ag/dact2agens": true,
+        "ag/alpino2agens": true,
         "bin/alpg": true,
         "bin/corpora.go": true,
         "bin/mkCorpora": true,
-        "bin/tree": true,
-        "docs/*.html": true,
-        "docs/md2html": true
+        "bin/tree": true
     },
     "editor.tabSize": 8
 }
