@@ -350,7 +350,7 @@
     }
 
     function macSave() {
-      macrotxt = document.forms['form1'].elements['mactxt'].value;
+      macrotxt = $('#mactxt').val();
       try {
         localStorage.setItem(
           'alpinograph_macros',
@@ -370,7 +370,6 @@
         }
       } catch (err) { }
       parseMacros();
-      $('#mactxt').text(macrotxt);
       $('#mactxt').val(macrotxt);
       disableSave();
       return false;
