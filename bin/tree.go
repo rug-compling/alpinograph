@@ -21,12 +21,13 @@ import (
 )
 
 type Edge struct {
-	label string
-	from  int
-	to    int
-	rel   string
-	orito int
-	key   string
+	label   string
+	from    int
+	to      int
+	rel     string
+	orito   int
+	key     string
+	tooltip string
 }
 
 type Word struct {
@@ -128,6 +129,7 @@ func main() {
 	if x(err) {
 		return
 	}
+
 	svg, ok := postProcess(string(b))
 	if !ok {
 		return
@@ -347,9 +349,13 @@ func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.B
 		}
 
 		link := Edge{
-			from: id1,
-			to:   id2,
-			rel:  toString(e.Properties["rel"]),
+			from:    id1,
+			to:      id2,
+			rel:     toString(e.Properties["rel"]),
+			tooltip: getEdgeTooltip(&e),
+		}
+		if link.tooltip != "" {
+			link.rel += "*"
 		}
 		if id, ok := e.Properties["id"]; ok {
 			link.orito = toInt(id)
@@ -434,7 +440,7 @@ func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.B
 
 		for _, link := range links {
 			if link.rel != "" /* && link.rel != "--" */ {
-				fmt.Fprintf(&buf, "    n%dn%d [label=%q];\n", link.from, link.to, link.rel)
+				fmt.Fprintf(&buf, "    n%dn%d [label=%q%s];\n", link.from, link.to, link.rel, link.tooltip)
 			}
 		}
 	}
@@ -462,7 +468,7 @@ func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.B
 		if relmap[fmt.Sprintf("%d-%d", link.from, link.to)] {
 			if link.rel != "" /* && link.rel != "--" */ {
 				if compact {
-					fmt.Fprintf(&buf, "    n%d -- n%d [label=%q, color=\"#000000\"];\n", link.from, link.to, " "+link.rel+"  ")
+					fmt.Fprintf(&buf, "    n%d -- n%d [label=%q, color=\"#000000\"%s];\n", link.from, link.to, " "+link.rel+"  ", link.tooltip)
 				} else {
 					fmt.Fprintf(&buf, "    n%d -- n%dn%d -- n%d [color=\"#000000\"];\n", link.from, link.from, link.to, link.to)
 				}
@@ -472,7 +478,7 @@ func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.B
 		} else {
 			if link.rel != "" /* && link.rel != "--" */ {
 				if compact {
-					fmt.Fprintf(&buf, "    n%d -- n%d [label=%q];\n", link.from, link.to, " "+link.rel+"  ")
+					fmt.Fprintf(&buf, "    n%d -- n%d [label=%q%s];\n", link.from, link.to, " "+link.rel+"  ", link.tooltip)
 				} else {
 					fmt.Fprintf(&buf, "    n%d -- n%dn%d -- n%d;\n", link.from, link.from, link.to, link.to)
 				}
@@ -588,10 +594,14 @@ func makeGraph(corpus, sid, idlist, edgelist string) (graph *bytes.Buffer, ok bo
 			lbl += ":" + rel
 		}
 		link := Edge{
-			label: lbl,
-			from:  id1,
-			to:    id2,
-			key:   fmt.Sprintf("%s_%d_%d_%s", e.Label[:1], id1, id2, rel),
+			label:   lbl,
+			from:    id1,
+			to:      id2,
+			key:     fmt.Sprintf("%s_%d_%d_%s", e.Label[:1], id1, id2, rel),
+			tooltip: getEdgeTooltip(&e),
+		}
+		if link.tooltip != "" {
+			link.label += "*"
 		}
 		links = append(links, link)
 	}
@@ -644,14 +654,6 @@ func makeGraph(corpus, sid, idlist, edgelist string) (graph *bytes.Buffer, ok bo
 		fmt.Fprintf(&buf, "    n%d [label=%q, %s, tooltip=%q];\n", id, label, style, tooltip)
 	}
 
-	/*
-		fmt.Fprintf(&buf, "\n    {rank=same; n%d", words[0].id)
-		for _, w := range words[1:] {
-			fmt.Fprintf(&buf, " n%d", w.id)
-		}
-		fmt.Fprintln(&buf, "}\n")
-	*/
-
 	fmt.Fprintf(&buf, `
 
     edge [color="#d3d3d3", fontname="Helvetica", fontsize=10];
@@ -669,9 +671,9 @@ func makeGraph(corpus, sid, idlist, edgelist string) (graph *bytes.Buffer, ok bo
 			e1 = fmt.Sprintf("n%d", link.from)
 		}
 		if edgemap[link.key] {
-			fmt.Fprintf(&buf, "    %s -> n%d [color=\"#000000\", label=%q];\n", e1, link.to, " "+link.label+"  ")
+			fmt.Fprintf(&buf, "    %s -> n%d [color=\"#000000\", label=%q%s];\n", e1, link.to, " "+link.label+"  ", link.tooltip)
 		} else {
-			fmt.Fprintf(&buf, "    %s -> n%d [label=%q];\n", e1, link.to, " "+link.label+"  ")
+			fmt.Fprintf(&buf, "    %s -> n%d [label=%q%s];\n", e1, link.to, " "+link.label+"  ", link.tooltip)
 		}
 	}
 
@@ -733,14 +735,13 @@ func postProcess(svg string) (string, bool) {
 			s = s[i+1:]
 			i = strings.LastIndex(s, "\"")
 			a = strings.TrimSpace(s[:i])
-
 		}
 		if strings.HasPrefix(line, "<text ") && a != "" {
 			line = "<text onmouseover=\"tooltip.show('" + html.EscapeString(a) + "')\" onmouseout=\"tooltip.hide()\"" + line[5:]
+			a = ""
 		}
 		if strings.HasPrefix(line, "</a>") {
 			line = ""
-			a = ""
 		}
 
 		lines = append(lines, line)
@@ -884,4 +885,17 @@ func conlog(s ...interface{}) {
 console.log(%q);
 </script>
 `, b.String())
+}
+
+func getEdgeTooltip(e *ag.BasicEdge) string {
+	props := make(map[string]interface{})
+	for key, val := range e.Properties {
+		if strings.HasPrefix(key, "x_") {
+			props[key] = val
+		}
+	}
+	if len(props) == 0 {
+		return ""
+	}
+	return fmt.Sprintf(", tooltip=%q", makeTooltip(props))
 }
