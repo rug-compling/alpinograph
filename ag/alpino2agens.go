@@ -273,6 +273,10 @@ func main() {
 		corpus = basename(flag.Arg(0))
 	}
 
+	if corpus == "public" {
+		x(fmt.Errorf("The name 'public' is reserved"))
+	}
+
 	tmp = "tmp." + corpus + "."
 
 	var err error
