@@ -1,8 +1,8 @@
-:manual
+:handmatig verwerkte corpora
 alpinotreebank	    7136	Alpino Treebank
 cgn		  129921	Corpus Gesproken Nederlands
 lassyklein	   65200	Lassy Klein
-:auto
+:automatisch verwerkte corpora
 dwc		 1498479	Dutch Web Corpus
 eindhoven	   40524	Eindhoven
 newspapers	14974458	Lassy Groot: Kranten

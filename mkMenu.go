@@ -30,28 +30,30 @@ var (
 )
 
 func main() {
-	manual := make([]string, 0)
-	auto := make([]string, 0)
+	options := make([]string, 0)
 	fp, err := os.Open("corpora.txt")
 	x(err)
 	scanner := bufio.NewScanner(fp)
-	var isAuto bool
+	inOptgroup := false
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" {
 			continue
 		}
-		if strings.HasPrefix(line, ":manual") {
-			isAuto = false
-		} else if strings.HasPrefix(line, ":auto") {
-			isAuto = true
-		} else if isAuto {
-			auto = append(auto, optFormat(line))
+		if strings.HasPrefix(line, ":") {
+			if inOptgroup {
+				options = append(options, "</optgroup>")
+			}
+			options = append(options, fmt.Sprintf(`<optgroup label="&mdash; %s &mdash;">`, html.EscapeString(line[1:])))
+			inOptgroup = true
 		} else {
-			manual = append(manual, optFormat(line))
+			options = append(options, optFormat(line))
 		}
 	}
 	fp.Close()
+	if inOptgroup {
+		options = append(options, "</optgroup>")
+	}
 
 	b, err := ioutil.ReadFile("menu.xml")
 	x(err)
@@ -111,16 +113,14 @@ func main() {
 		strings.Replace(
 			strings.Replace(
 				strings.Replace(
-					strings.Replace(
-						strings.Replace(string(b), "PART1;", buf1.String(), 1),
-						"<!--PART2-->", buf2.String(), 1),
-					"<!--WARNING-->", `<!--
+					strings.Replace(string(b), "PART1;", buf1.String(), 1),
+					"<!--PART2-->", buf2.String(), 1),
+				"<!--WARNING-->", `<!--
 
         WAARSCHUWING: dit is een gegenereerd bestand, bewerk het niet
 
 -->`, 1),
-				"<!--OPTAUTO-->", strings.TrimSpace(strings.Join(auto, "\n")), 1),
-			"<!--OPTMANUAL-->", strings.TrimSpace(strings.Join(manual, "\n")), 1))
+			"<!--OPTIONS-->", strings.TrimSpace(strings.Join(options, "\n")), 1))
 
 }
 
@@ -195,5 +195,5 @@ func optFormat(s string) string {
 
 	text := html.EscapeString(strings.Join(a[2:], " "))
 
-	return `            <option value="` + lbl + `">` + text + ` &mdash; ` + lines + ` zinnen</option>`
+	return `<option value="` + lbl + `">` + text + ` &mdash; ` + lines + ` zinnen</option>`
 }

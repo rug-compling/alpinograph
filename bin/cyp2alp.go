@@ -215,7 +215,7 @@ func cyp2alp(sentid string) string {
 	top.Rattr = rel.Rattr
 
 	alpino := &Alpino_ds{
-		Version: "1.10",
+		Version: "1.11",
 		Sentence: &SentType{
 			SentId: sentid,
 			Sent:   sentence.Tokens,

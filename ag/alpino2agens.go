@@ -239,13 +239,12 @@ var (
 
 func usage() {
 	fmt.Fprintf(os.Stderr, `
-
 Usage: %s [-t title] filename [filename...]
 Usage: find . -name '*.xml' | %s -t title
 
 Option -t is optional when there is exactly one input filename as argument
 
-Valid filename extension in both cases:
+Valid filename extensions in both cases:
 
   .dact
   .data.dz
@@ -256,7 +255,7 @@ Valid filename extension in both cases:
   .tgz      must contain xml-files
   .zip      must contain xml-files
 
-`, os.Args[0])
+`, os.Args[0], os.Args[0])
 }
 
 func main() {
