@@ -123,15 +123,13 @@ type NodeT struct {
 	Word         string `xml:"word,attr,omitempty" json:"word,attr"`
 	Wvorm        string `xml:"wvorm,attr,omitempty" json:"wvorm,attr"`
 
-	Nattr    []*NRattr `xml:"nattr,omitempty"`
-	Rattr    []*NRattr `xml:"rattr,omitempty"`
-	NodeList []*NodeT  `xml:"node,omitempty"`
+	Data     []*Data  `xml:"data,omitempty"`
+	NodeList []*NodeT `xml:"node,omitempty"`
 }
 
-type NRattr struct {
-	Type  string `xml:"type,attr"`
-	Name  string `xml:"name,attr"`
-	Value string `xml:"value,attr"`
+type Data struct {
+	Name string `xml:"name,attr,omitempty"`
+	Data string `xml:",chardata"`
 }
 
 type jsSentence struct {
@@ -141,9 +139,9 @@ type jsSentence struct {
 }
 
 type jsRel struct {
-	Rel   string      `json:"rel"`
-	Id    json.Number `json:"id"`
-	Rattr []*NRattr
+	Rel  string      `json:"rel"`
+	Id   json.Number `json:"id"`
+	Data []*Data
 }
 
 type jsMeta struct {
@@ -165,7 +163,7 @@ var (
 
 func cyp2alp(sentid string) string {
 
-	rows, err := db.Query("match (a:nattr) return to_json(a) -> 'properties'")
+	rows, err := db.Query("match (a:data{class: 'node'}) return to_json(a) -> 'properties'")
 	if err == nil {
 		for rows.Next() {
 			var a string
@@ -178,7 +176,7 @@ func cyp2alp(sentid string) string {
 		x(rows.Err())
 	}
 
-	rows, err = db.Query("match (a:rattr) return to_json(a) -> 'properties'")
+	rows, err = db.Query("match (a:data{class: 'rel'}) return to_json(a) -> 'properties'")
 	if err == nil {
 		for rows.Next() {
 			var a string
@@ -212,7 +210,13 @@ func cyp2alp(sentid string) string {
 	var rel jsRel
 	x(unmarshal([]byte(rl), &rel))
 	top.Rel = rel.Rel
-	top.Rattr = rel.Rattr
+	if rel.Data != nil && len(rel.Data) > 0 {
+		if top.Data == nil {
+			top.Data = rel.Data
+		} else {
+			top.Data = append(top.Data, rel.Data...)
+		}
+	}
 
 	alpino := &Alpino_ds{
 		Version: "1.11",
@@ -264,7 +268,7 @@ func cyp2alp(sentid string) string {
 				End:    node.End,
 				Rel:    rel.Rel,
 				Id:     int(id),
-				Rattr:  rel.Rattr,
+				Data:   rel.Data,
 			}
 			if _, ok := links[node.Id]; !ok {
 				links[node.Id] = make([]int, 0)
@@ -273,7 +277,13 @@ func cyp2alp(sentid string) string {
 		} else {
 			node.parent = p
 			node.Rel = rel.Rel
-			node.Rattr = rel.Rattr
+			if rel.Data != nil && len(rel.Data) > 0 {
+				if node.Data == nil {
+					node.Data = rel.Data
+				} else {
+					node.Data = append(node.Data, rel.Data...)
+				}
+			}
 			nodes[node.Id] = &node
 		}
 
@@ -358,8 +368,7 @@ func cyp2alp(sentid string) string {
 	xml = strings.Replace(xml, "></parser>", "/>", -1)
 	xml = strings.Replace(xml, "></node>", "/>", -1)
 	xml = strings.Replace(xml, "></meta>", "/>", -1)
-	xml = strings.Replace(xml, "></nattr>", "/>", -1)
-	xml = strings.Replace(xml, "></rattr>", "/>", -1)
+	xml = strings.Replace(xml, "></data>", "/>", -1)
 
 	return xml
 }
@@ -385,30 +394,28 @@ func unmarshal(data []byte, v interface{}) error {
 		if strings.HasPrefix(key, "x_") {
 			switch t := v.(type) {
 			case *jsRel:
-				if t.Rattr == nil {
-					t.Rattr = make([]*NRattr, 0)
+				if t.Data == nil {
+					t.Data = make([]*Data, 0)
 				}
 				r, ok := rattrMap[key]
 				if !ok {
-					return fmt.Errorf("unknown Rattr %s", key)
+					return fmt.Errorf("unknown Data %s", key)
 				}
-				t.Rattr = append(t.Rattr, &NRattr{
-					Name:  r[0],
-					Type:  r[1],
-					Value: fmt.Sprint(value),
+				t.Data = append(t.Data, &Data{
+					Name: fmt.Sprintf("ag:rel:%s:%s", r[1], r[0]),
+					Data: fmt.Sprint(value),
 				})
 			case *NodeT:
-				if t.Nattr == nil {
-					t.Nattr = make([]*NRattr, 0)
+				if t.Data == nil {
+					t.Data = make([]*Data, 0)
 				}
 				n, ok := nattrMap[key]
 				if !ok {
-					return fmt.Errorf("unknown Nattr %s", key)
+					return fmt.Errorf("unknown Data %s", key)
 				}
-				t.Nattr = append(t.Nattr, &NRattr{
-					Name:  n[0],
-					Type:  n[1],
-					Value: fmt.Sprint(value),
+				t.Data = append(t.Data, &Data{
+					Name: fmt.Sprintf("ag:node:%s:%s", n[1], n[0]),
+					Data: fmt.Sprint(value),
 				})
 			default:
 				return fmt.Errorf("unknown type %T", v)

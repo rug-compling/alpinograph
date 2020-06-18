@@ -142,15 +142,13 @@ type Node struct {
 	Word         string `xml:"word,attr"`
 	Wvorm        string `xml:"wvorm,attr"`
 
-	Nattr    []*NRattr `xml:"nattr,omitempty"`
-	Rattr    []*NRattr `xml:"rattr,omitempty"`
-	NodeList []*Node   `xml:"node"`
+	Data     []*Data `xml:"data,omitempty"`
+	NodeList []*Node `xml:"node"`
 }
 
-type NRattr struct {
-	Type  string `xml:"type,attr"`
-	Name  string `xml:"name,attr"`
-	Value string `xml:"value,attr"`
+type Data struct {
+	Name string `xml:"name,attr"`
+	Data string `xml:",chardata"`
 }
 
 // Een dependency relation
@@ -708,13 +706,13 @@ create property index on meta("value");
 	for name, attr := range nattrMap {
 		fmt.Printf(`create property index on node(%q);
 create property index on word(%q);
-create (:nattr{name: '%s', type: '%s', oriname: '%s'});
+create (:data{class: 'node', name: '%s', type: '%s', oriname: '%s'});
 `, name, name, sq(name), sq(attr[1]), sq(attr[0]))
 	}
 
 	for name, attr := range rattrMap {
 		fmt.Printf(`create property index on rel(%q);
-create (:rattr{name: '%s', type: '%s', oriname: '%s'});
+create (:data{class: 'rel', name: '%s', type: '%s', oriname: '%s'});
 `, name, sq(name), sq(attr[1]), sq(attr[0]))
 	}
 
@@ -755,10 +753,14 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 				fmt.Fprintf(&buf, `, "%s": %s`, name, q(val))
 			}
 		}
-		for _, nattr := range node.Nattr {
-			name := attrName(nattr.Name)
-			fmt.Fprintf(&buf, `, %q: %s`, name, qt(nattr.Value, nattr.Type))
-			nattrMap[name] = [2]string{nattr.Name, nattr.Type}
+		for _, nattr := range node.Data {
+			if !strings.HasPrefix(nattr.Name, "ag:node:") {
+				continue
+			}
+			aa := strings.SplitN(nattr.Name, ":", 4)
+			name := attrName(aa[3])
+			fmt.Fprintf(&buf, `, %q: %s`, name, qt(nattr.Data, aa[2]))
+			nattrMap[name] = [2]string{aa[3], aa[2]}
 		}
 		lvl := ""
 		if node.level > 0 {
@@ -804,10 +806,14 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 				fmt.Fprintf(&buf, `, "%s": %s`, name, q(val))
 			}
 		}
-		for _, nattr := range node.Nattr {
-			name := attrName(nattr.Name)
-			fmt.Fprintf(&buf, `, %q: %s`, name, qt(nattr.Value, nattr.Type))
-			nattrMap[name] = [2]string{nattr.Name, nattr.Type}
+		for _, nattr := range node.Data {
+			if !strings.HasPrefix(nattr.Name, "ag:node:") {
+				continue
+			}
+			aa := strings.SplitN(nattr.Name, ":", 4)
+			name := attrName(aa[3])
+			fmt.Fprintf(&buf, `, %q: %s`, name, qt(nattr.Data, aa[2]))
+			nattrMap[name] = [2]string{aa[3], aa[2]}
 		}
 		if node.End == last {
 			fmt.Fprint(&buf, ", \"last\": true")
@@ -1855,15 +1861,19 @@ func featureCount(item, jsn string) {
 }
 
 func relExtra(node *Node) string {
-	if node.Rattr == nil || len(node.Rattr) == 0 {
+	if node.Data == nil || len(node.Data) == 0 {
 		return ""
 	}
 	var buf bytes.Buffer
-	for _, rattr := range node.Rattr {
-		name := attrName(rattr.Name)
-		fmt.Fprintf(&buf, `, %q: %s`, name, qt(rattr.Value, rattr.Type))
+	for _, rattr := range node.Data {
+		if !strings.HasPrefix(rattr.Name, "ag:rel:") {
+			continue
+		}
+		aa := strings.SplitN(rattr.Name, ":", 4)
+		name := attrName(aa[3])
+		fmt.Fprintf(&buf, `, %q: %s`, name, qt(rattr.Data, aa[2]))
 		featureMap["rel"][name] = featureMap["rel"][name] + 1
-		rattrMap[name] = [2]string{rattr.Name, rattr.Type}
+		rattrMap[name] = [2]string{aa[3], aa[2]}
 	}
 	return buf.String()
 }
