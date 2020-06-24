@@ -141,6 +141,12 @@
         </item>
       </item>
     </item>
+    <item id="tut-rel" lbl="Alpino-structuren">
+      <item id="tut-rel-pdp" lbl="Node met twee parents">
+        match m = ()-[:rel]->()&lt;-[:rel]-()
+        return m
+      </item>
+    </item>
     <item id="tut-mv" lbl="Jongens- en meisjesnamen">
       <item id="tut-mv-en" lbl="persoon en zijn/haar">
         <item id="tut-mv-en-zin" lbl="zinnen">
@@ -900,6 +906,17 @@
           match (n:node{cat: 'conj'})-[r:rel{rel: 'crd'}]->()
           with n, count(r) as cnt
           where cnt > 2
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(sentid) as items
+        </item>
+      </item>
+      <item id="spod-crd22" lbl="reeksvormers (nevenschikkingen van de vorm crd,cnj,crd,cnj...)">
+        <item id="spod-crd22-zin" lbl="zinnen">
+          match (n1)&lt;-[:rel{rel:'crd'}]-(n:node{cat: 'conj', begin: n1.begin})-[:rel{rel: 'crd'}]->()
+          return n
+        </item>
+        <item id="spod-crd22-tel" lbl="telling">
+          match (n1)&lt;-[:rel{rel:'crd'}]-(n:node{cat: 'conj', begin: n1.begin})-[:rel{rel: 'crd'}]->()
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
