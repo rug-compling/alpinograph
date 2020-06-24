@@ -61,6 +61,7 @@ type Node struct {
 	wordcount int
 	level     int
 	parents   []*Node `xml:"node"`
+	vorfeld   bool
 
 	Aform        string `xml:"aform,attr"`
 	Begin        int    `xml:"begin,attr"`
@@ -360,6 +361,7 @@ LOOP:
 		*/
 		refnodes = make([]*Node, len(strings.Fields(alpino.Sentence.Sent)))
 		prepare(alpino.Node0, 0)
+		prepareVorfeld(alpino.Node0)
 		addIndexParents(alpino.Node0)
 		wordcount(alpino.Node0)
 
@@ -771,7 +773,7 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 			np = `, "_np": true`
 		}
 		vorfeld := ""
-		if isVorfeld(node) {
+		if node.vorfeld {
 			vorfeld = `, "_vorfeld": true`
 		}
 		deste := ""
@@ -823,7 +825,7 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 			np = `, "_np": true`
 		}
 		vorfeld := ""
-		if isVorfeld(node) {
+		if node.vorfeld {
 			vorfeld = `, "_vorfeld": true`
 		}
 		jsn := fmt.Sprintf("{\"sentid\": %s, \"id\": %d, \"begin\": %d, \"end\": %d, \"_n_words\": %d%s%s%s%s}",
@@ -1591,89 +1593,67 @@ func isNP(node *Node) bool {
 	return false
 }
 
-func isVorfeld(node *Node) bool {
-	/*
-		%PQ_precedes_head_of_smain%
-		and
-		not(parent::node[%PQ_precedes_head_of_smain%])
-		and(@cat or @pt)
-	*/
-	if !precedes_head_of_main(node) {
-		return false
+func prepareVorfeld(node *Node) {
+	if node.Cat == "smain" {
+		smainVorfeld(node)
 	}
-	for _, n := range node.parents {
-		if precedes_head_of_main(n) {
-			return false
+	if node.NodeList != nil {
+		for _, n := range node.NodeList {
+			prepareVorfeld(n)
 		}
-		break // alleen eerste parent!
 	}
-	return true
 }
 
-func precedes_head_of_main(node *Node) bool {
-	/*
-	   ancestor::node[@cat="smain"]/node[@rel="hd"]/number(@begin) > node[%PQ_headrel%]/number(@begin)
-	   or
-	   (  ancestor::node[@cat="smain"]/node[@rel="hd"]/number(@begin) > number(@begin)
-	      and
-	      not(node[%PQ_headrel%])
-	   )
-	*/
-	begins := make([]int, 0)
-	for _, n := range node.parents {
-		ancestors_smain_hd_begin(n, &begins)
-		break // alleen eerste parent!
-	}
-	node_headrel_begins := make([]int, 0)
-	for _, n := range node.NodeList {
-		headrel_begin(n, &node_headrel_begins)
-	}
-	if len(node_headrel_begins) > 0 {
-		for _, b := range begins {
-			for _, h := range node_headrel_begins {
-				if b > h {
-					return true
+func smainVorfeld(node *Node) {
+	if node.NodeList != nil {
+		for _, n := range node.NodeList {
+			if n.Rel == "hd" {
+				if n.index > 0 {
+					n = refnodes[n.index]
+				}
+				if n.Word != "" {
+					findTopic(node, n.Begin)
+					return // er kunnen meer heads zijn (cgn), maar die slaan we over
 				}
 			}
 		}
-	} else {
-		for _, b := range begins {
-			if b > node.Begin {
+	}
+}
+
+func findTopic(node *Node, begin int) {
+	if isTopic(node, begin) {
+		return
+	}
+	if node.NodeList != nil {
+		for _, n := range node.NodeList {
+			findTopic(n, begin)
+		}
+	}
+}
+
+func isTopic(node *Node, begin int) bool {
+
+	if node.Begin < begin && node.End <= begin {
+		node.vorfeld = true
+		return true
+	}
+	if node.Lemma != "" || node.Cat == "mwu" {
+		if node.Begin < begin {
+			node.vorfeld = true
+			return true
+		}
+		return false
+	}
+
+	if node.NodeList != nil {
+		for _, n := range node.NodeList {
+			if n.Begin < begin && (n.Rel == "hd" || n.Rel == "cmp" || n.Rel == "crd") {
+				node.vorfeld = true
 				return true
 			}
 		}
 	}
 	return false
-}
-
-func ancestors_smain_hd_begin(node *Node, begins *[]int) {
-	if node.Cat == "smain" {
-		for _, n := range node.NodeList {
-			if n.Rel == "hd" {
-				*begins = append(*begins, n.Begin)
-			}
-		}
-	}
-	for _, n := range node.parents {
-		ancestors_smain_hd_begin(n, begins)
-		break // alleen eerste parent!
-	}
-}
-
-func headrel_begin(node *Node, begins *[]int) {
-	/*
-		@rel=("hd","cmp","mwp","crd","rhd","whd","nucl","dp")
-	*/
-	if node.Rel == "hd" ||
-		node.Rel == "cmp" ||
-		node.Rel == "mwp" ||
-		node.Rel == "crd" ||
-		node.Rel == "rhd" ||
-		node.Rel == "whd" ||
-		node.Rel == "nucl" ||
-		node.Rel == "dp" {
-		*begins = append(*begins, node.Begin)
-	}
 }
 
 func isDeste(node *Node) bool {
