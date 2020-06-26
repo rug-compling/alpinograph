@@ -169,8 +169,11 @@
 
     function q(tag) {
       var el = document.forms['form1'];
-      el.elements['oquery'].value = qs[tag];
-      // el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.elements['oquery'].value = '';
+      setTimeout(function () {
+        el.elements['oquery'].value = qs[tag];
+      }, 200);
     }
 
     function onSubmit1() {

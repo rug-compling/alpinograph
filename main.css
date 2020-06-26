@@ -51,7 +51,7 @@ html, body {
 div.nav > div {
   direction: rtl;
   overflow-y: scroll;
-  max-height: 30em;
+  max-height: 40vh;
 }
 
 div.nav > div > * {
