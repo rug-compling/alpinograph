@@ -169,7 +169,7 @@
     function q(tag) {
       var el = document.forms['form1'];
       el.elements['oquery'].value = qs[tag];
-      el.scrollIntoView();
+      el.scrollIntoView({behavior: 'smooth', block: 'center'});
     }
 
     function onSubmit1() {
