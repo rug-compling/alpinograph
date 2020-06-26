@@ -170,7 +170,7 @@
     function q(tag) {
       var el = document.forms['form1'];
       el.elements['oquery'].value = qs[tag];
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function onSubmit1() {
@@ -572,6 +572,15 @@
       return r;
     }
 
+    function scrollMenu(event) {
+      var p = event.currentTarget.parentElement;
+      setTimeout(function () {
+        if ($('input', p)[0].checked) {
+          p.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 200);
+    }
+
     $(document).ready(function () {
       getHistory();
       macLoad();
@@ -580,6 +589,8 @@
         popup.addClass('hide');
         $('#backdrop').addClass('hide');
       });
+      $('.item > label').on('click', scrollMenu);
+      $('.sub-item > label').on('click', scrollMenu);
       doPermalink();
     });
 
