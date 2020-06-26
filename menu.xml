@@ -28,7 +28,7 @@
     </item>
   </item>
 
-  <item id="tut" lbl="Tutorial">
+  <item id="tut" lbl="Voorbeelden">
     <item id="tut-bitri" lbl="Bigrammen en trigrammen en zo">
       <item id="tut-bitri-bi" lbl="bigram: in geval">
         match p = (:word{lemma:'in'})-[:next]->(:word{lemma:'geval'})
