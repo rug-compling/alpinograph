@@ -32,6 +32,7 @@
     var nextOffset = 0;
     var currentTab = 0;
     var finished = false;
+    var popup;
 
     window._fn = {
       setPaging: function (vorige, volgende, more) {
@@ -169,7 +170,7 @@
     function q(tag) {
       var el = document.forms['form1'];
       el.elements['oquery'].value = qs[tag];
-      el.scrollIntoView({behavior: 'smooth', block: 'center'});
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function onSubmit1() {
@@ -340,12 +341,15 @@
     //
 
     function macOpen() {
-      $('#macros').removeClass('hide');
+      popup = $('#macros');
+      popup.removeClass('hide');
+      $('#backdrop').removeClass('hide');
       return false;
     }
 
     function macClose() {
       $('#macros').addClass('hide');
+      $('#backdrop').addClass('hide');
       return false;
     }
 
@@ -461,7 +465,9 @@
         ',' + c;
       var copyText = document.getElementById('permatext');
       copyText.value = h;
-      $('#permalink').removeClass('hide');
+      popup = $('#permalink');
+      popup.removeClass('hide');
+      $('#backdrop').removeClass('hide');
       return false;
     }
 
@@ -474,6 +480,7 @@
 
     function permaClose() {
       $('#permalink').addClass('hide');
+      $('#backdrop').addClass('hide');
     }
 
     //
@@ -521,11 +528,14 @@
     //
 
     function saveTabelShow() {
-      $('#saveTabel').removeClass('hide');
+      popup = $('#saveTabel');
+      popup.removeClass('hide');
+      $('#backdrop').removeClass('hide');
     }
 
     function saveTabelClose(r) {
       $('#saveTabel').addClass('hide');
+      $('#backdrop').addClass('hide');
       return r;
     }
 
@@ -534,11 +544,14 @@
     //
 
     function saveZinnenShow() {
-      $('#saveZinnen').removeClass('hide');
+      popup = $('#saveZinnen')
+      popup.removeClass('hide');
+      $('#backdrop').removeClass('hide');
     }
 
     function saveZinnenClose(r) {
       $('#saveZinnen').addClass('hide');
+      $('#backdrop').addClass('hide');
       return r;
     }
 
@@ -548,11 +561,14 @@
 
     function saveAttrShow(attr) {
       document.forms['formAttr'].elements['attr'].value = attr;
-      $('#saveAttr').removeClass('hide');
+      popup = $('#saveAttr');
+      popup.removeClass('hide');
+      $('#backdrop').removeClass('hide');
     }
 
     function saveAttrClose(r) {
       $('#saveAttr').addClass('hide');
+      $('#backdrop').addClass('hide');
       return r;
     }
 
@@ -560,6 +576,10 @@
       getHistory();
       macLoad();
       $('#mactxt').on('input propertychange', enableSave);
+      $('#backdrop').on('click', function () {
+        popup.addClass('hide');
+        $('#backdrop').addClass('hide');
+      });
       doPermalink();
     });
 
@@ -567,6 +587,7 @@
 </head>
 
 <body>
+  <div id="backdrop" class="hide"></div>
   <div class="nav">
     <input type="checkbox" id="menu" />
     <h1>AlpinoGraph</h1>

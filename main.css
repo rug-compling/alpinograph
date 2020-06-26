@@ -164,7 +164,7 @@ h1 {
 #outputTabel tr > td:first-child,
 #outputWoorden tr > td:first-child, #outputLemmas tr > td:first-child,
 #outputWoorden tr > td:nth-child(2), #outputLemmas tr > td:nth-child(2) {
-    text-align: right;
+  text-align: right;
 }
 
 #outputWoorden tr.skip td,
@@ -253,9 +253,21 @@ td.bool, td.float64 {
   left: 10%;
   right: 10%;
   top: 10em;
-  border: 2px solid #a0a0a0;
+  border: 2px solid black;
   background-color: #f0f0f0;
   padding: 2em;
+  z-index: 100;
+}
+
+#backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10;
+  backdrop-filter: blur(2px) saturate(60%);
 }
 
 #permatext {
@@ -281,7 +293,7 @@ td.bool, td.float64 {
 
 #output.warning > #warning,
 #output.warning > #runner {
-    display: block;
+  display: block;
 }
 
 #output.run > #runner {
@@ -308,12 +320,12 @@ body.ready #output.zinnen #saveZinnenButton {
 #output.woorden #runner,
 #output.woorden #buttons,
 #output.woorden #saveWoordenButton {
-    display: block;
+  display: block;
 }
 
 #output.lemmas #outputLemmas,
 #output.lemmas #runner,
 #output.lemmas #buttons,
 #output.lemmas #saveLemmasButton {
-    display: block;
+  display: block;
 }
