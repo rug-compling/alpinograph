@@ -173,7 +173,7 @@
       el.elements['oquery'].value = '';
       setTimeout(function () {
         el.elements['oquery'].value = qs[tag];
-      }, 200);
+      }, 100);
     }
 
     function onSubmit1() {
@@ -335,8 +335,11 @@
         histp = 0;
       }
       var el = document.forms['form1'];
-      el.elements['oquery'].value = hist[histp];
+      el.elements['oquery'].value = '';
       setHistButtons();
+      setTimeout(function () {
+        el.elements['oquery'].value = hist[histp];
+      }, 100);
     }
 
     //
