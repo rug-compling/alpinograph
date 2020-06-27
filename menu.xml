@@ -143,7 +143,8 @@
     </item>
     <item id="tut-rel" lbl="Alpino-structuren">
       <item id="tut-rel-pdp" lbl="Node met twee parents">
-        match m = ()-[:rel]->()&lt;-[:rel]-()
+        match m = (n1:node)-[:rel]->()&lt;-[:rel]-(n2:node)
+        where n1.id &lt; n2.id    -- voorkomt dubbelen
         return m
       </item>
     </item>
