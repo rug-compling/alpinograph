@@ -134,6 +134,16 @@ h1 {
   right: auto;
 }
 
+#help {
+  padding: 1em 2em;
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  color: white;
+  text-decoration: none;
+  z-index: 100;
+}
+
 #main {
   margin: 0px;
   padding: 1em 2em;
