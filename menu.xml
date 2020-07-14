@@ -847,15 +847,15 @@
           return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
       </item>
-      <item id="spod-crd1maar" lbl="nevenschikkingen met 1 coördinator, en dat is &quot;maar&quot;">
-        <item id="spod-crd1maar-zin" lbl="zinnen">
+      <item id="spod-crd1maa" lbl="nevenschikkingen met 1 coördinator, en dat is &quot;maar&quot;">
+        <item id="spod-crd1maa-zin" lbl="zinnen">
           match (n:node{cat: 'conj'})-[r:rel{rel: 'crd'}]->()
           optional match (n)-[:rel{rel: 'crd'}]->(w:word{lemma: 'maar'})
           with n, w, count(r) as cnt
           where cnt = 1 and w is not null
           return n.sentid, n.id, w.id
         </item>
-        <item id="spod-crd1maar-tel" lbl="telling">
+        <item id="spod-crd1maa-tel" lbl="telling">
           match (n:node{cat: 'conj'})-[r:rel{rel: 'crd'}]->()
           optional match (n)-[:rel{rel: 'crd'}]->(w:word{lemma: 'maar'})
           with n, w, count(r) as cnt
@@ -913,6 +913,8 @@
       </item>
       <item id="spod-crd22" lbl="reeksvormers (nevenschikkingen van de vorm crd,cnj,crd,cnj...)">
         <item id="spod-crd22-zin" lbl="zinnen">
+          -- Dit werkt niet optimaal. Sommige reeksen worden niet gevonden.
+
           match (n1:nw)&lt;-[:rel{rel:'crd'}]-(n:node{cat: 'conj'})-[:rel{rel: 'crd'}]->(n3:nw)
           match (n2:nw{sentid: n.sentid})&lt;-[:rel{rel:'cnj'}]-(n)-[:rel{rel: 'cnj'}]->(n4:nw)
           where n1.id = n.id + 1
@@ -928,6 +930,8 @@
           return n
         </item>
         <item id="spod-crd22-tel" lbl="telling">
+          -- Dit werkt niet optimaal. Sommige reeksen worden niet gevonden.
+
           match (n1:nw)&lt;-[:rel{rel:'crd'}]-(n:node{cat: 'conj'})-[:rel{rel: 'crd'}]->(n3:nw)
           match (n2:nw{sentid: n.sentid})&lt;-[:rel{rel:'cnj'}]-(n)-[:rel{rel: 'cnj'}]->(n4:nw)
           where n1.id = n.id + 1
@@ -1057,6 +1061,117 @@
           where cnt > 6
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(sentid) as items
+        </item>
+      </item>
+      <item id="spod-cnjnp" lbl="nevenschikking van NP's">
+        <item id="spod-cnjnp-zin" lbl="zinnen">
+          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{_np: true})
+          return n.sentid, n.id
+          except
+          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
+          where n2._np is null
+          return n.sentid, n.id
+        </item>
+        <item id="spod-cnjnp-tel" lbl="telling">
+          select count(distinct(sentid)) as zinnen, count(sentid) as items
+          from (
+            match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{_np: true})
+            return n.sentid, n.id
+            except
+            match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
+            where n2._np is null
+            return n.sentid, n.id
+          ) as foo
+        </item>
+      </item>
+      <item id="spod-cnjpp" lbl="nevenschikking van PP's">
+        <item id="spod-cnjpp-zin" lbl="zinnen">
+          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{cat: 'pp'})
+          return n.sentid, n.id
+          except
+          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
+          where n2.cat is null or n2.cat != 'pp'
+          return n.sentid, n.id
+        </item>
+        <item id="spod-cnjpp-tel" lbl="telling">
+          select count(distinct(sentid)) as zinnen, count(sentid) as items
+          from (
+           match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{cat: 'pp'})
+            return n.sentid, n.id
+            except
+            match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
+            where n2.cat is null or n2.cat != 'pp'
+            return n.sentid, n.id
+          ) as foo
+       </item>
+      </item>
+      <item id="spod-cnjmain" lbl="nevenschikking van hoofdzinnen">
+        <item id="spod-cnjmain-zin" lbl="zinnen">
+          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{cat: 'smain'})
+          return n.sentid, n.id
+          except
+          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
+          where n2.cat is null or n2.cat != 'smain'
+          return n.sentid, n.id
+        </item>
+        <item id="spod-cnjmain-tel" lbl="telling">
+          select count(distinct(sentid)) as zinnen, count(sentid) as items
+          from (
+            match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{cat: 'smain'})
+            return n.sentid, n.id
+            except
+            match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
+            where n2.cat is null or n2.cat != 'smain'
+            return n.sentid, n.id
+          ) as foo
+       </item>
+      </item>
+      <item id="spod-cnjvp" lbl="nevenschikking van VP">
+        <item id="spod-cnjvp-zin" lbl="zinnen">
+          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n1:nw)
+          where n1.cat in ['ssub','ti','ppart','inf']
+             or n1.pt = 'ww'
+          return n.sentid, n.id
+          except
+          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
+          where not ( n2.cat is not null and n2.cat in ['ssub','ti','ppart','inf']
+             or n2.pt is not null and n2.pt = 'ww' )
+          return n.sentid, n.id
+        </item>
+        <item id="spod-cnjvp-tel" lbl="telling">
+          select count(distinct(sentid)) as zinnen, count(sentid) as items
+          from (
+            match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n1:nw)
+            where n1.cat in ['ssub','ti','ppart','inf']
+               or n1.pt = 'ww'
+            return n.sentid, n.id
+            except
+            match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
+            where not ( n2.cat is not null and n2.cat in ['ssub','ti','ppart','inf']
+               or n2.pt is not null and n2.pt = 'ww' )
+            return n.sentid, n.id
+          ) as foo
+        </item>
+      </item>
+      <item id="spod-cnjcp" lbl="nevenschikking van bijzinnen">
+        <item id="spod-cnjcp-zin" lbl="zinnen">
+          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{cat: 'cp'})
+          return n.sentid, n.id
+          except
+          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
+          where n2.cat is null or n2.cat != 'cp'
+          return n.sentid, n.id
+        </item>
+        <item id="spod-cnjcp-tel" lbl="telling">
+          select count(distinct(sentid)) as zinnen, count(sentid) as items
+          from (
+            match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{cat: 'cp'})
+            return n.sentid, n.id
+            except
+            match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
+            where n2.cat is null or n2.cat != 'cp'
+            return n.sentid, n.id
+          ) as foo
         </item>
       </item>
     </item>
