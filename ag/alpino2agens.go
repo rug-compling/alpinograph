@@ -1734,7 +1734,7 @@ func basename(name string) string {
 }
 
 func getFiles() {
-	if !util.IsTerminal(os.Stdin) {
+	if !util.IsTerminal(os.Stdin) && flag.NArg() == 0 {
 		scanner := bufio.NewScanner(os.Stdin)
 		for scanner.Scan() {
 			filename := strings.TrimSpace(scanner.Text())

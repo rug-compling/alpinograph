@@ -3,6 +3,12 @@ alpinotreebank	    7136	Alpino Treebank
 cgn		  129921	Corpus Gesproken Nederlands
 lassyklein	   65200	Lassy Klein
 :automatisch verwerkte corpora
+basilex	         1635680        BasiLex 1.0
+basiscript        782179        BasiScript 1.0: Opstellen
+childesdutch      545476        Childes Dutch
+clef             4266515        CLEF
 dwc		 1498479	Dutch Web Corpus
 eindhoven	   40524	Eindhoven
 newspapers	14974458	Lassy Groot: Kranten
+wikixvii        16073845        NL-wiki 2017
+wablieft          256729        Wablieft
