@@ -29,163 +29,217 @@
   </item>
 
   <item id="tut" lbl="Voorbeelden">
-    <item id="tut-bitri" lbl="Bigrammen en trigrammen en zo">
-      <item id="tut-bitri-bi" lbl="bigram: in geval">
-        match p = (:word{lemma:'in'})-[:next]->(:word{lemma:'geval'})
-        return p
+    <item id="tut-inl" lbl="Inleiding">
+      <item id="tut-inl-node" lbl="Node">
+        -- Een vertex in de graaf dat geen woord is
+        -- (of een multi-word unit)
+
+        match (n:node)
+        return n
+        limit 10
       </item>
-      <item id="tut-bitri-tri" lbl="trigram: in elk geval">
-        match p = (:word{lemma:'in'})-[:next]->(:word{lemma:'elk'})-[:next]->(:word{lemma:'geval'})
-        return p
-      </item>
-      <item id="tut-bitri-volgend" lbl="welk woord volgt er op &quot;in geval&quot;">
-        match (:word{lemma:'in'})-[:next]->(:word{lemma:'geval'})-[:next]->(w:word)
+      <item id="tut-inl-word" lbl="Woord">
+        match (w:word)
         return w
+        limit 10
       </item>
-      <item id="tut-bitri-tussen" lbl="welk woord staat er tussen &quot;in&quot; en &quot;van&quot;">
-        match (:word{lemma:'in'})-[:next]->(n:word)-[:next]->(:word{lemma:'van'})
+      <item id="tut-inl-nw" lbl="Node of woord">
+        -- :nw is een alias voor :node en :word samen
+
+        match (n:nw)
         return n
+        limit 10
       </item>
-      <item id="tut-bitri-vinden" lbl="hoe vindt men het?">
-        match (:word{lemma:'vinden'})-[:next]->(:word{lemma:'het'})-[:next]->(adj:word{pt:'adj'})-[:next]->(:word{lemma:'dat'})
-        return adj
+      <item id="tut-inl-zin" lbl="Zin">
+        match (s:sentence)
+        return s
+        limit 10
       </item>
-      <item id="tut-bitri-mwu" lbl="multi-word unit">
-        -- multi-word units zitten op een node boven de woorden
-        match p = (:node{lemma:'in geval van'})
-        return p
+      <item id="tut-inl-meta" lbl="Metadata">
+        match (m:meta)
+        return m.sentid as "sentence ID", m.type, m.name, m.value
+        limit 10
       </item>
-      <item id="tut-bitri-mwu-van" lbl="multi-word units die eindigen met &quot;van&quot;">
-        match (n:node{cat:'mwu'})-[:rel{rel:'mwp'}]->(w:word{lemma:'van'})
-        where n.end = w.end
-        return n
+      <item id="tut-inl-corpus" lbl="Corpusinformatie">
+        match (d:doc)
+        return d
+      </item>
+      <item id="tut-inl-attr" lbl="Attributen">
+        -- Tellingen van verschillende soorten attributen
+
+        match (f:feature)
+        return f
+        limit 10
+      </item>
+      <item id="tut-inl-rel" lbl="Relatie">
+        match ()-[r]->()
+        return r
+        limit 10
+      </item>
+      <item id="tut-inl-roor" lbl="Root">
+        -- :sentence fungeert als root voor verschillende soorten relaties
+
+        match (:sentence)-[r]->()
+        return r
+        limit 10
       </item>
     </item>
-    <item id="tut-uitdr" lbl="Uitdrukkingen en gezegdes">
-      <item id="tut-uitdr-advduivel" lbl="advocaat van de duivel">
-        match (w1:word{lemma: 'advocaat'}),
-              (w2:word{sentid: w1.sentid, lemma: 'duivel'})
-        return w1, w2
-      </item>
-      <item id="tut-uitdr-kalfput" lbl="als het kalf verdronken is dempt men de put">
-        match (w1:word{lemma: 'kalf'}),
-              (w2:word{sentid: w1.sentid, lemma: 'put'})
-        return w1, w2
-      </item>
-      <item id="tut-uitdr-voorzover" lbl="voor zover mogelijk">
-        match (w1:node{lemma: 'voor zover'}), -- multi-word units zitten op een node
-              (w2:word{sentid: w1.sentid, lemma: 'mogelijk'})
-        where w1.end &lt;= w2.begin    -- 'mogelijk' moet achter 'voor zover' staan
-          and w2.begin - w1.end &lt;= 4 -- maximaal vier woorden ertussen
-        return w1, w2
-      </item>
-    </item>
-    <item id="tut-pair" lbl="Woordpaarrelaties">
-      <item id="tut-pair-eten" lbl="zelfstandig naamwoorden (n) als lijdend voorwerp (obj1) bij &quot;eten&quot;">
-        match p = (:word{lemma: 'eten', pt: 'ww'})-[:pair{rel: 'obj1'}]->(:nw{pt: 'n'})
+    <item id="tut-next" lbl="Woorden en woordgroepen">
+      <item id="tut-next-next" lbl="De next-relatie">
+        -- De relatie :next verbindt twee opeenvolgende woorden met elkaar
+
+        match p = ()-[:next]->()
         return p
       </item>
-      <item id="tut-pair-graag" lbl="werkwoorden (ww) waarbij &quot;graag&quot; als modifier (mod) optreedt">
+      <item id="tut-next-first" lbl="De eerste twee woorden van de zin">
+        match p = (:word{begin:0})-[:next]->()
+        return p
+      </item>
+      <item id="tut-next-last" lbl="De laatste twee woorden van de zin">
+        match p = ()-[:next]->(:word{last:true})
+        return p
+      </item>
+      <item id="tut-next-woorden" lbl="Woorden in dezelfde zin">
+        -- Zoek zinnen met zowel 'dag' als 'jaar'
+
+        match (w1:word{lemma: 'dag'}),
+              (w2:word{sentid: w1.sentid, lemma: 'jaar'})
+        return w1, w2
+      </item>
+      <item id="tut-next-near" lbl="Woorden bij elkaar in de buurt">
+        -- Zoek zinnen met zowel 'dag' als 'jaar'
+        -- Maximaal twee andere woorden tussen 'dag' en 'jaar'
+        -- Omdat de link geen richting bevat is de volgorde vrij
+
+        match p = (:word{lemma: 'dag'})-[:next*1..3]-(:word{lemma: 'jaar'})
+        return p
+      </item>
+      <item id="tut-next-groep" lbl="Woordgroepen">
+        -- Welke woord volgt het vaakst na 'per'?
+
+        match (:word{lemma: 'per'})-[:next]->(w:word)
+        return w.lemma, count(w.lemma) as aantal
+        order by aantal desc
+      </item>
+      <item id="tut-next-mwu" lbl="Multi-word units">
+        -- Een multi-word unit is de enige vertex van het type 'node' met de attributen 'word', 'lemma' en 'pt'
+        -- De waarde voor 'pt' is altijd 'mwu', net als voor 'cat' in dit geval
+
+        match (w:node{cat: 'mwu'})
+        return w.word, count(w.word) as aantal
+        order by aantal desc
+      </item>
+    </item>
+    <item id="tut-pair" lbl="Woordpaar-relaties">
+      <item id="tut-pair-pair" lbl="De pair-relatie">
+        match p = (:word)-[:pair]->(:word)
+        return p
+      </item>
+      <item id="tut-pair-graag" lbl="Wat doen we graag?">
+        -- Werkwoorden met 'graag' als modifier
+
         match p = (:nw{pt: 'ww'})-[:pair{rel: 'mod'}]->(:word{lemma: 'graag'})
         return p
       </item>
-      <item id="tut-pair-obj12" lbl="werkwoorden met lijdend voorwerp en meewerkend voorwerp">
-        match (w1:nw{pt: 'n'})&lt;-[:pair{rel:'obj1'}]-(w:word{pt:'ww'})-[:pair{rel:'obj2'}]->(w2:nw{pt: 'n'})
+      <item id="tut-pair-eten" lbl="Wat wordt er gegeten?">
+        -- Zelfstandig naamwoorden als 'obj1' van het werkwoord 'eten' of 'opeten'
+
+        match (w1:word{pt: 'ww'})-[:pair{rel: 'obj1'}]->(w:word{pt: 'n'})
+        where w1.lemma in ['eten', 'opeten']
+        return w.lemma, count(w.lemma) as aantal
+        order by aantal desc
+      </item>
+      <item id="tut-pair-obj12" lbl="Werkwoorden met lijdend voorwerp en meewerkend voorwerp">
+        match (w1:nw)&lt;-[:pair{rel:'obj1'}]-(w:word{pt:'ww'})-[:pair{rel:'obj2'}]->(w2:nw)
+        where w1.pt in ['n', 'mwu']
+          and w2.pt in ['n', 'mwu']
         return w.lemma as werkwoord, w1.word as "lijdend voorwerp", w2.word as "meewerkend voorwerp"
       </item>
     </item>
-    <item id="tut-ud" lbl="Universal Dependencies">
-      <item id="tut-ud-eten" lbl="wat eten en drinken we?">
-        <item id="tut-ud-eten-zin" lbl="zinnen">
-          match (w1:word)-[:ud{main:'obj'}]->(w2:word{upos:'NOUN'})
-          where w1.lemma in ['eten','op_eten','drinken','op_drinken']
-          return w1, w2
-        </item>
-        <item id="tut-ud-eten-tel" lbl="telling van woorden">
-          match (w:word)-[:ud{main:'obj'}]->(w2:word{upos:'NOUN'})
-          where w.lemma in ['eten','op_eten','drinken','op_drinken']
-          return w2.lemma as woord, count(w2.lemma) as aantal
-          order by aantal desc, woord
-        </item>
-      </item>
-      <item id="tud-ud-wwobj" lbl="werkwoord met object">
-        <item id="tut-ud-wwobj-zin" lbl="zinnen">
-          match (w1:word{upos:'VERB'})-[:ud{main:'obj'}]->(w2:word)
-          where w2.upos != 'PRON'
-          return w1, w2
-        </item>
-        <item id="tut-ud-wwobj-tel" lbl="telling">
-          match (w2:word{upos:'VERB'})-[:ud{main:'obj'}]->(w1:word)
-          where w1.upos != 'PRON'
-          return w1.lemma as "woord 1", w2.lemma as "woord 2", count(w1.lemma + ' ' + w2.lemma) as aantal
-          order by aantal desc, "woord 1", "woord 2"
-        </item>
-      </item>
-      <item id="tut-ud-pos" lbl="possessieven">
-        match (w1:word)-[:ud{rel:'nmod:poss'}]->(w2:word)
-        return w1, w2
-      </item>
-      <item id="tut-ud-rel" lbl="combinaties van UD en gewone relaties">
-        <item id="tut-ud-rel-ncc" lbl="nominalisaties van copula-constructies">
-          match p = (:node{cat:'np'})-[:rel{rel:'hd'}]->(:word)&lt;-[:ud{main:'cop'}]-(:word)
-          return p
-        </item>
-        <item id="tut-ud-rel-mwu" lbl="alleen multi-word units">
-          match p = (:word{lemma:'eten'})-[:ud{rel:'obj'}]->(:word)&lt;-[:rel{rel:'mwp'}]-()
-          return p
-        </item>
-        <item id="tut-ud-rel-mwu2" lbl="gewone woorden en multi-word units">
-          match p = (:word{lemma:'eten'})-[:ud{rel:'obj'}]->(:word)&lt;-[:rel*0..1{rel:'mwp'}]-(w)
-          where not exists ( (w)&lt;-[:rel{rel:'mwp'}]-() )
-          return p
-        </item>
-      </item>
-    </item>
     <item id="tut-rel" lbl="Alpino-structuren">
+      <item id="tut-rel-rel" lbl="De Alpino-relatie">
+        match p = (:node)-[:rel]->(:nw)
+        return p
+      </item>
+      <item id="tut-rel-kind" lbl="Onderwerpen die het lemma 'kind' bevatten">
+        match (:node)-[:rel{rel:'su'}]->(n:nw)-[:rel*0..]->(:word{lemma: 'kind'})
+        return n
+      </item>
+      <item id="tut-rel-mwu-van" lbl="Multi-word units die eindigen met 'van'">
+        match (n:node{cat:'mwu'})-[:rel{rel:'mwp'}]->(:word{lemma:'van', end:n.end})
+        return n
+      </item>
+      <item id="tut-rel-rela" lbl="Relatieve zinsdelen">
+        match p = (:node{cat:'rel'})-[:rel{rel:'body'}]->(:node{cat:'ssub'})
+        return p
+      </item>
       <item id="tut-rel-pdp" lbl="Node met twee parents">
+        -- In Alpino kan een node maar één parent hebben
+        -- In AlpinoGraph zijn nodes met een identieke index versmolten, waardoor 
+        --   een node meer dan één parent kan hebben
+
         match m = (n1:node)-[:rel]->()&lt;-[:rel]-(n2:node)
         where n1.id &lt; n2.id    -- voorkomt dubbelen
         return m
       </item>
     </item>
-    <item id="tut-mv" lbl="Jongens- en meisjesnamen">
-      <item id="tut-mv-en" lbl="persoon en zijn/haar">
-        <item id="tut-mv-en-zin" lbl="zinnen">
-          match (w:word)&lt;-[r1:rel*0..1{rel: 'mwp'}]-(n:nw)&lt;-[:rel]-(:node{cat:'conj'})-[:rel]->()-[:rel{rel:'det'}]->(w2:word{pt:'vnw'})
-          where w2.lemma in ['zijn', 'haar']
-            and ( w.ntype = 'eigen' or w.postag = 'SPEC(deeleigen)' )
-            and ( w.neclass is null or w.neclass = 'PER' )
-            and ( n.id = w.id or n.cat = 'mwu' )
-          return distinct n, w2
-        </item>
-        <item id="tut-mv-en-tel" lbl="telling">
-          match (w:word)&lt;-[r1:rel*0..1{rel: 'mwp'}]-(n:nw)&lt;-[:rel]-(:node{cat:'conj'})-[:rel]->()-[:rel{rel:'det'}]->(w2:word{pt:'vnw'})
-          where w2.lemma in ['zijn', 'haar']
-            and ( w.ntype = 'eigen' or w.postag = 'SPEC(deeleigen)' )
-            and ( w.neclass is null or w.neclass = 'PER' )
-            and ( n.id = w.id or n.cat = 'mwu' )
-          with distinct n.sentid as sentid, n.id as id, n.word as naam, w2.lemma as sekse
-          return count(*) as aantal, naam, sekse
-        </item>
+    <item id="tut-ud" lbl="Universal Dependencies">
+      <item id="tut-ud-ud" lbl="De standaard UD-relatie">
+        match p = (:word)-[:ud]->(:word)
+        return p
       </item>
-      <item id="tut-mv-ww" lbl="persoon ww't zijn/haar">
-        <item id="tut-mv-ww-zin" lbl="zinnen">
-          match (w2:word)&lt;-[:rel{rel: 'det'}]-()&lt;-[:rel{rel: 'obj1'}]-()-[r3:rel{rel: 'su'}]->()-[:rel*0..1{rel: 'hd'}]->(n:nw)-[r1:rel*0..1{rel: 'mwp'}]->(w:word)
-          where  w2.lemma in ['zijn', 'haar']
-            and ( w.ntype = 'eigen' or w.postag = 'SPEC(deeleigen)' )
-            and ( w.neclass is null or w.neclass = 'PER' )
-            and ( n.id = w.id or n.cat = 'mwu' )
-          return distinct n, w2
-        </item>
-        <item id="tut-mv-ww-tel" lbl="telling">
-          match (w2:word)&lt;-[:rel{rel: 'det'}]-()&lt;-[:rel{rel: 'obj1'}]-()-[r3:rel{rel: 'su'}]->()-[:rel*0..1{rel: 'hd'}]->(n:nw)-[r1:rel*0..1{rel: 'mwp'}]->(w:word)
-          where  w2.lemma in ['zijn', 'haar']
-            and ( w.ntype = 'eigen' or w.postag = 'SPEC(deeleigen)' )
-            and ( w.neclass is null or w.neclass = 'PER' )
-            and ( n.id = w.id or n.cat = 'mwu' )
-          with distinct n.sentid as sentid, n.id as id, n.word as naam, w2.lemma as sekse
-          return count(*) as aantal, naam, sekse
-        </item>
+      <item id="tut-ud-eud" lbl="De Enhanced UD-relatie">
+        match p = (:word)-[:eud]->(:word)
+        return p
+      </item>
+      <item id="tut-ud-dep" lbl="De dep-relatie">
+        -- :dep is een alias voor :ud en :eud samen
+
+        match p = (:word)-[:dep]->(:word)
+        return p
+      </item>
+      <item id="tut-ud-nsubj" lbl="Onderwerp">
+        match ()-[:ud{main:'nsubj'}]->(w)
+        return w
+      </item>
+      <item id="tud-ud-wwobj" lbl="Werkwoord met object">
+          match (w1:word{upos:'VERB'})-[:ud{main:'obj'}]->(w2:word)
+          where w2.upos != 'PRON'
+          return w1, w2
+      </item>
+      <item id="tut-ud-pos" lbl="Possessieven">
+        match (w1:word)-[:ud{rel:'nmod:poss'}]->(w2:word)
+        return w1, w2
+      </item>
+      <item id="tut-ud-reeks" lbl="Een advmod van een amod van een subject">
+        match p = ()-[:ud{main:'nsubj'}]->()-[:ud{main:'amod'}]->()-[:ud{main:'advmod'}]->()
+        return p
+      </item>
+    </item>
+    <item id="tut-mix" lbl="Heterogene relaties">
+      <item id="tut-mix-udmwu" lbl="Universal Dependencies en multi-word units (1)">
+        -- Universal dependencies zijn altijd tussen woorden
+        -- Soms is dat met een woord dat het begin van een multi-word unit is
+        --   en wil je de hele multi-word unit weten
+        -- Daarvoor kun je UD-relaties [:ud] combineren met Alpino-relaties [:rel]
+
+        match (:word{lemma:'gebruiken'})-[:ud{rel:'obj'}]->(v1:word)&lt;-[:rel*0..1{rel:'mwp'}]-(v)
+        where not exists ( (v)&lt;-[:rel{rel:'mwp'}]-() )
+        return v.lemma
+      </item>
+      <item id="tut-mix-udmwu2" lbl="Universal Dependencies en multi-word units (2)">
+        -- Hier zoek je expliciet naar Universal Dependencies met een multi-word unit
+
+        match (w:word)-[u:ud]->(:word)&lt;-[:rel]-(n:node{cat:'mwu'})
+        where not u.main in ['flat','fixed']
+        return w.lemma, u.rel, n.word
+      </item>
+      <item id="tut-mix-cop" lbl="Nominalisaties van copula-constructies">
+        -- Voor de gevorderde taalkundige
+        -- Ook hier wordt een UD-relatie gecombineerd met een Alpino-relatie
+
+        match p = (:node{cat:'np'})-[:rel{rel:'hd'}]->(:word)&lt;-[:ud{main:'cop'}]-(:word)
+        return p
       </item>
     </item>
   </item>
@@ -1103,7 +1157,7 @@
             where n2.cat is null or n2.cat != 'pp'
             return n.sentid, n.id
           ) as foo
-       </item>
+        </item>
       </item>
       <item id="spod-cnjmain" lbl="nevenschikking van hoofdzinnen">
         <item id="spod-cnjmain-zin" lbl="zinnen">
@@ -1124,7 +1178,7 @@
             where n2.cat is null or n2.cat != 'smain'
             return n.sentid, n.id
           ) as foo
-       </item>
+        </item>
       </item>
       <item id="spod-cnjvp" lbl="nevenschikking van VP">
         <item id="spod-cnjvp-zin" lbl="zinnen">
