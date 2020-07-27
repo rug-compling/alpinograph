@@ -242,6 +242,37 @@
         return p
       </item>
     </item>
+    <item id="tut-meta" lbl="Metadata">
+      <item id="tut-meta-woorden" lbl="Aantal woorden per land">
+        -- Dit voorbeeld werk alleen met het Corpus Gesproken Nederlands
+
+        match (w:word),
+              (m:meta{sentid: w.sentid, name: 'country'})
+        return m.value as land, count(m.value) as aantal
+      </item>
+      <item id="tut-meta-gij" lbl="Waar wordt 'gij' gebruikt?">
+        -- Dit voorbeeld werk alleen met het Corpus Gesproken Nederlands
+
+        match (w:word{lemma: 'gij'}),
+              (m:meta{sentid: w.sentid, name: 'country'})
+        return m.value as land, count(m.value) as aantal
+      </item>
+      <item id="tut-meta-gij-perc" lbl="Genormaliseerd gebruik van 'gij'">
+        -- Dit voorbeeld werk alleen met het Corpus Gesproken Nederlands
+
+        select land,
+               case when land ? 'BE' then aantal::text::numeric / 379916 -- aantal woorden in BE
+                    when land ? 'NL' then aantal::text::numeric / 753845 -- aantal woorden in NL
+                    else 0
+               end as "per woord"
+        from
+        (
+          match (w:word{lemma: 'gij'}),
+                (m:meta{sentid: w.sentid, name: 'country'})
+          return m.value as land, count(m.value) as aantal
+        ) as foo
+      </item>
+    </item>
   </item>
 
   <item id="spod" lbl="SPOD">
