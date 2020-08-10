@@ -243,12 +243,18 @@
       </item>
     </item>
     <item id="tut-meta" lbl="Metadata">
+      <item id="tut-meta-zinnen" lbl="Aantal zinnen per land">
+        -- Dit voorbeeld werk alleen met het Corpus Gesproken Nederlands
+
+        match (m:meta{name: 'country'})
+        return m.value as land, count(m.value) as "aantal zinnen"
+      </item>
       <item id="tut-meta-woorden" lbl="Aantal woorden per land">
         -- Dit voorbeeld werk alleen met het Corpus Gesproken Nederlands
 
         match (w:word),
               (m:meta{sentid: w.sentid, name: 'country'})
-        return m.value as land, count(m.value) as aantal
+        return m.value as land, count(m.value) as "aantal woorden"
       </item>
       <item id="tut-meta-gij" lbl="Waar wordt 'gij' gebruikt?">
         -- Dit voorbeeld werk alleen met het Corpus Gesproken Nederlands

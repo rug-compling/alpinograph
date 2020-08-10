@@ -184,17 +184,22 @@ func optFormat(s string) string {
 
 	lbl := a[0]
 
-	s1 := a[1]
-	s2 := ""
-	for n := len(s1); n > 3; n = len(s1) {
-		// U+202F = NARROW NO-BREAK SPACE
-		//s2 = "&#8239;" + s1[n-3:n] + s2
-		s2 = "." + s1[n-3:n] + s2
-		s1 = s1[0 : n-3]
-	}
-	lines := s1 + s2
+	/*
+
+		s1 := a[1]
+		s2 := ""
+		for n := len(s1); n > 3; n = len(s1) {
+			// U+202F = NARROW NO-BREAK SPACE
+			//s2 = "&#8239;" + s1[n-3:n] + s2
+			s2 = "." + s1[n-3:n] + s2
+			s1 = s1[0 : n-3]
+		}
+		lines := s1 + s2
+
+	*/
 
 	text := html.EscapeString(strings.Join(a[2:], " "))
 
-	return `<option value="` + lbl + `">` + text + ` &mdash; ` + lines + ` zinnen</option>`
+	// return `<option value="` + lbl + `">` + text + ` &mdash; ` + lines + ` zinnen</option>`
+	return `<option value="` + lbl + `">` + text + `</option>`
 }
