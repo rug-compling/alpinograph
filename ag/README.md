@@ -1,34 +1,32 @@
 
-# Globale settings, voor elke sessie:
+## Globale settings, voor elke sessie
 
-    PATH=PATH/TO/opt/agensgraph/bin:$PATH
-    export PGPORT=PORTNUMBER
-    export AGDATA=PATH/TO/var/agensgraph/db_cluster
+    PATH={PATH/TO}/opt/agensgraph/bin:$PATH
+    export PGPORT={PORTNUMBER}
+    export AGDATA={PATH/TO}/var/agensgraph/db_cluster
 
-----------------------------------------------------------------
 
-# Eenmalig
+## Eenmalig
 
 Database aanmaken, gebruik **niet** je loginnaam:
 
-    initdb -A md5 --locale=en_US.utf8 -U ROOTUSERNAME -W
+    initdb -A md5 --locale=en_US.utf8 -U {ROOTUSERNAME} -W
 
-Poortnummer aanpassen in: PATH/TO/`var/agensgraph/db_cluster/postgresql.conf`
+Poortnummer aanpassen in: {PATH/TO}/`var/agensgraph/db_cluster/postgresql.conf`
 
-In PATH/TO/`var/agensgraph/db_cluster/pg_hba.conf` regels toevoegen
+In {PATH/TO}/`var/agensgraph/db_cluster/pg_hba.conf` regels toevoegen
 voor elke gebruiker die van buiten verbinding mag maken.
 
 Starten, en reguliere gebruiker aanmaken:
 
     ag_ctl start
 
-    createuser -d -e -U ROOTUSERNAME -W `id -un` -P
+    createuser -d -e -U {ROOTUSERNAME} -W `id -un` -P
 
-    createdb -e -O `id -un` -U ROOTUSERNAME -W
+    createdb -e -O `id -un` -U {ROOTUSERNAME} -W
 
-----------------------------------------------------------------
 
-# Per sessie
+## Per sessie
 
 Starten database:
 
@@ -38,22 +36,18 @@ Stoppen database:
 
     ag_stl stop
 
-----------------------------------------------------------------
 
-# Invoer corpus
+## Invoer corpus
 
-    export PGPASSWORD=USERPASSWORD
-    ./alpino2agens CORPUSNAME.dact | agens -b -q
+    export PGPASSWORD={USERPASSWORD}
+    ./alpino2agens {CORPUSNAME}.dact | agens -b -q
 
-----------------------------------------------------------------
 
-# Dump corpus
+## Dump corpus
 
-    pg_dump USERNAME -n CORPUSNAME
+    pg_dump {USERNAME} -n {CORPUSNAME}
 
-----------------------------------------------------------------
-
-# Command line interface
+## Command-line interface
 
 Starten:
 
@@ -61,9 +55,9 @@ Starten:
 
 Enkele commando's in AgensGraph:
 
-    set graph_path = 'CORPUSNAME';
+    set graph_path = '{CORPUSNAME}';
 
-    match p = ()-[]->() return p;
+    match (w:word) return w limit 2;
 
 Lijst van corpora (`public` is geen corpus):
 
@@ -78,7 +72,7 @@ Gegevens van een corpus:
     from
         pg_indexes
     where
-        schemaname = 'CORPUSNAME'
+        schemaname = '{CORPUSNAME}'
     order by
         tablename,
         indexname;
