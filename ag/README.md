@@ -45,7 +45,7 @@ Stoppen database:
 
 ## Dump corpus
 
-    pg_dump {USERNAME} -n {CORPUSNAME}
+    pg_dump `id -un` -n {CORPUSNAME}
 
 ## Command-line interface
 
