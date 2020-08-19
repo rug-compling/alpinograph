@@ -44,9 +44,11 @@ type Node struct {
 }
 
 var (
-	reQuote = regexp.MustCompile(`\\.`)
-	db      *sql.DB
-	debug   bool
+	reQuote   = regexp.MustCompile(`\\.`)
+	reTooltip = regexp.MustCompile(`, tooltip="[^"]*"`)
+	db        *sql.DB
+	debug     bool
+	dot       bool
 
 	names = map[string]string{
 		"r": "rel",
@@ -82,6 +84,7 @@ func main() {
 	edgelist := strings.TrimSpace(req.FormValue("e"))
 	compact := req.FormValue("style") != "high"
 	debug = req.FormValue("debug") != ""
+	dot = req.FormValue("dot") != ""
 
 	if x(openDB()) {
 		return
@@ -118,9 +121,20 @@ func main() {
 		return
 	}
 
+	var divsvg1 string
+
 	tree, ok := makeTree(corpus, sid, idlist, edgelist, compact)
 	if !ok {
 		return
+	}
+
+	if dot {
+		treeString := tree.String()
+		tree = bytes.NewBufferString(treeString)
+		divsvg1 = fmt.Sprintf(`<!--
+%s
+-->
+`, reTooltip.ReplaceAllLiteralString(treeString, ""))
 	}
 
 	cmd := exec.Command("dot", "-Tsvg")
@@ -134,13 +148,22 @@ func main() {
 	if !ok {
 		return
 	}
-	divsvg1 := `<div class="fig">` + svg + `</div>`
+	divsvg1 += `<div class="fig">` + svg + `</div>`
 
 	var divsvg2 string
 	if idlist != "" {
 		graph, ok := makeGraph(corpus, sid, idlist, edgelist)
 		if !ok {
 			return
+		}
+
+		if dot {
+			graphString := graph.String()
+			graph = bytes.NewBufferString(graphString)
+			divsvg2 = fmt.Sprintf(`<!--
+%s
+-->
+`, reTooltip.ReplaceAllLiteralString(graphString, ""))
 		}
 
 		cmd = exec.Command("dot", "-Tsvg")
@@ -153,7 +176,7 @@ func main() {
 		if !ok {
 			return
 		}
-		divsvg2 = `<div class="fig">` + svg + `</div>`
+		divsvg2 += `<div class="fig">` + svg + `</div>`
 	}
 
 	uddiv, hasUD, ok := makeUD(sid, idlist, edgelist, conlluErr)
@@ -399,6 +422,8 @@ func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.B
     nodesep=.05
     // ordering=out
 
+    margin=.05;
+    outputMode="edgesfirst";
     node [shape=box, height=0, width=0, style=filled, fontsize=12, color="#ffc0c0", fontname="Helvetica"];
 
 `, ranksep)
@@ -628,6 +653,8 @@ func makeGraph(corpus, sid, idlist, edgelist string) (graph *bytes.Buffer, ok bo
     //nodesep=.05
     // ordering=out
 
+    margin=.05;
+    outputMode="edgesfirst";
     node [height=0, width=0, fontsize=12];
 
 `)
