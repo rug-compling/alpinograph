@@ -48,7 +48,6 @@ var (
 	reTooltip = regexp.MustCompile(`, tooltip="[^"]*"`)
 	db        *sql.DB
 	debug     bool
-	dot       bool
 
 	names = map[string]string{
 		"r": "rel",
@@ -84,7 +83,6 @@ func main() {
 	edgelist := strings.TrimSpace(req.FormValue("e"))
 	compact := req.FormValue("style") != "high"
 	debug = req.FormValue("debug") != ""
-	dot = req.FormValue("dot") != ""
 
 	if x(openDB()) {
 		return
@@ -121,21 +119,13 @@ func main() {
 		return
 	}
 
-	var divsvg1 string
-
 	tree, ok := makeTree(corpus, sid, idlist, edgelist, compact)
 	if !ok {
 		return
 	}
 
-	if dot {
-		treeString := tree.String()
-		tree = bytes.NewBufferString(treeString)
-		divsvg1 = fmt.Sprintf(`<!--
-%s
--->
-`, reTooltip.ReplaceAllLiteralString(treeString, ""))
-	}
+	treeString := tree.String()
+	tree = bytes.NewBufferString(treeString)
 
 	cmd := exec.Command("dot", "-Tsvg")
 	cmd.Stdin = tree
@@ -148,7 +138,13 @@ func main() {
 	if !ok {
 		return
 	}
-	divsvg1 += `<div class="fig">` + svg + `</div>`
+	divsvg1 := fmt.Sprintf(`<div class="fig">
+%s
+</div>
+<script type="text/javascript">
+var graaf = %q;
+</script>
+`, svg, reTooltip.ReplaceAllLiteralString(treeString, ""))
 
 	var divsvg2 string
 	if idlist != "" {
@@ -157,14 +153,8 @@ func main() {
 			return
 		}
 
-		if dot {
-			graphString := graph.String()
-			graph = bytes.NewBufferString(graphString)
-			divsvg2 = fmt.Sprintf(`<!--
-%s
--->
-`, reTooltip.ReplaceAllLiteralString(graphString, ""))
-		}
+		graphString := graph.String()
+		graph = bytes.NewBufferString(graphString)
 
 		cmd = exec.Command("dot", "-Tsvg")
 		cmd.Stdin = graph
@@ -176,7 +166,13 @@ func main() {
 		if !ok {
 			return
 		}
-		divsvg2 += `<div class="fig">` + svg + `</div>`
+		divsvg2 = fmt.Sprintf(`<div class="fig">
+%s
+</div>
+<script type="text/javascript">
+var subgraaf = %q;
+</script>
+`, svg, reTooltip.ReplaceAllLiteralString(graphString, ""))
 	}
 
 	uddiv, hasUD, ok := makeUD(sid, idlist, edgelist, conlluErr)
@@ -190,16 +186,21 @@ func main() {
 	}
 
 	var download string
+	var download2 string
 	if hasUD {
 		download = `<input type="submit" name="want" value="Alpino met UD (XML)">
 <input type="submit" name="want" value="UD (CoNLL-U)">
 `
+	}
+	if divsvg2 != "" {
+		download2 = `<input type="button" onClick="save(subgraaf, 'subgraph');" value="Subgraaf (DOT)">`
 	}
 	fmt.Printf(`<title>%s</title>
 <link rel="stylesheet" type="text/css" href="../tree.css">
 <link rel="stylesheet" type="text/css" href="../tooltip.css" />
 <link rel="icon" href="../../favicon.ico" type="image/ico">
 <script type="text/javascript" src="../tooltip.js"></script>
+<script type="text/javascript" src="../FileSaver.js"></script>
 </head>
 <body>
 <em>%s</em>
@@ -214,14 +215,22 @@ sentence-ID: %s%s
 Opslaan:
 <input type="submit" name="want" value="Alpino simpel (XML)">
 %s
+<input type="button" onClick="save(graaf, 'graph');" value="Graaf (DOT)">
+%s
 </form>
 </p>
 %s
 %s
 %s
+<script type="text/javascript">
+function save(s, n) {
+   var blob = new Blob([s], { type: 'text/vnd.graphviz', endings: 'native' });
+   saveAs(blob, n+".dot");
+}
+</script>
 </body>
 </html>
-`, zin, zin, c, sid, parser, meta, corpus, sid, download, divsvg1, divsvg2, uddiv)
+`, zin, zin, c, sid, parser, meta, corpus, sid, download, download2, divsvg1, divsvg2, uddiv)
 
 }
 
