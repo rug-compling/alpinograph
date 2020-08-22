@@ -312,7 +312,7 @@
         beginnen (2), ja/nee vragen (3), en imperatieven (4).
 
         |      |    |
-        | ---- | -- |
+        | ---: | -- |
         | (1)  |  Pieter leest een boek. |
         |      | &amp;nbsp; |
         | (2)  | Wie leest er een boek? |
@@ -416,7 +416,7 @@
         onderscheiden we relatieve bijzinnen (6) en free relatives (7).
 
         |      |    |
-        | ---- | -- |
+        | ---: | -- |
         | (1)  | (ik vroeg) wie dat boek gelezen heeft |
         |      | &amp;nbsp; |
         | (2a) | (ik lees dat boek) omdat het door Elsschot geschreven is |
@@ -672,7 +672,7 @@
         Correlatieve comparatieven zijn zinnen zoals:
 
         |     |    |
-        | --- | -- |
+        | --: | -- |
         | (1) | Hoe langer, hoe beter |
         |     | &amp;nbsp; |
         | (2) | Hoe langer hij wordt, des te meer hij last van zijn rug krijgt |
@@ -713,7 +713,7 @@
         wordt gemaakt voor de andere hoofden.
 
         |      |    |
-        | ---- | -- |
+        | ---: | -- |
         | (1)  | zo groen als gras |
         |      | &amp;nbsp; |
         | (2)  | even dik als jij |
@@ -975,7 +975,7 @@
         het aantal coordinatoren. Geen (1), één (2), twee (3) of meer (4).
 
         |      |  |
-        | ---- | -- |
+        | ---: | -- |
         | (1)  | Zij wilden inspraak , medezeggenschap , democratisering |
         |      | &amp;nbsp; |
         | (2a) | Appels en peren |
@@ -997,7 +997,7 @@
         vijf, zes, of meer.
 
         |      |    |
-        | ---- | -- |
+        | ---: | -- |
         | (5)  | de milieuverontreiniging, enzovoorts |
         |      | &amp;nbsp; |
         | (6)  | cacaoboter , cacaopoeder of palmolie |
@@ -1006,7 +1006,7 @@
         conjuncten: NP (2), PP (7), hoofdzinnen (8), VP (9) en bijzinnen (10).
 
         |      |    |
-        | ---- | -- |
+        | ---: | -- |
         | (7)  | in Arnhem en in België |
         |      | &amp;nbsp; |
         | (8)  | Drie keer hadden ze dat beloofd en drie keer was die belofte weer ingetrokken |
@@ -1437,7 +1437,7 @@
         bijwoordgroepen (4).
 
         |      |    |
-        | ---- | -- |
+        | ---: | -- |
         | (1)  | een grote boom |
         |      | &amp;nbsp; |
         | (2)  | op een tak |
@@ -1517,7 +1517,7 @@
         en predicatieve complementen (5).
 
         |      |    |
-        | ---- | -- |
+        | ---: | -- |
         | (1)  | De vrouw van de buurman |
         |      | &amp;nbsp; |
         | (2a) | De door hem beschreven voorvallen |
@@ -1545,7 +1545,7 @@
         voorzetsel gedragen.
 
         |      |    |
-        | ---- | -- |
+        | ---: | -- |
         | (7)  | in de kooi |
         |      | &amp;nbsp; |
         | (8)  | Hij houdt daar helemaal niet van |
@@ -1696,7 +1696,7 @@
         Onder het kopje werkwoorden worden de vaste werkwoordelijke uitdrukkingen geteld (1).
 
         |      |    |
-        | ---- | -- |
+        | ---: | -- |
         | (1a) | aan bod komen |
         | ( b) | ter kennis geven |
         | ( c) | op prijs stellen |
@@ -1707,7 +1707,7 @@
         de rode volgorde volgt het voltooid deelwoord het hulpwerkwoord (3).
 
         |      |    |
-        | ---- | -- |
+        | ---: | -- |
         | (2a) | zijn boek zal morgen gepresenteerd worden |
         | ( b) | ze zouden nooit een woord met elkaar gewisseld hebben |
         |      | &amp;nbsp; |
@@ -1717,7 +1717,7 @@
         Voorbeelden van werkwoordclusters worden gegeven in (2), (3), en (4).
 
         |      |    |
-        | ---- | -- |
+        | ---: | -- |
         | (4a) | Moet op korte termijn worden opgetreden? |
         | ( b) | De zaak moet aanhangig worden gemaakt |
         | ( c) | Ze zeiden dat ik dat zou hebben moeten kunnen zien aankomen |
@@ -1727,7 +1727,7 @@
         Deze query werkt niet voor het CGN corpus.
 
         |      |    |
-        | ---- | -- |
+        | ---: | -- |
         | (5a) | Ik heb hem het boek zien lezen |
         | ( b) | Ik heb hem de olifanten helpen voeren |
         | ( c) | Ik heb hem de oppasser de olifanten zien helpen voeren |
@@ -1737,7 +1737,7 @@
         Deze query werkt niet voor het CGN corpus.
 
         |      |    |
-        | ---- | -- |
+        | ---: | -- |
         | (6a) | Hij wordt geslagen | 
         | ( b) | Het monument zal spoedig te zien zijn in het Amsterdamse Oosterpark |
 
@@ -1746,7 +1746,7 @@
         als plaatsonderwerp gebruikt.
 
         |      |    |
-        | ---- | -- |
+        | ---: | -- |
         | (7a) | Er werd niet meer over gesproken |
         | ( b) | In Amsterdam werd niet gedemonstreerd |
       </item>
@@ -1962,7 +1962,7 @@
         Werkwoorden met een scheidbaar partikel worden gegeven in (1) en (2).
 
         |      |    |
-        | ---- | -- |
+        | ---: | -- |
         | (1a) | Ik heb hem opgebeld |
         | ( b) | Ik bel hem op |
         | ( c) | Ik heb hem op willen bellen |
@@ -2195,12 +2195,12 @@
         (lokaal, 4) dan wel in een ingebedde bijzin (niet lokaal, 5).
 
         |      |    |
-        | ---- | -- |
+        | ---: | -- |
         | (1)  | De kinderen geloven nog in Sinterklaas |
         |      | &amp;nbsp; |
         | (2)  | Sinterklaas keurden ze geen blik waardig |
         |      | &amp;nbsp; |
-        |(3)   | Wie denk je dat ik tegenkwam? |
+        | (3)  | Wie denk je dat ik tegenkwam? |
         |      | &amp;nbsp; |
         | (4)  | Welke procedure moet worden gevolgd? |
         |      | &amp;nbsp; |

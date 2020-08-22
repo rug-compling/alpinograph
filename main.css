@@ -297,6 +297,19 @@ td.bool, td.float64 {
   margin-bottom: 2em;
   overflow-y: auto;
   max-height: 40vh;
+  line-height: 1.5;
+  padding: 1em;
+  background-color: white;
+  border: 1px solid lightgray;
+}
+
+#infoContent h2 {
+  font-size: x-large;
+  font-weight: 300;
+}
+
+#infoContent table tr>td {
+  padding: 0px .7em;
 }
 
 #permatext {
