@@ -1,33 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <menu>
 
-  <item id="idx" lbl="Index">
-    <item id="idx-doc" lbl="Corpusinformatie">
-      match (d:doc)
-      return d
-    </item>
-    <item id="idx-node" lbl="Attributen van nodes">
-      match (f:feature{v: 'node'})
-      return f.name as attribuut, f.count as aantal
-      order by attribuut
-    </item>
-    <item id="idx-word" lbl="Attributen van woorden">
-      match (f:feature{v: 'word'})
-      return f.name as attribuut, f.count as aantal
-      order by attribuut
-    </item>
-    <item id="idx-rel" lbl="Attributen van relaties">
-      match (f:feature{v: 'rel'})
-      return f.name as attribuut, f.count as aantal
-      order by attribuut
-    </item>
-    <item id="idx-meta" lbl="Soorten metadata">
-      match (f:feature{v: 'meta'})
-      return f.name as metadata, f.count as aantal
-      order by metadata
-    </item>
-  </item>
-
   <item id="tut" lbl="Voorbeelden">
     <item id="tut-inl" lbl="Inleiding">
       <item id="tut-inl-node" lbl="Node">
@@ -167,7 +140,8 @@
       </item>
       <item id="tut-rel-mwu-van" lbl="Multi-word units die eindigen met 'van'">
         match (n:node{cat:'mwu'})-[:rel{rel:'mwp'}]->(:word{lemma:'van', end:n.end})
-        return n
+        return n.word as "multi-word unit", count(n.word) as aantal
+        order by aantal desc, "multi-word unit"
       </item>
       <item id="tut-rel-rela" lbl="Relatieve zinsdelen">
         match p = (:node{cat:'rel'})-[:rel{rel:'body'}]->(:node{cat:'ssub'})
@@ -279,9 +253,39 @@
         ) as foo
       </item>
     </item>
+    <item id="idx" lbl="Index">
+      <item id="idx-doc" lbl="Corpusinformatie">
+      match (d:doc)
+      return d
+      </item>
+      <item id="idx-node" lbl="Attributen van nodes">
+      match (f:feature{v: 'node'})
+      return f.name as attribuut, f.count as aantal
+      order by attribuut
+      </item>
+      <item id="idx-word" lbl="Attributen van woorden">
+      match (f:feature{v: 'word'})
+      return f.name as attribuut, f.count as aantal
+      order by attribuut
+      </item>
+      <item id="idx-rel" lbl="Attributen van relaties">
+      match (f:feature{v: 'rel'})
+      return f.name as attribuut, f.count as aantal
+      order by attribuut
+      </item>
+      <item id="idx-meta" lbl="Soorten metadata">
+      match (f:feature{v: 'meta'})
+      return f.name as metadata, f.count as aantal
+      order by metadata
+      </item>
+    </item>
   </item>
 
   <item id="spod" lbl="SPOD">
+
+    <item id="spod-info" lbl="Info" class="info">
+      *Syntactic profiler of Dutch*
+    </item>
 
     <item id="spod-attrib" lbl="Attributen">
       <item id="spod-pos" lbl="pos">
@@ -302,6 +306,29 @@
     </item>
 
     <item id="spod-sents" lbl="Hoofdzinnen">
+      <item id="spod-sents-info" lbl="Info" class="info">
+        Bij deze queries vergelijken we de verschillende typen hoofdzinnen:
+        mededelende hoofdzinnen (1), vraagzinnen die met een vraag-constituent
+        beginnen (2), ja/nee vragen (3), en imperatieven (4).
+
+        |      |    |
+        | ---- | -- |
+        | (1)  |  Pieter leest een boek. |
+        |      | &amp;nbsp; |
+        | (2)  | Wie leest er een boek? |
+        |      | &amp;nbsp; |
+        | (3)  | Lees jij een boek? |
+        |      | &amp;nbsp; |
+        | (4a) | Lees dat boek nou toch eens. |
+        | ( b) | Lees jij dat boek nou toch eens. |
+
+        Het onderscheid tussen ja/nee vragen en imperatieven is in de
+        treebanks niet altijd nauwkeurig te bepalen --- met name voor
+        de handmatig geannoteerde treebanks die iets minder informatie
+        bevatten dan de automatisch geannoteerde treebanks. Bijvoorbeeld
+        imperatieven die wel een onderwerp bevatten (4b) zullen door de
+        bestaande queries niet worden gevonden als imperatief.
+      </item>
       <item id="spod-smain" lbl="mededelende hoofdzinnen">
         <item id="spod-smain-zin" lbl="zinnen">
           match p = (:node{cat: 'smain'})
@@ -379,6 +406,54 @@
     </item>
 
     <item id="spod-bijzinnen" lbl="Bijzinnen">
+
+      <item id="spod-bijzinnen-info" lbl="Info" class="info">
+        Deze queries vergelijken de verschillende soorten bijzinnen.
+        We onderscheiden de volgende bijzinnen: ingebedde vraagzinnen
+        met een vraag-constituent (1), finiete bijzinnen (2), infiniete
+        bijzinnen met *om te* (3) infiniete bijzinnen met alleen *te* (4),
+        en infiniete bijzinnen met een ander voorzetsel (5). Daarnaast
+        onderscheiden we relatieve bijzinnen (6) en free relatives (7).
+
+        |      |    |
+        | ---- | -- |
+        | (1)  | (ik vroeg) wie dat boek gelezen heeft |
+        |      | &amp;nbsp; |
+        | (2a) | (ik lees dat boek) omdat het door Elsschot geschreven is |
+        | ( b) | (ik denk) dat het boek door Elsschot is geschreven |
+        | ( c) | (ik vroeg) of het boek door Ellschot is geschreven |
+        |      | &amp;nbsp; |
+        | (3a) | (ik heb geprobeerd) om een boek te lezen |
+        | ( b) | (ik ga naar de bieb) om een boek te lezen |
+        | ( c) | (het was niet nodig) om het boek te lezen |
+        | ( d) | (slangen zijn) om van te gruwen |
+        | ( e) | (het kind is oud genoeg) om alleen naar school te gaan |
+        | ( f) | (het boek is te duur) om te kopen |
+        | ( g) | (hij heeft voldoende invloed) om het boek te verkopen |
+        | ( h) | (ze was zo genadig) om het boek voor te lezen |
+        | ( i) | (een boek) om nooit te vergeten |
+        |      | &amp;nbsp; |
+        | (4)  | (ik heb geprobeerd) een boek te lezen |
+        |      | &amp;nbsp; |
+        | (5)  | (ik lees dat boek) zonder mijn oordeel uit te spreken |
+        |      | &amp;nbsp; |
+        | (6)  | (ik lees een boek) dat door Elsschot is geschreven |
+        |      | &amp;nbsp; |
+        | (7)  | wie dit leest (is gek) |
+
+        Binnen de finiete bijzinnen maken we onderscheid tussen bijzinnen die
+        ingeleid worden met *dat* (2b), met *of* (2c) dan wel met een ander
+        voegwoord (2a).
+
+        De infiniete bijzinnen met *om* worden verder onderverdeeld naar
+        gelang de bijzin optreedt als complement (3a), of als bepaling (3b),
+        als onderwerp (3c), als predicatief complement (3d), of als
+        comperatief complement (3efgh). Infiniete bijzinnen die als
+        bepaling optreden worden verder onderverdeeld, afhankelijk of
+        de bepaling bij een werkwoord optreedt (3b) of bij een zelfstandig
+        naamwoord (3i).
+      </item>
+
       <item id="spod-whsub" lbl="ingebedde vraagzinnen">
         <item id="spod-whsub-zin" lbl="zinnen">
           match (n:node{cat: 'whsub'})-[:rel*1..2]->(n2:node{cat: 'ssub'})
@@ -593,6 +668,15 @@
     </item>
 
     <item id="spod-corc" lbl="Correlatieve comparatieven">
+      <item id="spod-corc-info" lbl="Info" class="info">
+        Correlatieve comparatieven zijn zinnen zoals:
+
+        |     |    |
+        | --- | -- |
+        | (1) | Hoe langer, hoe beter |
+        |     | &amp;nbsp; |
+        | (2) | Hoe langer hij wordt, des te meer hij last van zijn rug krijgt |
+      </item>
       <item id="spod-corc-zin" lbl="zinnen">
         match p1 = (n1:node{_deste: true})&lt;-[:rel*0..]-(n0:node)&lt;-[:rel*0..]-(n:node{cat: 'du'})
         match p2 = (n1)&lt;-[:rel*0..]-(n0)-[:rel*0..]->(n2:node{_deste: true})
@@ -615,6 +699,40 @@
     </item>
 
     <item id="spod-compcomp" lbl="Woorden met een comparatief complement">
+      <item id="spod-compcomp-info" lbl="Info" class="info">
+        Comparatieve adjectieven en woorden zo als *zo*, *even*, *meer*,
+        *minder*, *niet*, *niets*, *ander*, *anders* treden soms op met
+        een complement dat vaak wordt ingeleid met het woord *dan* of *als*.
+        Naast het totale aantal voorkomens van de constructie kijken we naar
+        het aantal voorbeelden waarbij *zo* (1) of *even* (2) of een
+        comparatief adjective (3) of *meer* of *minder* (4) of *niet*,
+        *niets*, *ander*, *anders* (5) het hoofd is.
+
+        Bij comparatieve adjectieven make we ook nog een onderverdeling
+        naar de aard van het complement. Een vergelijkbare onderverdeling
+        wordt gemaakt voor de andere hoofden.
+
+        |      |    |
+        | ---- | -- |
+        | (1)  | zo groen als gras |
+        |      | &amp;nbsp; |
+        | (2)  | even dik als jij |
+        |      | &amp;nbsp; |
+        | (3a) | beter dan jij |
+        | ( b) | beter dan ik dacht |
+        | ( c) | beter dan bij de buren |
+        | ( d) | beter dan gisteren |
+        |      |  &amp;nbsp; |
+        | (4a) | meer geluk dan wijsheid |
+        | ( b) | meer geluk dan ik dacht |
+        | ( c) | meer geluk dan bij de buren |
+        | ( d) | meer geluk dan gisteren |
+        |      |  &amp;nbsp; |
+        | (5a) | niets anders dan ellende |
+        | ( b) | niets anders dan dat hij komt |
+        | ( c) | niets anders dan bij de buren |
+        | ( d) | niets anders dan gisteren |
+      </item>
       <item id="spod-cc" lbl="totaal">
         <item id="spod-cc-zin" lbl="zinnen">
           match (n:nw)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->(n2)
@@ -852,6 +970,51 @@
     </item>
 
     <item id="spod-neven" lbl="Nevenschikkingen">
+      <item id="spod-neven-info" lbl="Info" class="info">
+        Bij nevenschikkingen maken we onderscheid naar gelang
+        het aantal coordinatoren. Geen (1), één (2), twee (3) of meer (4).
+
+        |      |  |
+        | ---- | -- |
+        | (1)  | Zij wilden inspraak , medezeggenschap , democratisering |
+        |      | &amp;nbsp; |
+        | (2a) | Appels en peren |
+        | ( b) | Appels of peren |
+        | ( c) | De afzijdige maar invloedrijke waarnemer |
+        | ( d) | Ze helpen eiwitten, vetten, etc. afbreken |
+        |      | &amp;nbsp; |
+        | (3)  | Noch appels noch peren |
+        |      | &amp;nbsp; |
+        | (4)  | U kunt gezond zijn, of ziek of arm of rijk |
+
+        Indien er precies één coordinator is, maken we onderscheid tussen
+        *en* (2a), *of* (2b), *maar* (2c) en het speciale geval waar de
+        conjunctie wordt afgesloten met een woord zoals *enzovoorts* dat
+        in de annotatie ook als coordinator wordt weergegeven (2d).
+
+        We maken ook een onderverdeling naar gelang het aantal conjuncten
+        dat in de coordinatie optreedt. Eén (5), twee (2), drie (6), vier,
+        vijf, zes, of meer.
+
+        |      |    |
+        | ---- | -- |
+        | (5)  | de milieuverontreiniging, enzovoorts |
+        |      | &amp;nbsp; |
+        | (6)  | cacaoboter , cacaopoeder of palmolie |
+
+        Ten slotte wordt een onderscheid gemaakt naar de categorie van de
+        conjuncten: NP (2), PP (7), hoofdzinnen (8), VP (9) en bijzinnen (10).
+
+        |      |    |
+        | ---- | -- |
+        | (7)  | in Arnhem en in België |
+        |      | &amp;nbsp; |
+        | (8)  | Drie keer hadden ze dat beloofd en drie keer was die belofte weer ingetrokken |
+        |      | &amp;nbsp; |
+        | (9)  | die sinds 1981 in Duitsland woont en werkt |
+        |      |  &amp;nbsp; |
+        | (10) | (Hij zei) dat het er bij hoorde, en dat ik niet bang hoefde te zijn |
+      </item>
       <item id="spod-conj" lbl="alle nevenschikkingen">
         <item id="spod-conj-zin" lbl="zinnen">
           match p = (:node{cat: 'conj'})
@@ -1268,6 +1431,21 @@
     </item>
 
     <item id="spod-wgroep" lbl="Woordgroepen">
+      <item id="spod-wgroep-info" lbl="Info" class="info">
+        Voor woordgroepen onderscheiden we hier naamwoordgroepen (1),
+        voorzetselgroepen (2), bijvoeglijk-naamwoordgroepen (3) en
+        bijwoordgroepen (4).
+
+        |      |    |
+        | ---- | -- |
+        | (1)  | een grote boom |
+        |      | &amp;nbsp; |
+        | (2)  | op een tak |
+        |      | &amp;nbsp; |
+        | (3)  | heel erg geliefd |
+        |      | &amp;nbsp; |
+        | (4)  | spelenderwijs |
+      </item>
       <item id="spod-np" lbl="np">
         <item id="spod-np-zin" lbl="zinnen">
           match (x:nw{_np: true})
@@ -1328,6 +1506,50 @@
     </item>
 
     <item id="spod-ppgroep" lbl="Voorzetselgroepen">
+      <item id="spod-ppgroep-info" lbl="Info" class="info">
+        Voorzetselgroepen worden onderscheiden naar grammaticale
+        functie en naar interne structuur. Voorzetselgroepen kunnen
+        optreden als bepaling bij nomina (1), adjectieven (2) of
+        bij werkwoorden (6). Dit laatste geval wordt in de traditionele
+        grammatica een bijwoordelijke bepaling genoemd. Voorzetselgroepen
+        kunnen ook als complement optreden. Hier onderscheiden we
+        voorzetselvoorwerpen (3), locatief/directinele complementen (4)
+        en predicatieve complementen (5).
+
+        |      |    |
+        | ---- | -- |
+        | (1)  | De vrouw van de buurman |
+        |      | &amp;nbsp; |
+        | (2a) | De door hem beschreven voorvallen |
+        | ( b) | De op zichzelf rationele beslissingen |
+        |      | &amp;nbsp; |
+        | (3)  | We rekenen op zijn steun |
+        |      | &amp;nbsp; |
+        | (4a) | De ketchup vindt u bij de groenteafdeling |
+        | ( b) | We rijden wel even naar het station |
+        |      | &amp;nbsp; |
+        | (5a) | Die aanpak is niet zonder risico |
+        | ( b) | Je moet in het bezit zijn van een visum |
+        | ( c) | De haven is van cruciale betekenis |
+        |      | &amp;nbsp; |
+        | (6)  | We gaan vissen bij de brug |
+
+        Voorzetselgroepen worden onderverdeeld aan de hand van hun
+        interne structuur. We onderscheiden de meest gangbare structuur
+        waarbij een voorzetsel direct gevolgd wordt door een NP (7) en
+        de structuur waarbij een R-pronomen direct of indirect gevolgd
+        wordt door het bijbehorende voorzetsel (8). Ten slotte volgt
+        een aparte telling voor het aantal voorzetseluitdrukkingen.
+        Dit zijn versteende combinaties zoals *ten tijde van*,
+        *door middel van*, *naar aanleiding van* die zich als
+        voorzetsel gedragen.
+
+        |      |    |
+        | ---- | -- |
+        | (7)  | in de kooi |
+        |      | &amp;nbsp; |
+        | (8)  | Hij houdt daar helemaal niet van |
+      </item>
       <item id="spod-ppnp" lbl="grammaticale functie, bepalingen bij zelfstandige naamwoorden">
         <item id="spod-ppnp-zin" lbl="zinnen">
           match (n:node{cat: 'pp'})&lt;-[:rel{rel: 'mod'}]-(:node{cat: 'np'})
@@ -1470,6 +1692,64 @@
     </item>
 
     <item id="spod-ww" lbl="Werkwoorden">
+      <item id="spod-ww-info" lbl="Info" class="info">
+        Onder het kopje werkwoorden worden de vaste werkwoordelijke uitdrukkingen geteld (1).
+
+        |      |    |
+        | ---- | -- |
+        | (1a) | aan bod komen |
+        | ( b) | ter kennis geven |
+        | ( c) | op prijs stellen |
+
+        Daarnaast maken we een onderscheid bij werkwoordclusters tussen de zogenaamde
+        rode en groene volgorde. Bij de groene werkwoordvolgorde gaat het voltooid
+        deelwoord in de werkwoordcluster aan het hulpwerkwoord vooraf (2), en bij
+        de rode volgorde volgt het voltooid deelwoord het hulpwerkwoord (3).
+
+        |      |    |
+        | ---- | -- |
+        | (2a) | zijn boek zal morgen gepresenteerd worden |
+        | ( b) | ze zouden nooit een woord met elkaar gewisseld hebben |
+        |      | &amp;nbsp; |
+        | (3a) | zijn boek zal morgen worden gepresenteerd |
+        | ( b) | ze zouden nooit een woord met elkaar hebben gewisseld |
+
+        Voorbeelden van werkwoordclusters worden gegeven in (2), (3), en (4).
+
+        |      |    |
+        | ---- | -- |
+        | (4a) | Moet op korte termijn worden opgetreden? |
+        | ( b) | De zaak moet aanhangig worden gemaakt |
+        | ( c) | Ze zeiden dat ik dat zou hebben moeten kunnen zien aankomen |
+
+        De "accusativus cum infinitivo" constructie vertoont de beroemde
+        'cross-serial' afhankelijkheden. Voorbeelden zijn (5).
+        Deze query werkt niet voor het CGN corpus.
+
+        |      |    |
+        | ---- | -- |
+        | (5a) | Ik heb hem het boek zien lezen |
+        | ( b) | Ik heb hem de olifanten helpen voeren |
+        | ( c) | Ik heb hem de oppasser de olifanten zien helpen voeren |
+
+        De passieve werkwoorden worden gebruikt in de lijdende vorm, als in (6).
+        Het gaat hierbij om de gevallen waarbij een onderwerp aanwezig is.
+        Deze query werkt niet voor het CGN corpus.
+
+        |      |    |
+        | ---- | -- |
+        | (6a) | Hij wordt geslagen | 
+        | ( b) | Het monument zal spoedig te zien zijn in het Amsterdamse Oosterpark |
+
+        De niet-persoonlijke passieven identificeert de gevallen van de lijdende vorm
+        waarbij geen echt onderwerp beschikbaar is. In die gevallen wordt vaak *er*
+        als plaatsonderwerp gebruikt.
+
+        |      |    |
+        | ---- | -- |
+        | (7a) | Er werd niet meer over gesproken |
+        | ( b) | In Amsterdam werd niet gedemonstreerd |
+      </item>
       <item id="spod-vwuit" lbl="vaste werkwoordelijke uitdrukkingen">
         <item id="spod-vwuit-zin" lbl="zinnen">
           match (n:node)&lt;-[:rel{rel: 'svp'}]-()
@@ -1676,6 +1956,26 @@
     </item>
 
     <item id="spod-wwsch" lbl="Scheidbare werkwoorden">
+      <item id="spod-wwsch-info" lbl="Info" class="info">
+        De queries voor scheidbare werkwoorden zijn niet beschikbaar voor de handmatig geannoteerde corpora.
+
+        Werkwoorden met een scheidbaar partikel worden gegeven in (1) en (2).
+
+        |      |    |
+        | ---- | -- |
+        | (1a) | Ik heb hem opgebeld |
+        | ( b) | Ik bel hem op |
+        | ( c) | Ik heb hem op willen bellen |
+
+        We maken daarbij een onderscheid tussen gevallen waarbij het partikel
+        gescheiden is van het werkwoord (1bc) en gevallen waarbij het partikel
+        in het werkwoord geincorporeerd is (1a).
+
+        Daarnaast bekijken we de gevallen waarbij het werkwoord niet finiet is (1ac).
+        En binnen die gevallen onderscheiden we opnieuw gevallen waarbij het partikel
+        gescheiden is van het werkwoord (1c) en gevallen waarbij het partikel in het
+        werkwoord geincorporeerd is (1a).
+      </item>
       <item id="spod-vpart" lbl="Werkwoorden met een scheidbaar partikel">
         <item id="spod-vpart-zin" lbl="zinnen">
           -- alleen voor automatisch verwerkte corpora
@@ -1817,6 +2117,13 @@
     </item>
 
     <item id="spod-inb" lbl="Inbedding">
+      <item id="spod-inb-info" lbl="Info" class="info">
+        Bij deze queries wordt gekeken naar de complexiteit van de zinnen in termen
+        van de inbedding van finitie bijzinnen. Een hoofdzin zonder finiete bijzin
+        geldt dan als "geen inbedding". Een hoofdzin met een finiete bijzin geldt als
+        "minstens 1 finiete zinsinbedding. Indien de finiete bijzin zelf ook een finiete
+        bijzin bevat is er sprake van minstens 2 finiete zinsinbeddingen. En zo verder.
+      </item>
       <item id="spod-inb-all" lbl="telling van alle niveaus">
         match (n:node{_clause: true})
         optional match (n)-[:rel*1..]->(n2:node{sentid:n.sentid, _clause: true})
@@ -1875,6 +2182,30 @@
     </item>
 
     <item id="sod-topiextr" lbl="Topicalisatie en Extractie">
+      <item id="spod-topiextr-info" lbl="Info" class="info">
+        De eerste query, "np-topic is subject", bekijkt hoe vaak in een
+        hoofdzin die met een NP begint, deze NP als subject van de persoonsvorm
+        fungeert (1), terwijl de tweede query die gevallen telt waarbij zo'n NP
+        een andere rol bekleedt (2). De derde query, "topic is niet lokaal",
+        identificeert de gevallen waarbij de eerste constituent van de hoofdzin
+        geen rol speelt in die hoofdzin, maar een rol speelt in een ingebedde
+        constituent. Bij de vierde en vijfde query wordt onderzocht hoe vaak
+        in een wh-vraag of relatieve bijzin het wh-element, dan wel de woordgroep
+        die het relatieve voornaamwoord bevat een rol speelt in de hoofdzin
+        (lokaal, 4) dan wel in een ingebedde bijzin (niet lokaal, 5).
+
+        |      |    |
+        | ---- | -- |
+        | (1)  | De kinderen geloven nog in Sinterklaas |
+        |      | &amp;nbsp; |
+        | (2)  | Sinterklaas keurden ze geen blik waardig |
+        |      | &amp;nbsp; |
+        |(3)   | Wie denk je dat ik tegenkwam? |
+        |      | &amp;nbsp; |
+        | (4)  | Welke procedure moet worden gevolgd? |
+        |      | &amp;nbsp; |
+        | (5)  | Ze keek alleen naar wat ze dacht dat het Amerikaanse belang was |
+      </item>
       <item id="spod-nptsub" lbl="np-topic is subject">
         <item id="spod-nptsub-zin" lbl="zinnen">
           match (n:nw{_vorfeld: true, _np: true})&lt;-[r:rel]-()
@@ -1991,6 +2322,13 @@
     </item>
 
     <item id="spod-parser" lbl="Parser succes">
+      <item id="spod-parser-info" lbl="Info" class="info">
+        Dit deel werkt niet voor handmatig geannoteerde corpora.
+
+        De query telt hoevaak de parser een volledige analyse van
+        de zin heeft kunnen uitvoeren (dus zonder woorden over te
+        slaan of fragmenten te combineren).
+      </item>
       <item id="spod-ok" lbl="volledige parse">
         <item id="spod-ok-zin" lbl="zinnen">
           -- alleen voor automatisch verwerkte corpora
@@ -2168,6 +2506,19 @@
     </item>
 
     <item id="spod-onbekend" lbl="Onbekende woorden">
+      <item id="spod-onbekend-info" lbl="Info" class="info">
+        Dit deel werkt niet voor handmatig geannoteerde corpora.
+
+        De parser kent een heel scale aan heuristieken om voor woorden die niet
+        in het woordenboek staan toch een woordsoort toe te kennen. In deze
+        afdeling wordt onderzocht hoe vaak zulke onbekende woorden voorkwamen,
+        en op welke manier onbekende woorden alsnog werden behandeld. Eerst wordt
+        het totaal aantal woorden gegeven, gevolgd door het aantal woorden dat in
+        het woordenboek stond. De derde query geeft het aantal onbekende woorden terug.
+        De drie volgende queries geven vervolgens aan hoevaak een onbekend woord als
+        samenstelling werd gezien, of als naam (maar niet uit de namenlijst) of op
+        een nog andere manier werden behandeld.
+      </item>
       <item id="spod-his" lbl="&quot;alle&quot; woorden (nodes met attribuut @his)">
         <item id="spod-his-zin" lbl="woorden">
           -- alleen voor automatisch verwerkte corpora

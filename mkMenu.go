@@ -2,6 +2,9 @@ package main
 
 import (
 	"github.com/pebbe/util"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
+	mdhtml "github.com/yuin/goldmark/renderer/html"
 
 	"bufio"
 	"bytes"
@@ -21,15 +24,42 @@ type MenuT struct {
 type ItemT struct {
 	ID    string   `xml:"id,attr"`
 	Lbl   string   `xml:"lbl,attr"`
+	Class string   `xml:"class,attr"`
 	Items []*ItemT `xml:"item"`
 	Text  string   `xml:",cdata"`
 }
 
 var (
-	x = util.CheckErr
+	md goldmark.Markdown
+	x  = util.CheckErr
 )
 
 func main() {
+	md = goldmark.New(
+		goldmark.WithExtensions(
+			extension.Table,
+			extension.Strikethrough,
+			extension.Linkify,
+			extension.DefinitionList,
+			extension.NewTypographer(
+				// alleen: -- ---
+				extension.WithTypographicSubstitutions(extension.TypographicSubstitutions{
+					extension.LeftSingleQuote:  nil,
+					extension.RightSingleQuote: nil,
+					extension.LeftDoubleQuote:  nil,
+					extension.RightDoubleQuote: nil,
+					extension.Ellipsis:         nil,
+					extension.LeftAngleQuote:   nil,
+					extension.RightAngleQuote:  nil,
+					extension.Apostrophe:       nil,
+				}),
+			),
+		),
+		goldmark.WithRendererOptions(
+			mdhtml.WithUnsafe(),
+		),
+	)
+
 	options := make([]string, 0)
 	fp, err := os.Open("corpora.txt")
 	x(err)
@@ -78,8 +108,13 @@ func main() {
 		data := strings.TrimSpace(item.Text) != ""
 
 		if data {
-			fmt.Fprintf(&buf1, "qs['%s'] = %q;\n", item.ID, format(trail[:lvl+1], item.Text))
-			fmt.Fprintf(&buf2, "<li><a href=\"javascript:q('%s')\">%s</a></li>\n", item.ID, item.Lbl)
+			if item.Class == "info" {
+				fmt.Fprintf(&buf1, "qi['%s'] = %q;\n", item.ID, format(trail[:lvl+1], item.Text, true))
+				fmt.Fprintf(&buf2, "<li><a href=\"javascript:iq('%s')\">Toelichting &rarr;</a></li>\n", item.ID)
+			} else {
+				fmt.Fprintf(&buf1, "qs['%s'] = %q;\n", item.ID, format(trail[:lvl+1], item.Text, false))
+				fmt.Fprintf(&buf2, "<li><a href=\"javascript:q('%s')\">%s</a></li>\n", item.ID, item.Lbl)
+			}
 		} else {
 			if lvl == 0 {
 				fmt.Fprintln(&buf2, `<div class="item">`)
@@ -124,7 +159,7 @@ func main() {
 
 }
 
-func format(trail []string, s string) string {
+func format(trail []string, s string, info bool) string {
 	// TODO
 	aa := strings.Split(s, "\n")
 	for len(aa) > 0 && strings.TrimSpace(aa[0]) == "" {
@@ -153,6 +188,13 @@ func format(trail []string, s string) string {
 				aa[i] = a[maxlen:]
 			}
 		}
+	}
+
+	if info {
+		var buf bytes.Buffer
+		x(md.Convert([]byte(strings.Join(aa, "\n")), &buf))
+
+		return fmt.Sprintf("<h2>%s</h2>\n%s\n", html.EscapeString(strings.Join(trail[:len(trail)-1], " | ")), buf.String())
 	}
 
 	return fmt.Sprintf("-- %s\n\n%s\n", strings.Join(trail, " | "), strings.Join(aa, "\n"))

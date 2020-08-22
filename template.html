@@ -17,6 +17,7 @@
     // menu
     //
     var qs = {};
+    var qi = {};
     PART1;
 
     var started = false;
@@ -490,6 +491,22 @@
     }
 
     //
+    // info
+    //
+
+    function iq(id) {
+      $('#infoContent').html(qi[id]);
+      popup = $('#info');
+      popup.removeClass('hide');
+      $('#backdrop').removeClass('hide');
+    }
+
+    function infoClose() {
+      $('#info').addClass('hide');
+      $('#backdrop').addClass('hide');
+    }
+
+    //
     // uitvoer
     //
 
@@ -659,6 +676,12 @@
       <p>
         <button onClick="permaSelect()">Naar klembord kopi&euml;ren</button>
         <button onClick="permaClose()">Sluiten</button>
+      </p>
+    </div>
+    <div id="info" class="hide">
+      <div id="infoContent"></div>
+      <p>
+        <button onClick="infoClose()">Sluiten</button>
       </p>
     </div>
     <div id="saveTabel" class="hide">

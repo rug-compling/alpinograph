@@ -263,7 +263,7 @@ td.bool, td.float64 {
   text-align: right;
 }
 
-#permalink, #macros, #saveTabel, #saveZinnen, #saveWoorde, #saveLemmas, #saveAttr {
+#permalink, #macros, #info, #saveTabel, #saveZinnen, #saveWoorde, #saveLemmas, #saveAttr {
   -webkit-box-shadow: 11px 10px 12px -6px rgba(0, 0, 0, 0.5);
   -moz-box-shadow: 11px 10px 12px -6px rgba(0, 0, 0, 0.5);
   box-shadow: 11px 10px 12px -6px rgba(0, 0, 0, 0.5);
@@ -287,6 +287,16 @@ td.bool, td.float64 {
   background: rgba(0, 0, 0, 0.5);
   z-index: 10;
   backdrop-filter: blur(2px) saturate(60%);
+}
+
+#info {
+  max-width: 60em;
+}
+
+#infoContent {
+  margin-bottom: 2em;
+  overflow-y: auto;
+  max-height: 40vh;
 }
 
 #permatext {
