@@ -320,7 +320,7 @@
         | (3)  | Lees jij een boek? |
         |      | &amp;nbsp; |
         | (4a) | Lees dat boek nou toch eens. |
-        | ( b) | Lees jij dat boek nou toch eens. |
+        |   b) | Lees jij dat boek nou toch eens. |
 
         Het onderscheid tussen ja/nee vragen en imperatieven is in de
         treebanks niet altijd nauwkeurig te bepalen --- met name voor
@@ -420,18 +420,18 @@
         | (1)  | (ik vroeg) wie dat boek gelezen heeft |
         |      | &amp;nbsp; |
         | (2a) | (ik lees dat boek) omdat het door Elsschot geschreven is |
-        | ( b) | (ik denk) dat het boek door Elsschot is geschreven |
-        | ( c) | (ik vroeg) of het boek door Ellschot is geschreven |
+        |   b) | (ik denk) dat het boek door Elsschot is geschreven |
+        |   c) | (ik vroeg) of het boek door Ellschot is geschreven |
         |      | &amp;nbsp; |
         | (3a) | (ik heb geprobeerd) om een boek te lezen |
-        | ( b) | (ik ga naar de bieb) om een boek te lezen |
-        | ( c) | (het was niet nodig) om het boek te lezen |
-        | ( d) | (slangen zijn) om van te gruwen |
-        | ( e) | (het kind is oud genoeg) om alleen naar school te gaan |
-        | ( f) | (het boek is te duur) om te kopen |
-        | ( g) | (hij heeft voldoende invloed) om het boek te verkopen |
-        | ( h) | (ze was zo genadig) om het boek voor te lezen |
-        | ( i) | (een boek) om nooit te vergeten |
+        |   b) | (ik ga naar de bieb) om een boek te lezen |
+        |   c) | (het was niet nodig) om het boek te lezen |
+        |   d) | (slangen zijn) om van te gruwen |
+        |   e) | (het kind is oud genoeg) om alleen naar school te gaan |
+        |   f) | (het boek is te duur) om te kopen |
+        |   g) | (hij heeft voldoende invloed) om het boek te verkopen |
+        |   h) | (ze was zo genadig) om het boek voor te lezen |
+        |   i) | (een boek) om nooit te vergeten |
         |      | &amp;nbsp; |
         | (4)  | (ik heb geprobeerd) een boek te lezen |
         |      | &amp;nbsp; |
@@ -719,19 +719,19 @@
         | (2)  | even dik als jij |
         |      | &amp;nbsp; |
         | (3a) | beter dan jij |
-        | ( b) | beter dan ik dacht |
-        | ( c) | beter dan bij de buren |
-        | ( d) | beter dan gisteren |
+        |   b) | beter dan ik dacht |
+        |   c) | beter dan bij de buren |
+        |   d) | beter dan gisteren |
         |      |  &amp;nbsp; |
         | (4a) | meer geluk dan wijsheid |
-        | ( b) | meer geluk dan ik dacht |
-        | ( c) | meer geluk dan bij de buren |
-        | ( d) | meer geluk dan gisteren |
+        |   b) | meer geluk dan ik dacht |
+        |   c) | meer geluk dan bij de buren |
+        |   d) | meer geluk dan gisteren |
         |      |  &amp;nbsp; |
         | (5a) | niets anders dan ellende |
-        | ( b) | niets anders dan dat hij komt |
-        | ( c) | niets anders dan bij de buren |
-        | ( d) | niets anders dan gisteren |
+        |   b) | niets anders dan dat hij komt |
+        |   c) | niets anders dan bij de buren |
+        |   d) | niets anders dan gisteren |
       </item>
       <item id="spod-cc" lbl="totaal">
         <item id="spod-cc-zin" lbl="zinnen">
@@ -979,9 +979,9 @@
         | (1)  | Zij wilden inspraak , medezeggenschap , democratisering |
         |      | &amp;nbsp; |
         | (2a) | Appels en peren |
-        | ( b) | Appels of peren |
-        | ( c) | De afzijdige maar invloedrijke waarnemer |
-        | ( d) | Ze helpen eiwitten, vetten, etc. afbreken |
+        |   b) | Appels of peren |
+        |   c) | De afzijdige maar invloedrijke waarnemer |
+        |   d) | Ze helpen eiwitten, vetten, etc. afbreken |
         |      | &amp;nbsp; |
         | (3)  | Noch appels noch peren |
         |      | &amp;nbsp; |
@@ -1521,16 +1521,16 @@
         | (1)  | De vrouw van de buurman |
         |      | &amp;nbsp; |
         | (2a) | De door hem beschreven voorvallen |
-        | ( b) | De op zichzelf rationele beslissingen |
+        |   b) | De op zichzelf rationele beslissingen |
         |      | &amp;nbsp; |
         | (3)  | We rekenen op zijn steun |
         |      | &amp;nbsp; |
         | (4a) | De ketchup vindt u bij de groenteafdeling |
-        | ( b) | We rijden wel even naar het station |
+        |   b) | We rijden wel even naar het station |
         |      | &amp;nbsp; |
         | (5a) | Die aanpak is niet zonder risico |
-        | ( b) | Je moet in het bezit zijn van een visum |
-        | ( c) | De haven is van cruciale betekenis |
+        |   b) | Je moet in het bezit zijn van een visum |
+        |   c) | De haven is van cruciale betekenis |
         |      | &amp;nbsp; |
         | (6)  | We gaan vissen bij de brug |
 
@@ -1698,8 +1698,8 @@
         |      |    |
         | ---: | -- |
         | (1a) | aan bod komen |
-        | ( b) | ter kennis geven |
-        | ( c) | op prijs stellen |
+        |   b) | ter kennis geven |
+        |   c) | op prijs stellen |
 
         Daarnaast maken we een onderscheid bij werkwoordclusters tussen de zogenaamde
         rode en groene volgorde. Bij de groene werkwoordvolgorde gaat het voltooid
@@ -1709,18 +1709,18 @@
         |      |    |
         | ---: | -- |
         | (2a) | zijn boek zal morgen gepresenteerd worden |
-        | ( b) | ze zouden nooit een woord met elkaar gewisseld hebben |
+        |   b) | ze zouden nooit een woord met elkaar gewisseld hebben |
         |      | &amp;nbsp; |
         | (3a) | zijn boek zal morgen worden gepresenteerd |
-        | ( b) | ze zouden nooit een woord met elkaar hebben gewisseld |
+        |   b) | ze zouden nooit een woord met elkaar hebben gewisseld |
 
         Voorbeelden van werkwoordclusters worden gegeven in (2), (3), en (4).
 
         |      |    |
         | ---: | -- |
         | (4a) | Moet op korte termijn worden opgetreden? |
-        | ( b) | De zaak moet aanhangig worden gemaakt |
-        | ( c) | Ze zeiden dat ik dat zou hebben moeten kunnen zien aankomen |
+        |   b) | De zaak moet aanhangig worden gemaakt |
+        |   c) | Ze zeiden dat ik dat zou hebben moeten kunnen zien aankomen |
 
         De "accusativus cum infinitivo" constructie vertoont de beroemde
         'cross-serial' afhankelijkheden. Voorbeelden zijn (5).
@@ -1729,8 +1729,8 @@
         |      |    |
         | ---: | -- |
         | (5a) | Ik heb hem het boek zien lezen |
-        | ( b) | Ik heb hem de olifanten helpen voeren |
-        | ( c) | Ik heb hem de oppasser de olifanten zien helpen voeren |
+        |   b) | Ik heb hem de olifanten helpen voeren |
+        |   c) | Ik heb hem de oppasser de olifanten zien helpen voeren |
 
         De passieve werkwoorden worden gebruikt in de lijdende vorm, als in (6).
         Het gaat hierbij om de gevallen waarbij een onderwerp aanwezig is.
@@ -1739,7 +1739,7 @@
         |      |    |
         | ---: | -- |
         | (6a) | Hij wordt geslagen | 
-        | ( b) | Het monument zal spoedig te zien zijn in het Amsterdamse Oosterpark |
+        |   b) | Het monument zal spoedig te zien zijn in het Amsterdamse Oosterpark |
 
         De niet-persoonlijke passieven identificeert de gevallen van de lijdende vorm
         waarbij geen echt onderwerp beschikbaar is. In die gevallen wordt vaak *er*
@@ -1748,7 +1748,7 @@
         |      |    |
         | ---: | -- |
         | (7a) | Er werd niet meer over gesproken |
-        | ( b) | In Amsterdam werd niet gedemonstreerd |
+        |   b) | In Amsterdam werd niet gedemonstreerd |
       </item>
       <item id="spod-vwuit" lbl="vaste werkwoordelijke uitdrukkingen">
         <item id="spod-vwuit-zin" lbl="zinnen">
@@ -1964,8 +1964,8 @@
         |      |    |
         | ---: | -- |
         | (1a) | Ik heb hem opgebeld |
-        | ( b) | Ik bel hem op |
-        | ( c) | Ik heb hem op willen bellen |
+        |   b) | Ik bel hem op |
+        |   c) | Ik heb hem op willen bellen |
 
         We maken daarbij een onderscheid tussen gevallen waarbij het partikel
         gescheiden is van het werkwoord (1bc) en gevallen waarbij het partikel

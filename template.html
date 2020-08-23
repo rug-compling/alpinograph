@@ -495,10 +495,12 @@
     //
 
     function iq(id) {
-      $('#infoContent').html(qi[id]);
+      $('#backdrop').removeClass('hide');
+      var ic = $('#infoContent');
+      ic.html(qi[id]);
       popup = $('#info');
       popup.removeClass('hide');
-      $('#backdrop').removeClass('hide');
+      ic[0].scrollTo(0,0); // dit moet *na* removeclass
     }
 
     function infoClose() {

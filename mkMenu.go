@@ -110,7 +110,7 @@ func main() {
 		if data {
 			if item.Class == "info" {
 				fmt.Fprintf(&buf1, "qi['%s'] = %q;\n", item.ID, format(trail[:lvl+1], item.Text, true))
-				fmt.Fprintf(&buf2, "<li><a href=\"javascript:iq('%s')\">Toelichting &rarr;</a></li>\n", item.ID)
+				fmt.Fprintf(&buf2, "<li><a href=\"javascript:iq('%s')\">Toelichting &nbsp; »</a></li>\n", item.ID)
 			} else {
 				fmt.Fprintf(&buf1, "qs['%s'] = %q;\n", item.ID, format(trail[:lvl+1], item.Text, false))
 				fmt.Fprintf(&buf2, "<li><a href=\"javascript:q('%s')\">%s</a></li>\n", item.ID, item.Lbl)
