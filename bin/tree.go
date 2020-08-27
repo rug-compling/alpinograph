@@ -198,7 +198,8 @@ var subgraaf = %q;
 	fmt.Printf(`<title>%s</title>
 <link rel="stylesheet" type="text/css" href="../tree.css">
 <link rel="stylesheet" type="text/css" href="../tooltip.css" />
-<link rel="icon" href="../../favicon.ico" type="image/ico">
+<link rel="icon" href="../favicon.ico" type="image/ico">
+<link rel="apple-touch-icon" href="../icon.png">
 <script type="text/javascript" src="../tooltip.js"></script>
 <script type="text/javascript" src="../FileSaver.js"></script>
 </head>
