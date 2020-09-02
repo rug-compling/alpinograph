@@ -130,8 +130,20 @@
       </item>
     </item>
     <item id="tut-rel" lbl="Alpino-structuren">
+      <item id="tut-rel-attrib" lbl="Alpino-attributen: een onvoltooid deelwoord">
+        match (w:word{wvorm:'od'})
+        return w
+      </item>
+      <item id="tut-rel-conj" lbl="Alpino-attributen: een conjunctie">
+        match (n:node{cat:'conj'})
+        return n
+      </item>
       <item id="tut-rel-rel" lbl="De Alpino-relatie">
         match p = (:node)-[:rel]->(:nw)
+        return p
+      </item>
+      <item id="tut-rel-rela" lbl="Relatieve zinsdelen">
+        match p = (:node{cat:'rel'})-[:rel{rel:'body'}]->(:node{cat:'ssub'})
         return p
       </item>
       <item id="tut-rel-kind" lbl="Onderwerpen die het lemma 'kind' bevatten">
@@ -142,10 +154,6 @@
         match (n:node{cat:'mwu'})-[:rel{rel:'mwp'}]->(:word{lemma:'van', end:n.end})
         return n.word as "multi-word unit", count(n.word) as aantal
         order by aantal desc, "multi-word unit"
-      </item>
-      <item id="tut-rel-rela" lbl="Relatieve zinsdelen">
-        match p = (:node{cat:'rel'})-[:rel{rel:'body'}]->(:node{cat:'ssub'})
-        return p
       </item>
       <item id="tut-rel-pdp" lbl="Node met twee parents">
         -- In Alpino kan een node maar één parent hebben
@@ -158,6 +166,16 @@
       </item>
     </item>
     <item id="tut-ud" lbl="Universal Dependencies">
+      <item id="tut-ud-upos" lbl="Universal part-of-speech tag">
+        match (w:word{upos:'NOUN'})
+        return w
+      </item>
+      <item id="tut-ud-feat" lbl="Universal morphological features">
+        -- Attributen met een hoofdletter moeten tussen dubbele aanhalingstekens
+
+        match (w:word{upos:'VERB'})
+        return w."VerbForm", count(w."VerbForm")
+      </item>
       <item id="tut-ud-ud" lbl="De standaard UD-relatie">
         match p = (:word)-[:ud]->(:word)
         return p
@@ -176,17 +194,17 @@
         match ()-[:ud{main:'nsubj'}]->(w)
         return w
       </item>
-      <item id="tud-ud-wwobj" lbl="Werkwoord met object">
-          match (w1:word{upos:'VERB'})-[:ud{main:'obj'}]->(w2:word)
-          where w2.upos != 'PRON'
-          return w1, w2
-      </item>
       <item id="tut-ud-pos" lbl="Possessieven">
         match (w1:word)-[:ud{rel:'nmod:poss'}]->(w2:word)
         return w1, w2
       </item>
-      <item id="tut-ud-reeks" lbl="Een advmod van een amod van een subject">
-        match p = ()-[:ud{main:'nsubj'}]->()-[:ud{main:'amod'}]->()-[:ud{main:'advmod'}]->()
+      <item id="tud-ud-wwobj" lbl="Werkwoord met object dat geen persoonlijk voornaamwoord is">
+          match (w1:word{upos:'VERB'})-[:ud{main:'obj'}]->(w2:word)
+          where w2.upos != 'PRON'
+          return w1, w2
+      </item>
+      <item id="tut-ud-reeks" lbl="Een advmod van een amod van een zelfstandig naamwoord">
+        match p = (:word{upos:'NOUN'})-[:ud{main:'amod'}]->()-[:ud{main:'advmod'}]->()
         return p
       </item>
     </item>
