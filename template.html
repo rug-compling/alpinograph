@@ -204,8 +204,8 @@
       var q = q1.replace(/%[a-zA-Z][_a-zA-Z0-9]*%/g, function (x) {
         var v = macrodct[x.substr(1, x.length - 2)];
         if (!v) {
-          err = true
-          $('#error').append($('<p></p>').text('Fout: geen definitie gevonden voor ' + x)).removeClass('hide');
+          err = true;
+          window._fn.error('Fout: geen definitie gevonden voor ' + x);
         }
         return v || "MACRONOTFOUND";
       })
