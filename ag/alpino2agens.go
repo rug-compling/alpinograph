@@ -24,6 +24,8 @@ import (
 	"strings"
 )
 
+const VERSION = 1
+
 type Alpino_ds struct {
 	XMLName  xml.Name      `xml:"alpino_ds"`
 	Version  string        `xml:"version,attr"`
@@ -61,6 +63,7 @@ type Node struct {
 	wordcount int
 	level     int
 	parents   []*Node `xml:"node"`
+	rels      []string
 	vorfeld   bool
 
 	Aform        string `xml:"aform,attr"`
@@ -361,6 +364,7 @@ LOOP:
 		*/
 		refnodes = make([]*Node, len(strings.Fields(alpino.Sentence.Sent)))
 		prepare(alpino.Node0, 0)
+		prepareRels(alpino.Node0)
 		prepareVorfeld(alpino.Node0)
 		addIndexParents(alpino.Node0)
 		wordcount(alpino.Node0)
@@ -718,7 +722,7 @@ create (:data{class: 'rel', name: '%s', type: '%s', oriname: '%s'});
 `, name, sq(name), sq(attr[1]), sq(attr[0]))
 	}
 
-	fmt.Printf("create (:doc{alud_version: '%s'});\n", alud.VersionID())
+	fmt.Printf("create (:doc{alpino2agens_version: %d, alud_version: '%s'});\n", int(VERSION), alud.VersionID())
 
 }
 
@@ -1198,6 +1202,7 @@ func mwu(node *Node) {
 // Zoek alle referenties. Dit zijn nodes met een attribuut "index".
 // Sla deze op in een tabel 'refnames': index -> *Node
 func prepare(node *Node, level int) {
+	node.rels = []string{node.Rel}
 	if node.Cat == "smain" || node.Cat == "sv1" || node.Cat == "ssub" {
 		level++
 		node.level = level
@@ -1561,36 +1566,54 @@ func validMwu(node *Node) bool {
 }
 
 func isNP(node *Node) bool {
-	if node.Cat == "conj" {
-		for _, n := range node.NodeList {
-			if isNP(n) {
-				return true
-			}
-		}
-		return false
-	}
 
 	if node.Cat == "np" {
 		return true
 	}
 
-	if node.Lcat == "np" && node.Rel != "hd" && node.Rel != "mwp" {
+	if node.Lcat == "np" && otherString(node.rels, "hd", "mwp") {
 		return true
 	}
 
-	if node.Pt == "n" && node.Rel != "hd" {
+	if node.Pt == "n" && otherString(node.rels, "hd") {
 		return true
 	}
 
-	if node.Pt == "vnw" && node.Pdtype == "pron" && node.Rel != "hd" {
+	if node.Pt == "vnw" && node.Pdtype == "pron" && otherString(node.rels, "hd") {
 		return true
 	}
 
-	if node.Cat == "mwu" && (node.Rel == "su" || node.Rel == "obj1" || node.Rel == "obj2" || node.Rel == "app") {
+	if node.Cat == "mwu" && hasString(node.rels, "su", "obj1", "obj2", "app") {
 		return true
+	}
+
+	if node.NodeList != nil {
+		for _, n := range node.NodeList {
+			if n.Rel != "cnj" {
+				continue
+			}
+			if n.index > 0 {
+				n = refnodes[n.index]
+			}
+			if isNP(n) {
+				return true
+			}
+		}
 	}
 
 	return false
+}
+
+func prepareRels(node *Node) {
+	if node.index > 0 && node.Word == "" && (node.NodeList == nil || len(node.NodeList) == 0) {
+		n := refnodes[node.index]
+		n.rels = append(n.rels, node.Rel)
+	}
+	if node.NodeList != nil {
+		for _, n := range node.NodeList {
+			prepareRels(n)
+		}
+	}
 }
 
 func prepareVorfeld(node *Node) {
@@ -1860,4 +1883,30 @@ func relExtra(node *Node) string {
 
 func attrName(name string) string {
 	return "x_" + reNoName.ReplaceAllLiteralString(name, "_")
+}
+
+// is er een string in ss die gelijk is aan een string in s ?
+func hasString(ss []string, s ...string) bool {
+	for _, s1 := range ss {
+		for _, s2 := range s {
+			if s1 == s2 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// is er een string in ss die ongelijk is aan alle strings in s ?
+func otherString(ss []string, s ...string) bool {
+LOOP:
+	for _, s1 := range ss {
+		for _, s2 := range s {
+			if s1 == s2 {
+				continue LOOP
+			}
+		}
+		return true
+	}
+	return false
 }

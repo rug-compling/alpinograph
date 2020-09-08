@@ -290,8 +290,8 @@ func safeQuery(query string) (string, error) {
 	query = strings.TrimSpace(query)
 
 	qu := strings.ToUpper(query)
-	if !(strings.HasPrefix(qu, "MATCH") || strings.HasPrefix(qu, "SELECT")) {
-		return "", fmt.Errorf("Query must start with MATCH or SELECT")
+	if !(strings.HasPrefix(qu, "MATCH") || strings.HasPrefix(qu, "SELECT") || strings.HasPrefix(qu, "WITH")) {
+		return "", fmt.Errorf("Query must start with MATCH, SELECT or WITH")
 	}
 
 	return query, nil

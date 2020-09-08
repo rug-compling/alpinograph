@@ -171,7 +171,7 @@
         return w
       </item>
       <item id="tut-ud-feat" lbl="Universal morphological features">
-        -- Attributen met een hoofdletter moeten tussen dubbele aanhalingstekens
+        -- Attributen met hoofdletters in de naam moeten tussen dubbele aanhalingstekens
 
         match (w:word{upos:'VERB'})
         return w."VerbForm", count(w."VerbForm")
