@@ -24,8 +24,6 @@ import (
 	"strings"
 )
 
-const VERSION = 1
-
 type Alpino_ds struct {
 	XMLName  xml.Name      `xml:"alpino_ds"`
 	Version  string        `xml:"version,attr"`
