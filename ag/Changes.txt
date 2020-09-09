@@ -1,0 +1,31 @@
+
+Versie 1
+========
+
+Oude definitie voor _np :
+
+match ()-[r:rel{primary:true}]->(n1:nw)
+where n1.cat = 'np'
+   or ( n1.lcat = 'np' and r.rel != 'hd' and r.rel != 'mwp' )
+   or ( n1.pt = 'n' and r.rel != 'hd' )
+   or ( n1.pt = 'vnw' and n1.pdtype = 'pron' and r.rel != 'hd' )
+   or ( n1.cat = 'mwu' and r.rel in ['su','obj1','obj2','app'] )
+with n1
+match (n1)<-[:rel*0..{primary:true}]-(n)
+set n._np = true;
+
+... met extra voorwaarde: elke node op path van n naar n1 heeft
+cat:'conj', met uitzondering van n1 zelf.
+
+
+Nieuwe definitie voor _np :
+
+match ()-[r:rel]->(n1:nw)
+where n1.cat = 'np'
+   or ( n1.lcat = 'np' and r.rel != 'hd' and r.rel != 'mwp' )
+   or ( n1.pt = 'n' and r.rel != 'hd' )
+   or ( n1.pt = 'vnw' and n1.pdtype = 'pron' and r.rel != 'hd' )
+   or ( n1.cat = 'mwu' and r.rel in ['su','obj1','obj2','app'] )
+with n1
+match (n1)<-[:rel*0..{rel:'cnj'}]-(n)
+set n._np = true;

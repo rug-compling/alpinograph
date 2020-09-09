@@ -5,4 +5,4 @@ alpino2agens: alpino2agens.go version.go
 	go build -o $@ $^
 
 version.go: alpino2agens.go
-	@echo version out of date && exit 1
+	@echo $@ out of date && exit 1
