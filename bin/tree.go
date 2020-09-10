@@ -17,7 +17,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	// "time"
+	"time"
 )
 
 type Edge struct {
@@ -93,10 +93,10 @@ func main() {
 		return
 	}
 
-	// start := time.Now()
-	// conlog("match (s:sentence{sentid:'" + sid + "'}) return s.tokens, s.conllu_error")
+	start := time.Now()
+	conlog("match (s:sentence{sentid:'" + sid + "'}) return s.tokens, s.conllu_error")
 	row := db.QueryRow("match (s:sentence{sentid:'" + sid + "'}) return s.tokens, s.conllu_error")
-	// conlog("row: ", time.Since(start))
+	conlog("row: ", time.Since(start))
 	var zin, conlluErr string
 	if row != nil {
 		var ce sql.NullString
@@ -239,16 +239,16 @@ func makeMeta(corpus, sid string) (meta string, ok bool) {
 
 	lines := make([]string, 0)
 
-	// start := time.Now()
-	// conlog("match (m:meta{sentid:'" + sid + "'}) return m.name, m.type, m.value")
+	start := time.Now()
+	conlog("match (m:meta{sentid:'" + sid + "'}) return m.name, m.type, m.value")
 	rows, err := db.Query("match (m:meta{sentid:'" + sid + "'}) return m.name, m.type, m.value")
-	// conlog("started: ", time.Since(start))
+	conlog("started: ", time.Since(start))
 	if x(err) {
 		return
 	}
 
 	for rows.Next() {
-		// conlog("row: ", time.Since(start))
+		conlog("row: ", time.Since(start))
 		var name, tp, val string
 		if x(rows.Scan(&name, &tp, &val)) {
 			return
@@ -260,9 +260,9 @@ func makeMeta(corpus, sid string) (meta string, ok bool) {
 				html.EscapeString(unescape(name)),
 				html.EscapeString(unescape(val))))
 	}
-	// conlog("rows: ", time.Since(start))
+	conlog("rows: ", time.Since(start))
 	x(rows.Err())
-	// conlog("done: ", time.Since(start))
+	conlog("done: ", time.Since(start))
 
 	if len(lines) == 0 {
 		return "", true
@@ -272,24 +272,24 @@ func makeMeta(corpus, sid string) (meta string, ok bool) {
 
 func makeParser(corpus, sid string) (parser string, ok bool) {
 
-	// start := time.Now()
-	// conlog("match (s:sentence{sentid:'" + sid + "'}) return s.cats, s.skips")
+	start := time.Now()
+	conlog("match (s:sentence{sentid:'" + sid + "'}) return s.cats, s.skips")
 	rows, err := db.Query("match (s:sentence{sentid:'" + sid + "'}) return s.cats, s.skips")
-	// conlog("started: ", time.Since(start))
+	conlog("started: ", time.Since(start))
 	if x(err) {
 		return
 	}
 
 	var c, s sql.NullInt64
 	for rows.Next() {
-		// conlog("row: ", time.Since(start))
+		conlog("row: ", time.Since(start))
 		if x(rows.Scan(&c, &s)) {
 			return
 		}
 	}
-	// conlog("rows: ", time.Since(start))
+	conlog("rows: ", time.Since(start))
 	x(rows.Err())
-	// conlog("done: ", time.Since(start))
+	conlog("done: ", time.Since(start))
 	if c.Valid {
 		parser = fmt.Sprintf("<br>\ncats: %d", c.Int64)
 	}
@@ -324,10 +324,10 @@ func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.B
 		}
 	}
 
-	// start := time.Now()
-	// conlog("match (n1:node{sentid:'" + sid + "'})-[r:rel]->(n2:nw) return n1, r, n2 order by n1.id, n2.id")
+	start := time.Now()
+	conlog("match (n1:node{sentid:'" + sid + "'})-[r:rel]->(n2:nw) return n1, r, n2 order by n1.id, n2.id")
 	rows, err := db.Query("match (n1:node{sentid:'" + sid + "'})-[r:rel]->(n2:nw) return n1, r, n2 order by n1.id, n2.id")
-	// conlog("started: ", time.Since(start))
+	conlog("started: ", time.Since(start))
 	if x(err) {
 		return
 	}
@@ -338,7 +338,7 @@ func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.B
 
 	seen := make(map[int]bool)
 	for rows.Next() {
-		// conlog("row: ", time.Since(start))
+		conlog("row: ", time.Since(start))
 		var n1, r, n2 []byte
 		if x(rows.Scan(&n1, &r, &n2)) {
 			return
@@ -397,11 +397,11 @@ func makeTree(corpus, sid, idlist, edgelist string, compact bool) (tree *bytes.B
 		}
 		links = append(links, link)
 	}
-	// conlog("rows: ", time.Since(start))
+	conlog("rows: ", time.Since(start))
 	if x(rows.Err()) {
 		return
 	}
-	// conlog("done: ", time.Since(start))
+	conlog("done: ", time.Since(start))
 
 	if len(nodes) == 0 {
 		fmt.Println("Niet gevonden")
@@ -559,92 +559,104 @@ func makeGraph(corpus, sid, idlist, edgelist string) (graph *bytes.Buffer, ok bo
 		}
 	}
 
-	// start := time.Now()
-	// conlog("match (n1{sentid:'" + sid + "'})-[r]->(n2:nw{sentid:'" + sid + "'}) where n1.id in [" + idlist + "] or n2.id in [" + idlist + "] return distinct n1, r, n2")
-	rows, err := db.Query("match (n1{sentid:'" + sid + "'})-[r]->(n2:nw{sentid:'" + sid + "'}) where n1.id in [" + idlist + "] or n2.id in [" + idlist + "] return distinct n1, r, n2")
-	// conlog("started: ", time.Since(start))
-	if x(err) {
-		return
-	}
+	/*
+		match1 := "match (n1:sentence{sentid:'" + sid + "'})-[r]->(n2:nw{sentid:'" + sid + "'}) where n2.id in [" + idlist + "] return distinct n1, r, n2"
+		match2 := "match (n1:nw{sentid:'" + sid + "'})-[r]->(n2:nw{sentid:'" + sid + "'}) where n1.id in [" + idlist + "] or n2.id in [" + idlist + "] return distinct n1, r, n2"
+	*/
+
+	match1 := "match (n1:sentence{sentid:'" + sid + "'})-[r]->(n2:nw) where n2.id in [" + idlist + "] return distinct n1, r, n2"
+	match2 := "match (n1:nw{sentid:'" + sid + "'})-[r]->(n2:nw) where n1.id in [" + idlist + "] or n2.id in [" + idlist + "] return distinct n1, r, n2"
 
 	nodes := make([]ag.BasicVertex, 0)
 	links := make([]Edge, 0)
 	words := make([]Word, 0)
 
 	seen := make(map[int]bool)
-	for rows.Next() {
-		// conlog("row: ", time.Since(start))
-		var n1, r, n2 []byte
-		if x(rows.Scan(&n1, &r, &n2)) {
+	for _, match := range []string{match1, match2} {
+
+		start := time.Now()
+		conlog(match)
+		rows, err := db.Query(match)
+		conlog("started: ", time.Since(start))
+		if x(err) {
 			return
 		}
 
-		var v1 ag.BasicVertex
-		var e ag.BasicEdge
-		var v2 ag.BasicVertex
+		for rows.Next() {
+			conlog("row: ", time.Since(start))
+			var n1, r, n2 []byte
+			if x(rows.Scan(&n1, &r, &n2)) {
+				return
+			}
 
-		var id1, id2 int
+			var v1 ag.BasicVertex
+			var e ag.BasicEdge
+			var v2 ag.BasicVertex
 
-		if x(v1.Scan(n1)) {
+			var id1, id2 int
+
+			if x(v1.Scan(n1)) {
+				return
+			}
+			if x(e.Scan(r)) {
+				return
+			}
+			if x(v2.Scan(n2)) {
+				return
+			}
+			id1 = toInt(v1.Properties["id"])
+			id2 = toInt(v2.Properties["id"])
+
+			if !seen[id1] {
+				seen[id1] = true
+				if v1.Label == "node" || v1.Label == "word" {
+					nodes = append(nodes, v1)
+				}
+				if v1.Label == "word" {
+					words = append(words, Word{
+						id:  toInt(v1.Properties["id"]),
+						end: toInt(v1.Properties["end"]),
+					})
+				}
+			}
+			if !seen[id2] {
+				seen[id2] = true
+				if v2.Label == "node" || v2.Label == "word" {
+					nodes = append(nodes, v2)
+				}
+				if v2.Label == "word" {
+					words = append(words, Word{
+						id:  toInt(v2.Properties["id"]),
+						end: toInt(v2.Properties["end"]),
+					})
+				}
+			}
+
+			rel := ""
+			lbl := e.Label
+			if e.Label != "next" {
+				rel = toString(e.Properties["rel"])
+				lbl += ":" + rel
+			}
+			link := Edge{
+				label:   lbl,
+				from:    id1,
+				to:      id2,
+				key:     fmt.Sprintf("%s_%d_%d_%s", e.Label[:1], id1, id2, rel),
+				tooltip: getEdgeTooltip(&e),
+			}
+			if link.tooltip != "" {
+				link.label += "*"
+			}
+			links = append(links, link)
+		}
+		conlog("rows: ", time.Since(start))
+		if x(rows.Err()) {
 			return
 		}
-		if x(e.Scan(r)) {
-			return
-		}
-		if x(v2.Scan(n2)) {
-			return
-		}
-		id1 = toInt(v1.Properties["id"])
-		id2 = toInt(v2.Properties["id"])
+		conlog("done: ", time.Since(start))
 
-		if !seen[id1] {
-			seen[id1] = true
-			if v1.Label == "node" || v1.Label == "word" {
-				nodes = append(nodes, v1)
-			}
-			if v1.Label == "word" {
-				words = append(words, Word{
-					id:  toInt(v1.Properties["id"]),
-					end: toInt(v1.Properties["end"]),
-				})
-			}
-		}
-		if !seen[id2] {
-			seen[id2] = true
-			if v2.Label == "node" || v2.Label == "word" {
-				nodes = append(nodes, v2)
-			}
-			if v2.Label == "word" {
-				words = append(words, Word{
-					id:  toInt(v2.Properties["id"]),
-					end: toInt(v2.Properties["end"]),
-				})
-			}
-		}
-
-		rel := ""
-		lbl := e.Label
-		if e.Label != "next" {
-			rel = toString(e.Properties["rel"])
-			lbl += ":" + rel
-		}
-		link := Edge{
-			label:   lbl,
-			from:    id1,
-			to:      id2,
-			key:     fmt.Sprintf("%s_%d_%d_%s", e.Label[:1], id1, id2, rel),
-			tooltip: getEdgeTooltip(&e),
-		}
-		if link.tooltip != "" {
-			link.label += "*"
-		}
-		links = append(links, link)
 	}
-	// conlog("rows: ", time.Since(start))
-	if x(rows.Err()) {
-		return
-	}
-	// conlog("done: ", time.Since(start))
 
 	if len(nodes) == 0 {
 		fmt.Println("Niet gevonden")

@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	// "time"
+	"time"
 )
 
 type UDNode struct {
@@ -36,16 +36,16 @@ func getConllu(sentid string) (conllu string, ok bool) {
 	euds := make(map[int][]*UDLink)
 	copied := make(map[int]int)
 
-	// start := time.Now()
-	// conlog("match (n1)-[r:ud]->(n2:word{sentid:'" + sentid + "'}) return n1, r, n2")
+	start := time.Now()
+	conlog("match (n1)-[r:ud]->(n2:word{sentid:'" + sentid + "'}) return n1, r, n2")
 	rows, err := db.Query("match (n1)-[r:ud]->(n2:word{sentid:'" + sentid + "'}) return n1, r, n2")
-	// conlog("started: ", time.Since(start))
+	conlog("started: ", time.Since(start))
 	if x(err) {
 		return "", false
 	}
 
 	for rows.Next() {
-		// conlog("row: ", time.Since(start))
+		conlog("row: ", time.Since(start))
 		var n1, r, n2 []byte
 		if x(rows.Scan(&n1, &r, &n2)) {
 			return "", false
@@ -100,22 +100,22 @@ func getConllu(sentid string) (conllu string, ok bool) {
 			rel:   toString(e.Properties["rel"]),
 		}
 	}
-	// conlog("rows: ", time.Since(start))
+	conlog("rows: ", time.Since(start))
 	if x(rows.Err()) {
 		return "", false
 	}
-	// conlog("done: ", time.Since(start))
+	conlog("done: ", time.Since(start))
 
-	// start = time.Now()
-	// conlog("match (n1)-[r:eud]->(n2:word{sentid:'" + sentid + "'}) return n1, r, n2")
+	start = time.Now()
+	conlog("match (n1)-[r:eud]->(n2:word{sentid:'" + sentid + "'}) return n1, r, n2")
 	rows, err = db.Query("match (n1)-[r:eud]->(n2:word{sentid:'" + sentid + "'}) return n1, r, n2")
-	// conlog("started: ", time.Since(start))
+	conlog("started: ", time.Since(start))
 	if x(err) {
 		return "", false
 	}
 
 	for rows.Next() {
-		// conlog("row: ", time.Since(start))
+		conlog("row: ", time.Since(start))
 		var n1, r, n2 []byte
 		if x(rows.Scan(&n1, &r, &n2)) {
 			return "", false
@@ -167,11 +167,11 @@ func getConllu(sentid string) (conllu string, ok bool) {
 		)
 
 	}
-	// conlog("rows: ", time.Since(start))
+	conlog("rows: ", time.Since(start))
 	if x(rows.Err()) {
 		return "", false
 	}
-	// conlog("done: ", time.Since(start))
+	conlog("done: ", time.Since(start))
 
 	for key, val := range copied {
 		n1 := nodemap[val]
