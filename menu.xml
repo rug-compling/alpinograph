@@ -33,10 +33,6 @@
         return m.sentid as "sentence ID", m.type, m.name, m.value
         limit 10
       </item>
-      <item id="tut-inl-corpus" lbl="Corpusinformatie">
-        match (d:doc)
-        return d
-      </item>
       <item id="tut-inl-attr" lbl="Attributen">
         -- Tellingen van verschillende soorten attributen
 
@@ -55,6 +51,12 @@
         match (:sentence)-[r]->()
         return r
         limit 10
+      </item>
+      <item id="tut-inl-corpus" lbl="Datainvoer">
+        -- extra informatie toegevoegd bij het inlezen van het corpus
+
+        match (d:doc)
+        return d
       </item>
     </item>
     <item id="tut-next" lbl="Woorden en woordgroepen">
@@ -137,6 +139,11 @@
       <item id="tut-rel-conj" lbl="Alpino-attributen: een conjunctie">
         match (n:node{cat:'conj'})
         return n
+      </item>
+      <item id="tut-rel-nwords" lbl="Aantal woorden in een mededelende hoofdzin">
+        match (n:node{cat: 'smain'})
+        return n._n_words, count(n._n_words)
+        order by _n_words
       </item>
       <item id="tut-rel-rel" lbl="De Alpino-relatie">
         match p = (:node)-[:rel]->(:nw)
@@ -271,31 +278,32 @@
         ) as foo
       </item>
     </item>
-    <item id="idx" lbl="Index">
-      <item id="idx-doc" lbl="Corpusinformatie">
-      match (d:doc)
-      return d
-      </item>
-      <item id="idx-node" lbl="Attributen van nodes">
+  </item>
+
+  <item id="idx" lbl="Corpusinformatie">
+    <item id="idx-node" lbl="Attributen van nodes">
       match (f:feature{v: 'node'})
       return f.name as attribuut, f.count as aantal
       order by attribuut
-      </item>
-      <item id="idx-word" lbl="Attributen van woorden">
+    </item>
+    <item id="idx-word" lbl="Attributen van woorden">
       match (f:feature{v: 'word'})
       return f.name as attribuut, f.count as aantal
       order by attribuut
-      </item>
-      <item id="idx-rel" lbl="Attributen van relaties">
+    </item>
+    <item id="idx-rel" lbl="Attributen van relaties">
       match (f:feature{v: 'rel'})
       return f.name as attribuut, f.count as aantal
       order by attribuut
-      </item>
-      <item id="idx-meta" lbl="Soorten metadata">
+    </item>
+    <item id="idx-meta" lbl="Soorten metadata, indien aanwezig">
       match (f:feature{v: 'meta'})
       return f.name as metadata, f.count as aantal
       order by metadata
-      </item>
+    <item id="idx-doc" lbl="Bij de invoer van het corpus">
+      match (d:doc)
+      return d
+    </item>
     </item>
   </item>
 
