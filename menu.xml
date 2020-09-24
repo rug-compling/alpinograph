@@ -104,7 +104,24 @@
         return w.word, count(w.word) as aantal
         order by aantal desc
       </item>
-    </item>
+      <item id="tut-next-cp1" lbl="Compound parts (1)">
+        -- Het attribuut '_cp' van een 'word' bevat de compound parts van het lemma
+
+        match (w:word)
+        where length(w._cp) > 1
+        return w.lemma, count(*)
+        order by count desc, lemma
+      </item>
+       <item id="tut-next-cp2" lbl="Compound parts (2)">
+        -- Zoek woorden waarvan het lemma 'fiets' of 'fietsen' bevat
+
+        match (w:word)
+        where 'fiets' in w._cp
+           or 'fietsen' in w._cp
+        return w.word, count(*)
+        order by count desc, word
+      </item>
+   </item>
     <item id="tut-pair" lbl="Woordpaar-relaties">
       <item id="tut-pair-pair" lbl="De pair-relatie">
         match p = (:word)-[:pair]->(:word)
@@ -310,7 +327,15 @@
   <item id="spod" lbl="SPOD">
 
     <item id="spod-info" lbl="Info" class="info">
-      *Syntactic profiler of Dutch*
+      De *Syntactic profiler of Dutch* bestaat uit een grote set tests
+      waarmee een profiel van een corpus kan worden opgesteld. SPOD is
+      ontwikkeld in [PaQu](https://www.let.rug.nl/alfa/paqu/spod), en maakt
+      gebruik van query's in XPath. Zie paper (TODO).
+
+      Voor AlpinoGraph zijn al de SPOD-query's herschreven in Cypher. De
+      resultaten die je krijgt met deze nieuwe versies zijn niet altijd gelijk aan
+      de resultaten die je kreeg in PaQu, voornamelijk vanwege de technische
+      beperkingen van de oorspronkelijke query's in XPath. Zie paper (TODO).
     </item>
 
     <item id="spod-attrib" lbl="Attributen">

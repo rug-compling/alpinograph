@@ -131,6 +131,10 @@ type Node struct {
 	Root         string `xml:"root,attr"`
 	Sc           string `xml:"sc,attr"`
 	Sense        string `xml:"sense,attr"`
+	SonarNe      string `xml:"sonar_ne,attr"`
+	SonarNeClass string `xml:"sonar_ne_class,attr"`
+	SonarNeBegin string `xml:"sonar_ne_begin,attr"`
+	SonarNeEnd   string `xml:"sonar_ne_end,attr"`
 	Special      string `xml:"special,attr"`
 	Spectype     string `xml:"spectype,attr"`
 	Status       string `xml:"status,attr"`
@@ -673,6 +677,7 @@ create property index on word("neclass");
 create property index on word("his");
 create property index on word("_clause");
 create property index on word("_clause_lvl");
+create property index on word("_cp");
 create property index on word("_deste");
 create property index on word("_np");
 create property index on word("_vorfeld");
@@ -689,6 +694,7 @@ create property index on node("neclass");
 create property index on node("his");
 create property index on node("_clause");
 create property index on node("_clause_lvl");
+create property index on node("_cp");
 create property index on node("_deste");
 create property index on node("_np");
 create property index on node("_vorfeld");
@@ -700,6 +706,15 @@ create property index on ud("rel");
 create property index on ud("main");
 create property index on eud("rel");
 create property index on eud("main");
+
+create property index on node("ne");
+create property index on node("ne_val");
+create property index on node("ne_begin");
+create property index on node("ne_end");
+create property index on word("ne");
+create property index on word("ne_val");
+create property index on word("ne_begin");
+create property index on word("ne_end");
 `)
 	if hasMeta {
 		fmt.Print(`
@@ -722,7 +737,8 @@ create (:data{class: 'rel', name: '%s', type: '%s', oriname: '%s'});
 `, name, sq(name), sq(attr[1]), sq(attr[0]))
 	}
 
-	fmt.Printf("create (:doc{alpino2agens_version: %d, alud_version: '%s'});\n", int(VERSION), alud.VersionID())
+	fmt.Printf("create (:doc{alpino2agens_version: %d, alud_version: '%s', input_date: (select CURRENT_TIMESTAMP(0))});\n",
+		int(VERSION), alud.VersionID())
 
 }
 
@@ -812,6 +828,9 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 				fmt.Fprintf(&buf, `, "%s": %s`, name, q(val))
 			}
 		}
+		if node.SonarNeClass != "" {
+			fmt.Fprintf(&buf, `, "sonar_ne_begin": %s, "sonar_ne_end": %s`, node.SonarNeBegin, node.SonarNeEnd)
+		}
 		for _, nattr := range node.Data {
 			if !strings.HasPrefix(nattr.Name, "ag:node:") {
 				continue
@@ -832,7 +851,7 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 		if node.vorfeld {
 			vorfeld = `, "_vorfeld": true`
 		}
-		jsn := fmt.Sprintf("{\"sentid\": %s, \"id\": %d, \"begin\": %d, \"end\": %d, \"_n_words\": %d%s%s%s%s}",
+		jsn := fmt.Sprintf("{\"sentid\": %s, \"id\": %d, \"begin\": %d, \"end\": %d, \"_n_words\": %d%s%s%s%s, \"_cp\": [%s]}",
 			q(sentid),
 			node.Id,
 			node.Begin,
@@ -841,7 +860,8 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 			buf.String(),
 			feats[node.Begin],
 			np,
-			vorfeld)
+			vorfeld,
+			compound(node.Lemma))
 		fmt.Fprintf(fpWord, "%s\t%s\n", node.aid, jsn)
 		featureCount("word", jsn)
 	}
@@ -944,6 +964,10 @@ var NodeTags = []string{
 	"root",
 	"sc",
 	"sense",
+	"sonar_ne",
+	"sonar_ne_class",
+	// "sonar_ne_begin", // speciaal geval
+	// "sonar_ne_end", // speciaal geval
 	"special",
 	"spectype",
 	"status",
@@ -1086,6 +1110,10 @@ func getAttr(attr string, n *Node) string {
 		return n.Sc
 	case "sense":
 		return n.Sense
+	case "sonar_ne":
+		return n.SonarNe
+	case "sonar_ne_class":
+		return n.SonarNeClass
 	case "special":
 		return n.Special
 	case "spectype":
@@ -1110,6 +1138,7 @@ func getAttr(attr string, n *Node) string {
 		return n.Word
 	case "wvorm":
 		return n.Wvorm
+
 	}
 	return ""
 }
@@ -1817,7 +1846,9 @@ func doFile(filename string) {
 			x(err)
 			data, err := ioutil.ReadAll(r)
 			x(err)
-			chDoc <- Doc{name: h.Name, data: data}
+			if strings.HasSuffix(h.Name, ".xml") {
+				chDoc <- Doc{name: h.Name, data: data}
+			}
 		}
 		x(fp.Close())
 	} else if strings.HasSuffix(filename, ".tar.gz") || strings.HasSuffix(filename, ".tgz") {
@@ -1833,7 +1864,9 @@ func doFile(filename string) {
 			x(err)
 			data, err := ioutil.ReadAll(r)
 			x(err)
-			chDoc <- Doc{name: h.Name, data: data}
+			if strings.HasSuffix(h.Name, ".xml") {
+				chDoc <- Doc{name: h.Name, data: data}
+			}
 		}
 		x(rz.Close())
 		x(fp.Close())
@@ -1846,7 +1879,9 @@ func doFile(filename string) {
 			data, err := ioutil.ReadAll(fp)
 			x(err)
 			x(fp.Close())
-			chDoc <- Doc{name: f.Name, data: data}
+			if strings.HasSuffix(f.Name, ".xml") {
+				chDoc <- Doc{name: f.Name, data: data}
+			}
 		}
 		x(r.Close())
 	} else {
@@ -1909,4 +1944,12 @@ LOOP:
 		return true
 	}
 	return false
+}
+
+func compound(s string) string {
+	aa := strings.Split(s, "_")
+	for i, a := range aa {
+		aa[i] = q(a)
+	}
+	return strings.Join(aa, ", ")
 }
