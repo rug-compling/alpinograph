@@ -317,10 +317,10 @@
       match (f:feature{v: 'meta'})
       return f.name as metadata, f.count as aantal
       order by metadata
+    </item>
     <item id="idx-doc" lbl="Bij de invoer van het corpus">
       match (d:doc)
       return d
-    </item>
     </item>
   </item>
 
