@@ -141,7 +141,7 @@ h1 {
   right: 0px;
   color: white;
   text-decoration: none;
-  z-index: 100;
+  z-index: 9;
 }
 
 #main {
@@ -267,7 +267,6 @@ td.bool, td.float64 {
   -webkit-box-shadow: 11px 10px 12px -6px rgba(0, 0, 0, 0.5);
   -moz-box-shadow: 11px 10px 12px -6px rgba(0, 0, 0, 0.5);
   box-shadow: 11px 10px 12px -6px rgba(0, 0, 0, 0.5);
-  z-index: 10;
   position: fixed;
   left: 10%;
   right: 10%;
