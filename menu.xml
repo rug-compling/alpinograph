@@ -181,7 +181,7 @@
       </item>
       <item id="tut-rel-pdp" lbl="Node met twee parents">
         -- In Alpino kan een node maar één parent hebben
-        -- In AlpinoGraph zijn nodes met een identieke index versmolten, waardoor 
+        -- In AlpinoGraph zijn nodes met een identieke index versmolten, waardoor
         --   een node meer dan één parent kan hebben
 
         match m = (n1:node)-[:rel]->()&lt;-[:rel]-(n2:node)
@@ -330,12 +330,21 @@
       De *Syntactic profiler of Dutch* bestaat uit een grote set tests
       waarmee een profiel van een corpus kan worden opgesteld. SPOD is
       ontwikkeld in [PaQu](https://www.let.rug.nl/alfa/paqu/spod), en maakt
-      gebruik van query's in XPath. Zie paper (TODO).
+      gebruik van query's in XPath. Zie paper:
+      > Gertjan van Noord, Jack Hoeksema, Peter Kleiweg, and Gosse Bouma. 2020. &lt;br>
+      > SPOD: Syntactic profiler of Dutch. &lt;br>
+      > *Computational Linguistics in the Netherlands Journal*, 10. Accepted. &lt;br>
+      > TODO: URL
 
       Voor AlpinoGraph zijn al de SPOD-query's herschreven in Cypher. De
       resultaten die je krijgt met deze nieuwe versies zijn niet altijd gelijk aan
       de resultaten die je kreeg in PaQu, voornamelijk vanwege de technische
-      beperkingen van de oorspronkelijke query's in XPath. Zie paper (TODO).
+      beperkingen van de oorspronkelijke query's in XPath. Zie paper:
+      > Peter Kleiweg, Gertjan van Noord. 2020. &lt;br>
+      > AlpinoGraph: A Graph-based Search Engine for Flexible and
+      > Efficient Treebank Search.  &lt;br>
+      > Submitted.  &lt;br>
+      > TODO: URL
     </item>
 
     <item id="spod-attrib" lbl="Attributen">
@@ -702,16 +711,18 @@
       <item id="spod-whrel" lbl="free relatives">
         <item id="spod-whrel-zin" lbl="zinnen">
           match (n:node{cat: 'whrel'})-[:rel{rel: 'body'}]->(n2:node)
-          where n2.cat = 'ssub'
-             or n2.cat = 'conj' and exists( (n2)-[:rel{rel: 'cnj'}]->(:node{cat: 'ssub'}) )
-             or n2.cat = 'du' and exists( (n2)-[:rel]->(:node{cat: 'ssub'}) )
+          where not exists( (:node)-[:rel{rel: 'mod'}]->(n) )
+            and (n2.cat = 'ssub'
+                 or n2.cat = 'conj' and exists( (n2)-[:rel{rel: 'cnj'}]->(:node{cat: 'ssub'}) )
+                 or n2.cat = 'du' and exists( (n2)-[:rel]->(:node{cat: 'ssub'}) ) )
           return n.sentid, n.id, n2.id
         </item>
         <item id="spod-whrel-tel" lbl="telling">
           match (n:node{cat: 'whrel'})-[:rel{rel: 'body'}]->(n2:node)
-          where n2.cat = 'ssub'
-             or n2.cat = 'conj' and exists( (n2)-[:rel{rel: 'cnj'}]->(:node{cat: 'ssub'}) )
-             or n2.cat = 'du' and exists( (n2)-[:rel]->(:node{cat: 'ssub'}) )
+          where not exists( (:node)-[:rel{rel: 'mod'}]->(n) )
+            and (n2.cat = 'ssub'
+                 or n2.cat = 'conj' and exists( (n2)-[:rel{rel: 'cnj'}]->(:node{cat: 'ssub'}) )
+                 or n2.cat = 'du' and exists( (n2)-[:rel]->(:node{cat: 'ssub'}) ) )
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(sentid) as items
         </item>
@@ -1789,7 +1800,7 @@
 
         |      |    |
         | ---: | -- |
-        | (6a) | Hij wordt geslagen | 
+        | (6a) | Hij wordt geslagen |
         |   b) | Het monument zal spoedig te zien zijn in het Amsterdamse Oosterpark |
 
         De niet-persoonlijke passieven identificeert de gevallen van de lijdende vorm
