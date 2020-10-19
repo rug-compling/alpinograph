@@ -370,3 +370,7 @@ body.ready #output.zinnen #saveZinnenButton {
 #output.lemmas #saveLemmasButton {
   display: block;
 }
+
+td > pre {
+    margin: 0px;
+}

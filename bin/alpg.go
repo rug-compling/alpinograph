@@ -648,6 +648,17 @@ RESULTS:
 						break
 					}
 
+					if strings.HasPrefix(sval, "[{") || strings.HasPrefix(sval, "{") {
+						var in interface{}
+						if json.Unmarshal(val, &in) == nil {
+							bb, err := json.MarshalIndent(in, "", "  ")
+							if err == nil {
+								line.Fields[i] = fmt.Sprintf("<pre>%s</pre>", html.EscapeString(string(bb)))
+								break
+							}
+						}
+					}
+
 					if header[i].Name == "sentid" {
 						if sentid == "" {
 							sentid = unescape(sval)
