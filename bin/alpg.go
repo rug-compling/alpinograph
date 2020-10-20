@@ -2,6 +2,7 @@ package main
 
 import (
 	ag "github.com/bitnine-oss/agensgraph-golang"
+	//"github.com/kr/pretty"
 	_ "github.com/lib/pq"
 
 	"bytes"
@@ -446,122 +447,56 @@ RESULTS:
 
 			SCAN:
 				for {
-				LIST:
-					for true {
-						if sval[0] != '[' {
-							break LIST
-						}
-						m := reAny.FindAllIndex(val, -1)
-						if len(m) == 0 {
-							break LIST
-						}
-						parts := make([][]byte, 0)
-						for j := range m {
-							if j < len(m)-1 {
-								m[j][1] = m[j+1][0]
-							} else {
-								m[j][1] = len(val)
-							}
-							for val[m[j][1]-1] != '}' {
-								m[j][1] -= 1
-							}
-							parts = append(parts, val[m[j][0]:m[j][1]])
-						}
-						verticeThings := make([]*Thing, 0)
-						edgeThings := make([]*Thing, 0)
-						for _, part := range parts {
-							if reVertex.Match(part) {
-								var v ag.BasicVertex
-								if v.Scan(part) != nil {
-									break LIST
+					parts := make([][]byte, 0)
+					if reEdge.Match(val) || reVertex.Match(val) {
+						parts = append(parts, val)
+					} else if sval[0] == '[' {
+						if m := reAny.FindAllIndex(val, -1); m != nil {
+							for j := range m {
+								if j < len(m)-1 {
+									m[j][1] = m[j+1][0]
+								} else {
+									m[j][1] = len(val)
 								}
-								verticeThings = append(verticeThings, getVertex(&v))
-								if sid, ok := v.Properties["sentid"]; ok {
-									sentid = fmt.Sprint(sid)
+								for val[m[j][1]-1] != '}' {
+									m[j][1] -= 1
 								}
-								if v.Label == "sentence" {
-									nodes[v.Id.String()] = -1
-								} else if id, ok := v.Properties["id"]; ok {
-									if iid, err := strconv.Atoi(string(fmt.Sprint(id))); err == nil {
-										idmap[iid] = true
-										if v.Id.Valid {
-											nodes[v.Id.String()] = iid
-										}
-									}
-								}
-							} else if reEdge.Match(part) {
-								var e ag.BasicEdge
-								if e.Scan(part) != nil {
-									break LIST
-								}
-								edgeThings = append(edgeThings, getEdge(&e))
-								if e.Id.Valid && e.Start.Valid && e.End.Valid {
-									var rel, start, end string
-									if e.Label != "next" {
-										rel = unescape(fmt.Sprint(e.Properties["rel"]))
-									}
-									if e.Label == "eud" {
-										if s, ok := e.Properties["from"]; ok {
-											start = unescape(fmt.Sprint(s))
-										}
-										if s, ok := e.Properties["to"]; ok {
-											end = unescape(fmt.Sprint(s))
-										}
-									}
-									edges[e.Id.String()] = &Edge{
-										label:  e.Label,
-										start:  e.Start.String(),
-										end:    e.End.String(),
-										value:  rel,
-										eStart: start,
-										eEnd:   end,
-									}
-								}
-							} else {
-								break LIST
+								parts = append(parts, val[m[j][0]:m[j][1]])
 							}
 						}
-						if s := formatThings(verticeThings, edgeThings); s == "" {
-							break LIST
-						} else {
-							line.Fields[i] = s
-						}
-						// succes:
-						break SCAN
 					}
 
-					/*
-						// paden die met een edge beginnen doen een panic in BasicPath.Scan
-						// TODO: https://github.com/bitnine-oss/agensgraph-golang/issues/3
-						if strings.HasPrefix(sval, "[sentence") ||
-							strings.HasPrefix(sval, "[node") ||
-							strings.HasPrefix(sval, "[word") ||
-							strings.HasPrefix(sval, "[meta") ||
-							strings.HasPrefix(sval, "[doc") {
-							if p.Scan(val) == nil {
-								verticeThings := make([]*Thing, 0)
-								edgeThings := make([]*Thing, 0)
-								//n := len(p.Vertices) - 1
-								for _, v := range p.Vertices {
-									verticeThings = append(verticeThings, getVertex(&v))
+					if len(parts) > 0 {
+
+					LIST:
+						for true {
+							things := make([]*Thing, 0)
+							for _, part := range parts {
+								if reVertex.Match(part) {
+									var v ag.BasicVertex
+									if v.Scan(part) != nil {
+										break LIST
+									}
+									things = append(things, getVertex(&v))
 									if sid, ok := v.Properties["sentid"]; ok {
 										sentid = fmt.Sprint(sid)
 									}
 									if v.Label == "sentence" {
 										nodes[v.Id.String()] = -1
 									} else if id, ok := v.Properties["id"]; ok {
-										if iid, err := strconv.Atoi(fmt.Sprint(id)); err == nil {
-											//if i == 0 || i == n {
+										if iid, err := strconv.Atoi(string(fmt.Sprint(id))); err == nil {
 											idmap[iid] = true
-											//}
 											if v.Id.Valid {
 												nodes[v.Id.String()] = iid
 											}
 										}
 									}
-								}
-								for _, e := range p.Edges {
-									edgeThings = append(edgeThings, getEdge(&e))
+								} else if reEdge.Match(part) {
+									var e ag.BasicEdge
+									if e.Scan(part) != nil {
+										break LIST
+									}
+									things = append(things, getEdge(&e))
 									if e.Id.Valid && e.Start.Valid && e.End.Valid {
 										var rel, start, end string
 										if e.Label != "next" {
@@ -584,68 +519,18 @@ RESULTS:
 											eEnd:   end,
 										}
 									}
-								}
-								line.Fields[i] = formatThings(verticeThings, edgeThings)
-								if line.Fields[i] == "" {
-									line.Fields[i] = html.EscapeString(unescape(sval))
-								}
-								break
-							}
-						}
-
-					*/
-
-					var v ag.BasicVertex
-					if v.Scan(val) == nil {
-						if sid, ok := v.Properties["sentid"]; ok {
-							sentid = fmt.Sprint(sid)
-						}
-						if v.Label == "sentence" {
-							nodes[v.Id.String()] = -1
-						} else if id, ok := v.Properties["id"]; ok {
-							if iid, err := strconv.Atoi(string(fmt.Sprint(id))); err == nil {
-								idmap[iid] = true
-								if v.Id.Valid {
-									nodes[v.Id.String()] = iid
+								} else {
+									break LIST
 								}
 							}
-						}
-						line.Fields[i] = formatThings([]*Thing{getVertex(&v)}, []*Thing{})
-						if line.Fields[i] == "" {
-							line.Fields[i] = html.EscapeString(unescape(sval))
-						}
-						break
-					}
-
-					var e ag.BasicEdge
-					if e.Scan(val) == nil {
-						if e.Id.Valid && e.Start.Valid && e.End.Valid {
-							var rel, start, end string
-							if e.Label != "next" {
-								rel = unescape(fmt.Sprint(e.Properties["rel"]))
+							if s := formatThings(things); s == "" {
+								break LIST
+							} else {
+								line.Fields[i] = s
 							}
-							if e.Label == "eud" {
-								if s, ok := e.Properties["from"]; ok {
-									start = unescape(fmt.Sprint(s))
-								}
-								if s, ok := e.Properties["to"]; ok {
-									end = unescape(fmt.Sprint(s))
-								}
-							}
-							edges[e.Id.String()] = &Edge{
-								label:  e.Label,
-								start:  e.Start.String(),
-								end:    e.End.String(),
-								value:  rel,
-								eStart: start,
-								eEnd:   end,
-							}
+							// succes:
+							break SCAN
 						}
-						line.Fields[i] = formatThings([]*Thing{getEdge(&e)}, []*Thing{})
-						if line.Fields[i] == "" {
-							line.Fields[i] = html.EscapeString(unescape(sval))
-						}
-						break
 					}
 
 					if strings.HasPrefix(sval, "[{") || strings.HasPrefix(sval, "{") {
@@ -856,92 +741,48 @@ func getEdge(e *ag.BasicEdge) *Thing {
 	}
 }
 
-func formatEdges(ee []*Thing) string {
-	en := len(ee)
-	log(en)
+func formatThings(things []*Thing) string {
+
 	var buf bytes.Buffer
-	for i, item := range ee {
-		var left, right bool
-		if i > 0 {
-			if item.from == ee[i-1].from || item.from == ee[i-1].to {
-				right = true
-			}
-			if item.to == ee[i-1].from || item.to == ee[i-1].to {
-				left = true
-			}
-		}
+
+	n := len(things) - 1
+	for i, item := range things {
 		var e1, e2 string
-		if i < en-1 {
-			if item.from == ee[i+1].from || item.from == ee[i+1].to {
-				left = true
-			}
-			if item.to == ee[i+1].from || item.to == ee[i+1].to {
-				right = true
-			}
-		}
-		if left == right {
-			e1 = "?-[:"
-			e2 = "]-?"
-		} else if left {
-			e1 = "&lt;-[:"
-			e2 = "]-"
+		if item.from == "" && item.to == "" {
+			e1 = "(:"
+			e2 = ")"
 		} else {
-			e1 = "-[:"
-			e2 = "]-&gt;"
+			var left, right bool
+			if i > 0 {
+				other := things[i-1]
+				if item.from == other.id || item.from == other.from || item.from == other.to {
+					right = true
+				}
+				if item.to == other.id || item.to == other.from || item.to == other.to {
+					left = true
+				}
+			}
+			if i < n {
+				other := things[i+1]
+				if item.from == other.id || item.from == other.from || item.from == other.to {
+					left = true
+				}
+				if item.to == other.id || item.to == other.from || item.to == other.to {
+					right = true
+				}
+			}
+			if left == right {
+				e1 = "?-[:"
+				e2 = "]-?"
+			} else if left {
+				e1 = "&lt;-[:"
+				e2 = "]-"
+			} else {
+				e1 = "-[:"
+				e2 = "]-&gt;"
+			}
 		}
 		fmt.Fprintf(&buf, "<div class=\"inner\"><code>%s%s%s</code>%s</div>\n", e1, item.label, e2, item.props)
-	}
-	return buf.String()
-}
-
-func formatVertices(vv []*Thing) string {
-	var buf bytes.Buffer
-	for _, item := range vv {
-		fmt.Fprintf(&buf, "<div class=\"inner\"><code>(:%s)</code>%s</div>\n", item.label, item.props)
-	}
-	return buf.String()
-}
-
-func formatThings(vv []*Thing, ee []*Thing) string {
-	vn := len(vv)
-	en := len(ee)
-
-	if vn == 0 {
-		return formatEdges(ee)
-	}
-
-	if en == 0 {
-		return formatVertices(vv)
-	}
-
-	if vn != en+1 {
-		return ""
-	}
-
-	var buf bytes.Buffer
-
-	vorige := "NONE"
-	for i := 0; i < vn+en; i++ {
-		var item *Thing
-		if i%2 == 0 {
-			item = vv[i/2]
-		} else {
-			item = ee[i/2]
-		}
-		e1 := "(:"
-		e2 := ")"
-		if item.from == vorige {
-			e1 = "-[:"
-			e2 = "]-&gt;"
-		} else if item.to == vorige {
-			e1 = "&lt;-[:"
-			e2 = "]-"
-		} else if item.from != "" || item.to != "" {
-			e1 = "?-[:"
-			e2 = "]-?"
-		}
-		fmt.Fprintf(&buf, "<div class=\"inner\"><code>%s%s%s</code>%s</div>\n", e1, item.label, e2, item.props)
-		vorige = item.id
 	}
 
 	return buf.String()
@@ -1168,6 +1009,7 @@ func output(s string) {
 }
 
 func log(s ...interface{}) {
+	//output(fmt.Sprintf("console.log(%q);", pretty.Sprintf("%# v", s...)))
 	output(fmt.Sprintf("console.log(%q);", fmt.Sprint(s...)))
 }
 
