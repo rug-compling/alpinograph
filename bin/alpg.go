@@ -450,7 +450,7 @@ RESULTS:
 					parts := make([][]byte, 0)
 					if reEdge.Match(val) || reVertex.Match(val) {
 						parts = append(parts, val)
-					} else if sval[0] == '[' {
+					} else if len(sval) > 0 && sval[0] == '[' {
 						if m := reAny.FindAllIndex(val, -1); m != nil {
 							for j := range m {
 								if j < len(m)-1 {
@@ -533,7 +533,7 @@ RESULTS:
 						}
 					}
 
-					if strings.HasPrefix(sval, "[{") || strings.HasPrefix(sval, "{") {
+					if strings.HasPrefix(sval, "[") || strings.HasPrefix(sval, "{") {
 						var in interface{}
 						if json.Unmarshal(val, &in) == nil {
 							bb, err := json.MarshalIndent(in, "", "  ")
@@ -813,13 +813,30 @@ func formatProperties(ii map[string]interface{}) string {
 				"<tr><td>%s</td><td class=\"%T\">%s</td></tr>\n",
 				html.EscapeString(key),
 				ii[key],
-				html.EscapeString(fmt.Sprint(ii[key])))
+				formatValue(ii[key]))
 		}
 	} else {
 		fmt.Fprintln(&buf, "<tr><td></td></tr>")
 	}
 	buf.WriteString("</table>\n")
 	return buf.String()
+}
+
+func formatValue(val interface{}) string {
+
+	switch val.(type) {
+	case string, float64, bool:
+		return html.EscapeString(fmt.Sprint(val))
+	}
+
+	// log(fmt.Sprintf("%T %v", val, val))
+
+	s, err := json.MarshalIndent(val, "", "  ")
+	if err == nil {
+		return "<pre>" + html.EscapeString(string(s)) + "</pre>"
+	}
+
+	return html.EscapeString(fmt.Sprint(val))
 }
 
 func doTables(final bool) {
