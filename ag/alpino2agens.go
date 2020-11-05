@@ -861,7 +861,7 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 			feats[node.Begin],
 			np,
 			vorfeld,
-			compound(node.Lemma))
+			compound(node.Lemma, node.Word))
 		fmt.Fprintf(fpWord, "%s\t%s\n", node.aid, jsn)
 		featureCount("word", jsn)
 	}
@@ -1946,8 +1946,11 @@ LOOP:
 	return false
 }
 
-func compound(s string) string {
-	aa := strings.Split(s, "_")
+func compound(lemma, word string) string {
+	if strings.ToLower(lemma) == strings.ToLower(word) {
+		return q(lemma)
+	}
+	aa := strings.Split(lemma, "_")
 	for i, a := range aa {
 		aa[i] = q(a)
 	}

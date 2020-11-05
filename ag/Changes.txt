@@ -1,4 +1,16 @@
 
+Versie 3
+========
+
+Wijziging in _cp: als lowercase(lemma) gelijk is aan lowercase(woord),
+dan wordt dat lemma niet opgesplits. Bijvoorbeeld, een url met
+underscores er in.
+
+Versie 2
+========
+
+Nieuw: compound parts _cp
+
 Versie 1
 ========
 

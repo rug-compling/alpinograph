@@ -340,11 +340,10 @@
       resultaten die je krijgt met deze nieuwe versies zijn niet altijd gelijk aan
       de resultaten die je kreeg in PaQu, voornamelijk vanwege de technische
       beperkingen van de oorspronkelijke query's in XPath. Zie paper:
-      > Peter Kleiweg, Gertjan van Noord. 2020. &lt;br>
-      > AlpinoGraph: A Graph-based Search Engine for Flexible and
-      > Efficient Treebank Search.  &lt;br>
-      > Submitted.  &lt;br>
-      > TODO: URL
+      > Peter Kleiweg and Gertjan van Noord. 2020. &lt;br>
+      > [AlpinoGraph: A Graph-based search engine for flexible and efficient treebank search.](https://www.aclweb.org/anthology/2020.tlt-1.13/)  &lt;br>
+      > In *Proceedings of the 19th International Workshop on Treebanks and Linguistic Theories*,
+      > pages 151--161, Düsseldorf, Germany, 27--28 October. Association for Computational Linguistics.  &lt;br>
     </item>
 
     <item id="spod-attrib" lbl="Attributen">
