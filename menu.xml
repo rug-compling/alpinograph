@@ -295,6 +295,11 @@
         ) as foo
       </item>
     </item>
+    <item id="software" lbl="Software">
+      <item id="software-version" lbl="Versies">
+        select version() as "PostgreSQL version", agversion() as "AgensGraph version"
+      </item>
+    </item>
   </item>
 
   <item id="idx" lbl="Corpusinformatie">
