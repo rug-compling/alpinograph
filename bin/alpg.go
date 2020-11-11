@@ -101,6 +101,7 @@ var (
 	offset     = 0
 	pagesize   = &gint{i: MAXROWS}
 	paging     = false
+	queryPlan  = false
 	oncePaging sync.Once
 
 	wg    sync.WaitGroup
@@ -295,12 +296,13 @@ func safeQuery(query string) (string, error) {
 	query = strings.TrimSpace(query)
 
 	qu := strings.ToUpper(query)
-	if !(strings.HasPrefix(qu, "MATCH") || strings.HasPrefix(qu, "SELECT") || strings.HasPrefix(qu, "WITH")) {
-		return "", fmt.Errorf("Query must start with MATCH, SELECT or WITH")
+	if !(strings.HasPrefix(qu, "MATCH") || strings.HasPrefix(qu, "SELECT") || strings.HasPrefix(qu, "WITH") || strings.HasPrefix(qu, "EXPLAIN")) {
+		return "", fmt.Errorf("Query must start with MATCH, SELECT, WITH or EXPLAIN")
 	}
 
-	return query, nil
+	queryPlan = strings.HasPrefix(qu, "EXPLAIN")
 
+	return query, nil
 }
 
 func safeString(s string) string {
@@ -369,23 +371,25 @@ func doQuery(corpus, safequery string, chHeader chan []*Header, chLine chan *Lin
 			return
 		}
 		chRow <- scans
-		if paging && count-offset > pagesize.get() {
-			doPaging(true)
-			break
-		}
-		if count-offset == MAXROWS {
-			doPaging(true)
-			muWords.Lock()
-			n := len(wordCount)
-			muWords.Unlock()
-			if n == 0 {
-				// rows.Close() // dit hangt
+		if !queryPlan {
+			if paging && count-offset > pagesize.get() {
+				doPaging(true)
 				break
 			}
-		}
-		if count-offset > MAXROWS {
-			if tooManyWords.get() {
-				break
+			if count-offset == MAXROWS {
+				doPaging(true)
+				muWords.Lock()
+				n := len(wordCount)
+				muWords.Unlock()
+				if n == 0 {
+					// rows.Close() // dit hangt
+					break
+				}
+			}
+			if count-offset > MAXROWS {
+				if tooManyWords.get() {
+					break
+				}
 			}
 		}
 	}

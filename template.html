@@ -31,14 +31,19 @@
     var nextOffset = 0;
     var currentTab = 0;
     var finished = false;
+    var queryPlan = false;
+    var planLines = [];
     var popup;
 
     window._fn = {
       setPaging: function (vorige, volgende, more) {
         finished = true;
-        $('body').addClass('ready');
+        if (!queryPlan) {
+          // TODO: hack
+          $('body').addClass('ready');
+        }
         $('#wait').addClass('hide');
-        if (vorige < 0 && !more) {
+        if (vorige < 0 && !more || queryPlan) {
           $('#form2').addClass('hide');
         } else {
           $('#form2').removeClass('hide');
@@ -49,14 +54,21 @@
         }
       },
       header: function (h) {
-        $('#outputTabel').html('<table id="tab"></table>');
-        var tr = $('<tr></tr>');
-        tr.append($('<th></th>'));
-        for (var i = 0; i < h.length; i++) {
-          tr.append($('<th></th>').text(h[i].name));
+        if (h.length == 1 && h[0].name == "QUERY PLAN") {
+          queryPlan = true;
+          planLines = [];
+          $('#outputTabel').html('<pre id="tab"></pre>');
+        } else {
+          queryPlan = false;
+          $('#outputTabel').html('<table id="tab"></table>');
+          var tr = $('<tr></tr>');
+          tr.append($('<th></th>'));
+          for (var i = 0; i < h.length; i++) {
+            tr.append($('<th></th>').text(h[i].name));
+          }
+          $('#tab').append(tr);
+          $('#outputZinnen').html('<ol id="lst"></ol>');
         }
-        $('#tab').append(tr);
-        $('#outputZinnen').html('<ol id="lst"></ol>');
       },
       wordstart: function () {
         $('#butWoord').removeClass('hide').prop('disabled', false);
@@ -82,16 +94,21 @@
             }
           }
         }
-        var tr = $('<tr></tr>');
-        var lineno = thisOffset + r.lineno;
-        tr.append($('<td></td>').text('' + lineno + '.'));
-        for (var i = 0; i < r.fields.length; i++) {
-          tr.append($('<td></td>').html(r.fields[i]));
-        }
-        $('#tab').append(tr);
-        if (hassentence) {
-          var a = $('<a href="bin/tree?' + r.args + '" target="_blank"></a>').html(r.sentence);
-          $('#lst').append($('<li value="' + lineno + '"></li>').append(a));
+        if (queryPlan) {
+          planLines.push(r.fields[0]);
+          $('#tab').html(planLines.join('\n'));
+        } else {
+          var tr = $('<tr></tr>');
+          var lineno = thisOffset + r.lineno;
+          tr.append($('<td></td>').text('' + lineno + '.'));
+          for (var i = 0; i < r.fields.length; i++) {
+            tr.append($('<td></td>').html(r.fields[i]));
+          }
+          $('#tab').append(tr);
+          if (hassentence) {
+            var a = $('<a href="bin/tree?' + r.args + '" target="_blank"></a>').html(r.sentence);
+            $('#lst').append($('<li value="' + lineno + '"></li>').append(a));
+          }
         }
       },
       error: function (e) {
@@ -498,7 +515,7 @@
       ic.html(qi[id]);
       popup = $('#info');
       popup.removeClass('hide');
-      ic[0].scrollTo(0,0); // dit moet *na* removeclass
+      ic[0].scrollTo(0, 0); // dit moet *na* removeclass
     }
 
     function infoClose() {
