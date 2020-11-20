@@ -1664,7 +1664,11 @@ func smainVorfeld(node *Node) {
 					n = refnodes[n.index]
 				}
 				if n.Word != "" {
-					findTopic(node, n.Begin)
+					for _, topic := range findTopic(node, n.Begin) {
+						if checkTopic(topic, node, n.Begin) {
+							topic.vorfeld = true
+						}
+					}
 					return // er kunnen meer heads zijn (cgn), maar die slaan we over
 				}
 			}
@@ -1672,26 +1676,27 @@ func smainVorfeld(node *Node) {
 	}
 }
 
-func findTopic(node *Node, begin int) {
+func findTopic(node *Node, begin int) []*Node {
 	if isTopic(node, begin) {
-		return
+		return []*Node{node}
 	}
+	topics := make([]*Node, 0)
 	if node.NodeList != nil {
 		for _, n := range node.NodeList {
-			findTopic(n, begin)
+			for _, topic := range findTopic(n, begin) {
+				topics = append(topics, topic)
+			}
 		}
 	}
+	return topics
 }
 
 func isTopic(node *Node, begin int) bool {
-
 	if node.Begin < begin && node.End <= begin {
-		node.vorfeld = true
 		return true
 	}
 	if node.Lemma != "" || node.Cat == "mwu" {
 		if node.Begin < begin {
-			node.vorfeld = true
 			return true
 		}
 		return false
@@ -1700,12 +1705,41 @@ func isTopic(node *Node, begin int) bool {
 	if node.NodeList != nil {
 		for _, n := range node.NodeList {
 			if n.Begin < begin && (n.Rel == "hd" || n.Rel == "cmp" || n.Rel == "crd") {
-				node.vorfeld = true
 				return true
 			}
 		}
 	}
 	return false
+}
+
+func checkTopic(topic, node *Node, begin int) bool {
+	// alle nodes tussen node (inclusief) en topic (exclusief)
+	nodes := make(map[*Node]bool)
+	nodePath(node, topic, nodes)
+
+	for node := range nodes {
+		if isTopic(node, begin) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func nodePath(top, bottom *Node, nodes map[*Node]bool) bool {
+	retval := false
+	if top.NodeList != nil {
+		for _, n := range top.NodeList {
+			if n.index > 0 {
+				n = refnodes[n.index]
+			}
+			if n == bottom || nodePath(n, bottom, nodes) {
+				nodes[top] = true
+				retval = true
+			}
+		}
+	}
+	return retval
 }
 
 func isDeste(node *Node) bool {
