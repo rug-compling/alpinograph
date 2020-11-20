@@ -1669,7 +1669,7 @@ func smainVorfeld(node *Node) {
 							topic.vorfeld = true
 						}
 					}
-					return // er kunnen meer heads zijn (cgn), maar die slaan we over
+					// return // er kunnen meer heads zijn (cgn), maar die slaan we over
 				}
 			}
 		}
@@ -1677,10 +1677,10 @@ func smainVorfeld(node *Node) {
 }
 
 func findTopic(node *Node, begin int) []*Node {
-	if isTopic(node, begin) {
-		return []*Node{node}
-	}
 	topics := make([]*Node, 0)
+	if isTopic(node, begin) {
+		topics = append(topics, node)
+	}
 	if node.NodeList != nil {
 		for _, n := range node.NodeList {
 			for _, topic := range findTopic(n, begin) {
