@@ -56,14 +56,14 @@ type SentType struct {
 }
 
 type Node struct {
-	used       bool
-	aid        string
-	wordcount  int
-	level      int
-	parents    []*Node `xml:"node"`
-	rels       []string
-	vorfeld    bool
-	vorfeldTop int
+	used        bool
+	aid         string
+	wordcount   int
+	level       int
+	parents     []*Node `xml:"node"`
+	rels        []string
+	vorfeld     map[int]bool
+	vorfeldSkip map[int]bool
 
 	Aform        string `xml:"aform,attr"`
 	Begin        int    `xml:"begin,attr"`
@@ -201,8 +201,6 @@ var (
 	deprels  []*Deprel // reset per zin
 
 	targets = []string{"hd", "cmp", "crd", "dlink", "rhd", "whd"}
-
-	vorfeldSkips map[string]bool
 
 	opt_t = flag.String("t", "", "title")
 
@@ -370,7 +368,6 @@ LOOP:
 		refnodes = make([]*Node, len(strings.Fields(alpino.Sentence.Sent)))
 		prepare(alpino.Node0, 0)
 		prepareRels(alpino.Node0)
-		vorfeldSkips = make(map[string]bool)
 		prepareVorfeld(alpino.Node0)
 		addIndexParents(alpino.Node0)
 		wordcount(alpino.Node0)
@@ -872,10 +869,12 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 }
 
 func isVorfeld(node *Node) bool {
-	if !node.vorfeld {
-		return false
+	for id := range node.vorfeld {
+		if !node.vorfeldSkip[id] {
+			return true
+		}
 	}
-	return !vorfeldSkips[fmt.Sprintf("%d %d", node.Id, node.vorfeldTop)]
+	return false
 }
 
 func doNode2(node *Node) {
@@ -1242,6 +1241,8 @@ func mwu(node *Node) {
 // Zoek alle referenties. Dit zijn nodes met een attribuut "index".
 // Sla deze op in een tabel 'refnames': index -> *Node
 func prepare(node *Node, level int) {
+	node.vorfeld = make(map[int]bool)
+	node.vorfeldSkip = make(map[int]bool)
 	node.rels = []string{node.Rel}
 	if node.Cat == "smain" || node.Cat == "sv1" || node.Cat == "ssub" {
 		level++
@@ -1677,10 +1678,10 @@ func smainVorfeld(node *Node) {
 				}
 				if n.Word != "" {
 					for _, topic := range findTopic(node, n.Begin) {
-						topic.vorfeld = true
-						topic.vorfeldTop = node.Id
 						if checkTopic(topic, node, n.Begin) {
-							vorfeldSkips[fmt.Sprintf("%d %d", topic.Id, node.Id)] = true
+							topic.vorfeld[node.Id] = true
+						} else {
+							topic.vorfeldSkip[node.Id] = true
 						}
 					}
 				}
@@ -1739,11 +1740,11 @@ func checkTopic(topic, node *Node, begin int) bool {
 
 	for n := range nodes {
 		if isTopic(n, begin) {
-			return true
+			return false
 		}
 	}
 
-	return false
+	return true
 }
 
 func nodePath(top, bottom *Node, nodes map[*Node]bool) bool {
