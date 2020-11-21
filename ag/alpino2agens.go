@@ -56,13 +56,14 @@ type SentType struct {
 }
 
 type Node struct {
-	used      bool
-	aid       string
-	wordcount int
-	level     int
-	parents   []*Node `xml:"node"`
-	rels      []string
-	vorfeld   bool
+	used       bool
+	aid        string
+	wordcount  int
+	level      int
+	parents    []*Node `xml:"node"`
+	rels       []string
+	vorfeld    bool
+	vorfeldTop int
 
 	Aform        string `xml:"aform,attr"`
 	Begin        int    `xml:"begin,attr"`
@@ -200,6 +201,8 @@ var (
 	deprels  []*Deprel // reset per zin
 
 	targets = []string{"hd", "cmp", "crd", "dlink", "rhd", "whd"}
+
+	vorfeldSkips map[string]bool
 
 	opt_t = flag.String("t", "", "title")
 
@@ -367,6 +370,7 @@ LOOP:
 		refnodes = make([]*Node, len(strings.Fields(alpino.Sentence.Sent)))
 		prepare(alpino.Node0, 0)
 		prepareRels(alpino.Node0)
+		vorfeldSkips = make(map[string]bool)
 		prepareVorfeld(alpino.Node0)
 		addIndexParents(alpino.Node0)
 		wordcount(alpino.Node0)
@@ -739,7 +743,7 @@ create (:data{class: 'rel', name: '%s', type: '%s', oriname: '%s'});
 
 	fmt.Printf("create (:doc{alpino2agens_version: %d, alud_version: '%s', input_date: (select CURRENT_TIMESTAMP(0))});\n",
 		int(VERSION), alud.VersionID())
-
+	fmt.Println("checkpoint;")
 }
 
 func doNode1(sentid string, node *Node, last int, feats []string) {
@@ -793,7 +797,7 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 			np = `, "_np": true`
 		}
 		vorfeld := ""
-		if node.vorfeld {
+		if isVorfeld(node) {
 			vorfeld = `, "_vorfeld": true`
 		}
 		deste := ""
@@ -848,7 +852,7 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 			np = `, "_np": true`
 		}
 		vorfeld := ""
-		if node.vorfeld {
+		if isVorfeld(node) {
 			vorfeld = `, "_vorfeld": true`
 		}
 		jsn := fmt.Sprintf("{\"sentid\": %s, \"id\": %d, \"begin\": %d, \"end\": %d, \"_n_words\": %d%s%s%s%s, \"_cp\": [%s]}",
@@ -865,6 +869,13 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 		fmt.Fprintf(fpWord, "%s\t%s\n", node.aid, jsn)
 		featureCount("word", jsn)
 	}
+}
+
+func isVorfeld(node *Node) bool {
+	if !node.vorfeld {
+		return false
+	}
+	return !vorfeldSkips[fmt.Sprintf("%d %d", node.Id, node.vorfeldTop)]
 }
 
 func doNode2(node *Node) {
@@ -1660,16 +1671,18 @@ func smainVorfeld(node *Node) {
 	if node.NodeList != nil {
 		for _, n := range node.NodeList {
 			if n.Rel == "hd" {
+				// NIET alleen primary links
 				if n.index > 0 {
 					n = refnodes[n.index]
 				}
 				if n.Word != "" {
 					for _, topic := range findTopic(node, n.Begin) {
+						topic.vorfeld = true
+						topic.vorfeldTop = node.Id
 						if checkTopic(topic, node, n.Begin) {
-							topic.vorfeld = true
+							vorfeldSkips[fmt.Sprintf("%d %d", topic.Id, node.Id)] = true
 						}
 					}
-					// return // er kunnen meer heads zijn (cgn), maar die slaan we over
 				}
 			}
 		}
@@ -1678,11 +1691,12 @@ func smainVorfeld(node *Node) {
 
 func findTopic(node *Node, begin int) []*Node {
 	topics := make([]*Node, 0)
-	if isTopic(node, begin) {
-		topics = append(topics, node)
-	}
 	if node.NodeList != nil {
 		for _, n := range node.NodeList {
+			if isTopic(n, begin) {
+				topics = append(topics, n)
+			}
+			// ALLEEN primary links
 			for _, topic := range findTopic(n, begin) {
 				topics = append(topics, topic)
 			}
@@ -1704,8 +1718,14 @@ func isTopic(node *Node, begin int) bool {
 
 	if node.NodeList != nil {
 		for _, n := range node.NodeList {
-			if n.Begin < begin && (n.Rel == "hd" || n.Rel == "cmp" || n.Rel == "crd") {
-				return true
+			if n.Rel == "hd" || n.Rel == "cmp" || n.Rel == "crd" {
+				// NIET alleen primary links
+				if n.index > 0 {
+					n = refnodes[n.index]
+				}
+				if (n.Lemma != "" || n.Cat == "mwu") && n.Begin < begin {
+					return true
+				}
 			}
 		}
 	}
@@ -1713,28 +1733,31 @@ func isTopic(node *Node, begin int) bool {
 }
 
 func checkTopic(topic, node *Node, begin int) bool {
-	// alle nodes tussen node (inclusief) en topic (exclusief)
+	// alle nodes tussen node (exclusief) en topic (exclusief)
 	nodes := make(map[*Node]bool)
 	nodePath(node, topic, nodes)
 
-	for node := range nodes {
-		if isTopic(node, begin) {
-			return false
+	for n := range nodes {
+		if isTopic(n, begin) {
+			return true
 		}
 	}
 
-	return true
+	return false
 }
 
 func nodePath(top, bottom *Node, nodes map[*Node]bool) bool {
 	retval := false
 	if top.NodeList != nil {
 		for _, n := range top.NodeList {
-			if n.index > 0 {
-				n = refnodes[n.index]
-			}
-			if n == bottom || nodePath(n, bottom, nodes) {
-				nodes[top] = true
+			// TODO: alleen primaire links, of niet?
+			//if n.index > 0 {
+			//	n = refnodes[n.index]
+			//}
+			if n == bottom {
+				retval = true
+			} else if nodePath(n, bottom, nodes) {
+				nodes[n] = true
 				retval = true
 			}
 		}
