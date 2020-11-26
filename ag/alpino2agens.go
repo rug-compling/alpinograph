@@ -740,7 +740,6 @@ create (:data{class: 'rel', name: '%s', type: '%s', oriname: '%s'});
 
 	fmt.Printf("create (:doc{alpino2agens_version: %d, alud_version: '%s', input_date: (select CURRENT_TIMESTAMP(0))});\n",
 		int(VERSION), alud.VersionID())
-	fmt.Println("checkpoint;")
 }
 
 func doNode1(sentid string, node *Node, last int, feats []string) {
@@ -1660,6 +1659,8 @@ func prepareRels(node *Node) {
 func prepareVorfeld(node *Node) {
 	if node.Cat == "smain" {
 		smainVorfeld(node)
+	} else if node.Cat == "whq" {
+		whqVorfeld(node)
 	}
 	if node.NodeList != nil {
 		for _, n := range node.NodeList {
@@ -1677,7 +1678,7 @@ func smainVorfeld(node *Node) {
 					n = refnodes[n.index]
 				}
 				if n.Word != "" {
-					for _, topic := range findTopic(node, n.Begin) {
+					for _, topic := range findTopic(node, n.Begin, false) {
 						if checkTopic(topic, node, n.Begin) {
 							topic.vorfeld[node.Id] = true
 						} else {
@@ -1690,15 +1691,59 @@ func smainVorfeld(node *Node) {
 	}
 }
 
-func findTopic(node *Node, begin int) []*Node {
-	topics := make([]*Node, 0)
+func whqVorfeld(node *Node) {
 	if node.NodeList != nil {
 		for _, n := range node.NodeList {
+			// NIET alleen primary links
+			rel := n.Rel
+			if n.index > 0 {
+				n = refnodes[n.index]
+			}
+			if rel == "body" && n.Cat == "sv1" {
+				for _, n2 := range n.NodeList {
+					if n2.Rel == "hd" {
+						// NIET alleen primary links
+						if n2.index > 0 {
+							n2 = refnodes[n2.index]
+						}
+						if n2.Word != "" {
+							for _, topic := range findTopic(node, n2.Begin, true) {
+								if checkTopic(topic, node, n2.Begin) {
+									topic.vorfeld[node.Id] = true
+								} else {
+									topic.vorfeldSkip[node.Id] = true
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+func findTopic(node *Node, begin int, needWhd bool) []*Node {
+	topics := make([]*Node, 0)
+
+	// hier: inclusief topnode
+	//if isTopic(node, begin) {
+	//	topics = append(topics, node)
+	//}
+
+	if node.NodeList != nil {
+		for _, n := range node.NodeList {
+
+			if needWhd && n.Rel != "whd" {
+				continue
+			}
+
+			// hier: exclusief topnode
 			if isTopic(n, begin) {
 				topics = append(topics, n)
 			}
+
 			// ALLEEN primary links
-			for _, topic := range findTopic(n, begin) {
+			for _, topic := range findTopic(n, begin, false) {
 				topics = append(topics, topic)
 			}
 		}
@@ -1751,10 +1796,10 @@ func nodePath(top, bottom *Node, nodes map[*Node]bool) bool {
 	retval := false
 	if top.NodeList != nil {
 		for _, n := range top.NodeList {
-			// TODO: alleen primaire links, of niet?
-			//if n.index > 0 {
-			//	n = refnodes[n.index]
-			//}
+			// NIET alleen primaire links (lijkt niet logisch, maar werkt toch beter)
+			if n.index > 0 {
+				n = refnodes[n.index]
+			}
 			if n == bottom {
 				retval = true
 			} else if nodePath(n, bottom, nodes) {

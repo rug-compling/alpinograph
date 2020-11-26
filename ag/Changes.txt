@@ -1,4 +1,143 @@
 
+Versie 5
+========
+
+Het vorfeld werd eerst alleen maar bepaald als het begin van een smain.
+Maar een whq heeft ook een vorfeld hebben.
+
+Oude definitie:
+
+match (x:nw)
+where x.sentid + ' ' + x.id in (
+    select sid
+    from (
+
+        match (n:node{cat:'smain'})-[:rel{rel:'hd'}]->(fin:word)
+        match (n)-[:rel*1..{primary:true}]->(topic:nw)-[rel:rel*0..1]->(htopic:nw)
+        where ( htopic.lemma is not null
+                and htopic.begin < fin.begin
+                and ( length(rel) = 0
+                      or rel[0].rel in ['hd','cmp','crd']
+                    )
+              )
+              or
+              ( topic.begin < fin.begin
+                and
+                topic.end <= fin.begin
+              )
+        return topic.sentid + ' ' + topic.id as sid, n.id as nid
+
+        except
+
+        match (n:node{cat:'smain'})-[:rel{rel:'hd'}]->(fin:word)
+        match (n)-[:rel*1..{primary:true}]->(topic:nw)-[rel:rel*0..1]->(htopic:nw)
+        where ( htopic.lemma is not null
+                and htopic.begin < fin.begin
+                and ( length(rel) = 0
+                      or rel[0].rel in ['hd','cmp','crd']
+                    )
+              )
+              or
+              ( topic.begin < fin.begin
+                and
+                topic.end <= fin.begin
+              )
+        match (topic)<-[:rel*1..]-(nt:node)<-[:rel*1..]-(n)
+        match (nt)-[relt:rel*0..1]->(hnt:nw)
+        where ( hnt.lemma is not null
+                and hnt.begin < fin.begin
+                and ( length(relt) = 0
+                      or relt[0].rel in ['hd','cmp','crd']
+                    )
+              )
+              or
+              ( nt.begin < fin.begin
+                and
+                nt.end <= fin.begin
+              )
+        return topic.sentid + ' ' + topic.id as sid, n.id as nid
+
+    ) as foo
+)
+set x._vorfeld = true;
+
+
+Nieuwe definitie:
+
+Let op die extra voorwaarde r2[0].rel = 'whd'. Anders krijg je in
+Alpino Treebank ook "vooral" als vorfeld in de zin "Wat is begrip en
+vooral , wat is politiek ?" (sentence-ID: 2875).
+
+match (x:nw)
+where x.sentid + ' ' + x.id in (
+    select sid
+    from (
+        match (n:node)-[r:rel*0..1{rel:'body'}]->(nn:node)-[:rel{rel:'hd'}]->(fin:word)
+        where ( n.cat = 'smain' and length(r) = 0 )
+           or ( n.cat = 'whq' and length(r) = 1 and nn.cat = 'sv1' )
+        match (n)-[r2:rel*1..{primary:true}]->(topic:nw)-[rel:rel*0..1]->(htopic:nw)
+        where ( n.cat = 'smain' or r2[0].rel = 'whd' )
+          and ( ( htopic.lemma is not null
+                  and htopic.begin < fin.begin
+                  and ( length(rel) = 0
+                        or rel[0].rel in ['hd','cmp','crd']
+                      )
+                )
+                or
+                ( topic.begin < fin.begin
+                  and
+                  topic.end <= fin.begin
+                )
+              )
+        return topic.sentid + ' ' + topic.id as sid, n.id as nid
+
+        except
+
+        match (n:node)-[r:rel*0..1{rel:'body'}]->(nn:node)-[:rel{rel:'hd'}]->(fin:word)
+        where ( n.cat = 'smain' and length(r) = 0 )
+           or ( n.cat = 'whq' and length(r) = 1 and nn.cat = 'sv1' )
+        match (n)-[r2:rel*1..{primary:true}]->(topic:nw)-[rel:rel*0..1]->(htopic:nw)
+        where ( n.cat = 'smain' or r2[0].rel = 'whd' )
+          and ( ( htopic.lemma is not null
+                  and htopic.begin < fin.begin
+                  and ( length(rel) = 0
+                        or rel[0].rel in ['hd','cmp','crd']
+                      )
+                )
+                or
+                ( topic.begin < fin.begin
+                  and
+                  topic.end <= fin.begin
+                )
+              )
+        match (topic)<-[:rel*1..]-(nt:node)<-[:rel*1..]-(n)
+        match (nt)-[relt:rel*0..1]->(hnt:nw)
+        where ( hnt.lemma is not null
+                and hnt.begin < fin.begin
+                and ( length(relt) = 0
+                      or relt[0].rel in ['hd','cmp','crd']
+                    )
+              )
+              or
+              ( nt.begin < fin.begin
+                and
+                nt.end <= fin.begin
+              )
+        return topic.sentid + ' ' + topic.id as sid, n.id as nid
+
+    ) as foo
+)
+set x._vorfeld = true;
+
+
+Versie 4
+========
+
+De implementatie van vorfeld kwam niet overeen met de definitie. Dat
+leidde tot vele verschillen in het corpus CGN, en enkele verschillen
+in sommige andere corpora.
+
+
 Versie 3
 ========
 
@@ -6,10 +145,12 @@ Wijziging in _cp: als lowercase(lemma) gelijk is aan lowercase(woord),
 dan wordt dat lemma niet opgesplits. Bijvoorbeeld, een url met
 underscores er in.
 
+
 Versie 2
 ========
 
 Nieuw: compound parts _cp
+
 
 Versie 1
 ========
