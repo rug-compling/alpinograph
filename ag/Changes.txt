@@ -1,4 +1,10 @@
 
+Versie 6
+========
+
+Compound parts _cp zonder DIM.
+
+
 Versie 5
 ========
 

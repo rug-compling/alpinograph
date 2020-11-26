@@ -2053,7 +2053,7 @@ func compound(lemma, word string) string {
 	if strings.ToLower(lemma) == strings.ToLower(word) {
 		return q(lemma)
 	}
-	aa := strings.Split(lemma, "_")
+	aa := strings.Split(strings.Replace(lemma, "_DIM", "", -1), "_")
 	for i, a := range aa {
 		aa[i] = q(a)
 	}
