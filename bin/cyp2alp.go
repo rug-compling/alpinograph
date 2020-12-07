@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -159,6 +160,15 @@ type jsAttr struct {
 var (
 	nattrMap = make(map[string][2]string)
 	rattrMap = make(map[string][2]string)
+
+	reEnts = regexp.MustCompile("&#(34|38|39|60|62);")
+	ents   = map[string]string{
+		"&#34;": "&quot;",
+		"&#38;": "&amp;",
+		"&#39;": "&apos;",
+		"&#60;": "&lt;",
+		"&#62;": "&gt;",
+	}
 )
 
 func cyp2alp(sentid string) string {
@@ -369,6 +379,11 @@ func cyp2alp(sentid string) string {
 	xml = strings.Replace(xml, "></node>", "/>", -1)
 	xml = strings.Replace(xml, "></meta>", "/>", -1)
 	xml = strings.Replace(xml, "></data>", "/>", -1)
+
+	// standard XML entities
+	xml = reEnts.ReplaceAllStringFunc(xml, func(s1 string) string {
+		return ents[s1]
+	})
 
 	return xml
 }
