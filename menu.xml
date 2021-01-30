@@ -337,9 +337,8 @@
       ontwikkeld in [PaQu](https://www.let.rug.nl/alfa/paqu/spod), en maakt
       gebruik van query's in XPath. Zie paper:
       > Gertjan van Noord, Jack Hoeksema, Peter Kleiweg, and Gosse Bouma. 2020. &lt;br>
-      > SPOD: Syntactic profiler of Dutch. &lt;br>
-      > *Computational Linguistics in the Netherlands Journal*, 10. Accepted. &lt;br>
-      > TODO: URL
+      > [SPOD: Syntactic profiler of Dutch.](https://www.clinjournal.org/clinj/article/view/110) &lt;br>
+      > *Computational Linguistics in the Netherlands Journal*, 10, pages 129--145. &lt;br>
 
       Voor AlpinoGraph zijn al de SPOD-query's herschreven in Cypher. De
       resultaten die je krijgt met deze nieuwe versies zijn niet altijd gelijk aan
