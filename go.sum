@@ -1,0 +1,16 @@
+github.com/bitnine-oss/agensgraph-golang v0.1.0 h1:a6mzN0y5ySY82lvqNvNa8J9KJdB53Vi1+K1aRHOYcI4=
+github.com/bitnine-oss/agensgraph-golang v0.1.0/go.mod h1:x84yDsJV+xpXVe7lvKrQvtKwGokhIDHDwCaUzg9CM5o=
+github.com/lib/pq v1.9.0 h1:L8nSXQQzAYByakOFMTwpjRoHsMJklur4Gi59b6VivR8=
+github.com/lib/pq v1.9.0/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
+github.com/pebbe/compactcorpus v1.0.0 h1:z76XdaHOGrZT4Pvsy3gQSbKB+JNZ0JO11G0DFlCkGy4=
+github.com/pebbe/compactcorpus v1.0.0/go.mod h1:EvuE+7ufpjWuFrtyRgGUrY2t3BN+kgII666i8NIUVi0=
+github.com/pebbe/dbxml v1.3.0 h1:wXbSUtTZ32uXOE7BAHuTxpd2UWZBdERfhzvP7l6+PoI=
+github.com/pebbe/dbxml v1.3.0/go.mod h1:Hl8vBiwip2cZ3BQHlQ0gBYLuNVaNY++qqYzCyM4U7OA=
+github.com/pebbe/util v0.0.0-20140716220158-e0e04dfe647c h1:v8sa96tiKlyli7NB08SpQAFLsvMhrYupxhpdBrCYH/E=
+github.com/pebbe/util v0.0.0-20140716220158-e0e04dfe647c/go.mod h1:X/ocweApVYXiDQEEfsunYRI4UXw60Ea8u7fYf+aAaEU=
+github.com/rug-compling/alpinods v1.12.3 h1:uXGEnBDeEHLmBAN6UNDkwwz9PSwfxCqNIS3Tiri5c54=
+github.com/rug-compling/alpinods v1.12.3/go.mod h1:QsRpNTvTL2Hb95t3nn3LQmxyjHmXCns7d4Rc5yrdRPI=
+github.com/rug-compling/alud v2.5.0+incompatible h1:P12taEjmXYNIf17KYguKysnOjQyn9pcrunMm976f35o=
+github.com/rug-compling/alud v2.5.0+incompatible/go.mod h1:JKcwXJJlKThRnZF/61U4pa+YdUkArdcvU6N25RQOqvc=
+github.com/yuin/goldmark v1.3.2 h1:YjHC5TgyMmHpicTgEqDN0Q96Xo8K6tLXPnmNOHXCgs0=
+github.com/yuin/goldmark v1.3.2/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
