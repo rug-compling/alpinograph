@@ -1,4 +1,4 @@
-module githib.com/rug-compling/alpinograph
+module github.com/rug-compling/alpinograph
 
 go 1.16
 
