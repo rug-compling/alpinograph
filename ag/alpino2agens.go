@@ -194,7 +194,7 @@ const (
 var (
 	x         = util.CheckErr
 	reCopied  = regexp.MustCompile(`CopiedFrom=([0-9]+)`)
-	reSpecial = regexp.MustCompile(`["\n\\]`)
+	reSpecial = regexp.MustCompile(`["\n\\\t]`)
 	reNoName  = regexp.MustCompile(`[^a-zA-Z0-9]+`)
 
 	refnodes []*Node   // reset per zin
@@ -1533,6 +1533,9 @@ func q(s string) string {
 		}
 		if s1 == `\` {
 			return `\\\\`
+		}
+		if s1 == "\t" {
+			return `\\t`
 		}
 		x(fmt.Errorf("shouldn't happen"))
 		return s1
