@@ -112,7 +112,7 @@
         return w.lemma, count(*)
         order by count desc, lemma
       </item>
-       <item id="tut-next-cp2" lbl="Compound parts (2)">
+      <item id="tut-next-cp2" lbl="Compound parts (2)">
         -- Zoek woorden waarvan het lemma 'fiets' of 'fietsen' bevat
 
         match (w:word)
@@ -121,7 +121,7 @@
         return w.word, count(*)
         order by count desc, word
       </item>
-   </item>
+    </item>
     <item id="tut-pair" lbl="Woordpaar-relaties">
       <item id="tut-pair-pair" lbl="De pair-relatie">
         match p = (:word)-[:pair]->(:word)
@@ -351,6 +351,20 @@
     </item>
 
     <item id="spod-attrib" lbl="Attributen">
+      <item id="spod-attrib-info" lbl="Info" class="info">
+        Hier worden de woordsoorten geteld. De Lassy part-of-speech labels
+        worden geteld via het attribuut **postag**. Er is daarnaast een
+        attribuut **pt** dat de vereenvoudigde weergave geeft van dezelfde
+        informatie: het deel van de postag tot aan het openingshaakje. De
+        documentatie van postag is te vinden in: Frank van Eynde, [Part of
+        speech tagging en lemmatisering van het D-Coi
+        corpus](http://www.let.rug.nl/vannoord/Lassy/POS_manual.pdf), 2005.
+
+        Vanwege historische redenen wordt hier ook het attribuut **pos**
+        opgenomen, maar dit attribuut wordt niet langer onderhouden, is ook
+        niet gedocumenteerd en wordt ook niet gecorrigeerd in de handmatig
+        geannoteerde corpora.
+      </item>
       <item id="spod-pos" lbl="pos">
         match (w:word)
         return w.pos as pos, count(*) as aantal
