@@ -2605,13 +2605,30 @@
           match (w:nw)
           where w.his is not null
           return w
+
+          except
+
+          match (w:nw)-[:rel]->(w2:nw)
+          where w.his is not null
+            and w2.his is not null
+          return w
         </item>
         <item id="spod-his-tel" lbl="telling">
           -- alleen voor automatisch verwerkte corpora
 
-          match (w:nw)
-          where w.his is not null
-          return count(*) as woorden
+          select count(*) as woorden
+          from (
+            match (w:nw)
+            where w.his is not null
+            return w
+
+            except
+
+            match (w:nw)-[:rel]->(w2:nw)
+            where w.his is not null
+              and w2.his is not null
+            return w
+          ) as foo
         </item>
       </item>
       <item id="spod-normal" lbl="woorden uit het woordenboek of de namenlijst">
@@ -2620,12 +2637,26 @@
 
           match (w:nw{his: 'normal'})
           return w
+
+          except
+
+          match (w:nw{his: 'normal'})-[:rel]->(w2:nw)
+          where w2.his is not null
+          return w
         </item>
         <item id="spod-normal-tel" lbl="telling">
           -- alleen voor automatisch verwerkte corpora
+          select count(*) as woorden
+          from (
+            match (w:nw{his: 'normal'})
+            return w
 
-          match (w:nw{his: 'normal'})
-          return count(*) as woorden
+            except
+
+            match (w:nw{his: 'normal'})-[:rel]->(w2:nw)
+            where w2.his is not null
+            return w
+          ) as foo
         </item>
       </item>
       <item id="spod-onbeken" lbl="woorden niet direct uit het woordenboek">
@@ -2636,14 +2667,31 @@
           where w.his is not null
             and not (w.his in ['normal','robust_skip','skip'])
           return w
+
+          except
+
+          match (w:nw)-[:rel]->(w2:nw)
+          where w.his is not null
+            and w2.his is not null
+          return w
         </item>
         <item id="spod-onbeken-tel" lbl="telling">
           -- alleen voor automatisch verwerkte corpora
 
-          match (w:nw)
-          where w.his is not null
-            and not (w.his in ['normal','robust_skip','skip'])
-          return count(*) as woorden
+          select count(*) as woorden
+          from (
+            match (w:nw)
+            where w.his is not null
+              and not (w.his in ['normal','robust_skip','skip'])
+            return w
+
+            except
+
+            match (w:nw)-[:rel]->(w2:nw)
+            where w.his is not null
+              and w2.his is not null
+            return w
+          ) as foo
         </item>
       </item>
       <item id="spod-compoun" lbl="woorden herkend als samenstelling">
@@ -2652,12 +2700,27 @@
 
           match (w:nw{his: 'compound'})
           return w
+
+          except
+
+          match (w:nw{his: 'compound'})-[:rel]->(w2:nw)
+          where w2.his is not null
+          return w
         </item>
         <item id="spod-compoun-tel" lbl="telling">
           -- alleen voor automatisch verwerkte corpora
 
-          match (w:nw{his: 'compound'})
-          return count(*) as woorden
+          select count(*) as woorden
+          from (
+            match (w:nw{his: 'compound'})
+            return w
+
+            except
+
+            match (w:nw{his: 'compound'})-[:rel]->(w2:nw)
+            where w2.his is not null
+            return w
+          ) as foo
         </item>
       </item>
       <item id="spod-name" lbl="woorden herkend als naam (maar niet uit namenlijst)">
@@ -2666,12 +2729,27 @@
 
           match (w:nw{his: 'name'})
           return w
+
+          except
+
+          match (w:nw{his: 'name'})-[:rel]->(w2:nw)
+          where w2.his is not null
+          return w
         </item>
         <item id="spod-name-tel" lbl="telling">
           -- alleen voor automatisch verwerkte corpora
 
-          match (w:nw{his: 'name'})
-          return count(*) as woorden
+          select count(*) as woorden
+          from (
+            match (w:nw{his: 'name'})
+            return w
+
+            except
+
+            match (w:nw{his: 'name'})-[:rel]->(w2:nw)
+            where w2.his is not null
+            return w
+          ) as foo
         </item>
       </item>
       <item id="spod-noun" lbl="onbekende woorden die niet als samenstelling of naam werden herkend">
@@ -2682,14 +2760,31 @@
           where w.his is not null
             and not (w.his in ['normal','compound','name','robust_skip','skip'])
           return w
+
+          except
+
+          match (w:nw)-[:rel]->(w2:nw)
+          where w.his is not null
+            and w2.his is not null
+          return w
         </item>
         <item id="spod-noun-tel" lbl="telling">
           -- alleen voor automatisch verwerkte corpora
 
-          match (w:nw)
-          where w.his is not null
-            and not (w.his in ['normal','compound','name','robust_skip','skip'])
-          return count(*) as woorden
+          select count(*) as woorden
+          from (
+            match (w:nw)
+            where w.his is not null
+              and not (w.his in ['normal','compound','name','robust_skip','skip'])
+            return w
+
+            except
+
+            match (w:nw)-[:rel]->(w2:nw)
+            where w.his is not null
+              and w2.his is not null
+            return w
+          ) as foo
         </item>
       </item>
     </item>
