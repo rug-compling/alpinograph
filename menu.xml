@@ -2220,7 +2220,7 @@
         <item id="spod-ott-tel" lbl="telling">
           match (w:word{pvtijd: 'tgw'})
           where w.lemma != 'hebben' and w.lemma != 'zijn' or not exists ((w)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'}))
-          with w.sentid as sentid, w.id as id
+          with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         </item>
       </item>
@@ -2233,7 +2233,7 @@
         <item id="spod-ovt-tel" lbl="telling">
           match (w:word{pvtijd: 'verl'})
           where w.lemma != 'hebben' and w.lemma != 'zijn' or not exists ((w)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'}))
-          with w.sentid as sentid, w.id as id
+          with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         </item>
       </item>
@@ -2248,7 +2248,7 @@
         <item id="spod-vtt-tel" lbl="telling">
           match (w:word{pvtijd: 'tgw'})&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(n:node{cat: 'ppart'})
           where w.lemma = 'hebben' or w.lemma = 'zijn'
-          with w.sentid as sentid, w.id as id
+          with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         </item>
       </item>
@@ -2263,7 +2263,7 @@
         <item id="spod-vvt-tel" lbl="telling">
           match (w:word{pvtijd: 'verl'})&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(n:node{cat: 'ppart'})
           where w.lemma = 'hebben' or w.lemma = 'zijn'
-          with w.sentid as sentid, w.id as id
+          with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         </item>
       </item>
@@ -2301,7 +2301,7 @@
           match (w1:word{pvtijd: 'tgw'})&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;()-[:rel{rel: 'body'}]-&gt;()-[:rel{rel: 'hd'}]-&gt;(w2:word{pvtijd: 'tgw'})
           where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
             and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
-          with w1.sentid as sentid, w1.id as id
+          with distinct w1.sentid as sentid, w1.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         </item>
       </item>
@@ -2316,7 +2316,7 @@
           match (w1:word{pvtijd: 'tgw'})&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;()-[:rel{rel: 'body'}]-&gt;()-[:rel{rel: 'hd'}]-&gt;(w2:word{pvtijd: 'verl'})
           where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
             and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
-          with w1.sentid as sentid, w1.id as id
+          with distinct w1.sentid as sentid, w1.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         </item>
       </item>
@@ -2331,7 +2331,7 @@
           match (w1:word{pvtijd: 'verl'})&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;()-[:rel{rel: 'body'}]-&gt;()-[:rel{rel: 'hd'}]-&gt;(w2:word{pvtijd: 'tgw'})
           where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
             and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
-          with w1.sentid as sentid, w1.id as id
+          with distinct w1.sentid as sentid, w1.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         </item>
       </item>
@@ -2346,7 +2346,7 @@
           match (w1:word{pvtijd: 'verl'})&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;()-[:rel{rel: 'body'}]-&gt;()-[:rel{rel: 'hd'}]-&gt;(w2:word{pvtijd: 'verl'})
           where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
             and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
-          with w1.sentid as sentid, w1.id as id
+          with distinct w1.sentid as sentid, w1.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         </item>
       </item>
