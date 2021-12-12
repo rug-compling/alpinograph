@@ -2195,6 +2195,163 @@
       </item>
     </item>
 
+    <item id="spod-wwtijden" lbl="Werkwoordstijden ">
+      <item id="spod-wwtijden-info" lbl="Info" class="info">
+        We onderscheiden de vier klassieke werkwoordstijden: onvoltooid
+        tegenwoordige tijd (1), onvoltooid verleden tijd (2), voltooid
+        tegenwoordige tijd (3) en voltooid verleden tijd (4).
+
+        |      |    |
+        | ---: | -- |
+        | (1)  | De bakker bakt het brood |
+        |      | &amp;nbsp; |
+        | (2)  | De bakker bakte het brood |
+        |      | &amp;nbsp; |
+        | (3)  | De bakker heeft het brood gebakken |
+        |      | &amp;nbsp; |
+        | (4)  | De bakker had het brood gebakken |
+      </item>
+      <item id="spod-ott" lbl="Onvoltooid tegenwoordige tijd">
+        <item id="spod-ott-zin" lbl="zinnen">
+          match (w:word{pvtijd: 'tgw'})
+          where w.lemma != 'hebben' and w.lemma != 'zijn' or not exists ((w)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'}))
+          return w
+        </item>
+        <item id="spod-ott-tel" lbl="telling">
+          match (w:word{pvtijd: 'tgw'})
+          where w.lemma != 'hebben' and w.lemma != 'zijn' or not exists ((w)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'}))
+          with w.sentid as sentid, w.id as id
+          return count(distinct(sentid)) as zinnen, count(*) as items
+        </item>
+      </item>
+      <item id="spod-ovt" lbl="Onvoltooid verleden tijd">
+        <item id="spod-ovt-zin" lbl="zinnen">
+          match (w:word{pvtijd: 'verl'})
+          where w.lemma != 'hebben' and w.lemma != 'zijn' or not exists ((w)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'}))
+          return w
+        </item>
+        <item id="spod-ovt-tel" lbl="telling">
+          match (w:word{pvtijd: 'verl'})
+          where w.lemma != 'hebben' and w.lemma != 'zijn' or not exists ((w)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'}))
+          with w.sentid as sentid, w.id as id
+          return count(distinct(sentid)) as zinnen, count(*) as items
+        </item>
+      </item>
+      <item id="spod-vtt" lbl="Voltooid tegenwoordige tijd">
+        <item id="spod-vtt-zin" lbl="zinnen">
+          match (w:word{pvtijd: 'tgw'})&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(n:node{cat: 'ppart'})
+          optional match (n)-[:rel{rel:'hd'}]-&gt;(w2)
+          with w, w2
+          where w.lemma = 'hebben' or w.lemma = 'zijn'
+          return w, w2
+        </item>
+        <item id="spod-vtt-tel" lbl="telling">
+          match (w:word{pvtijd: 'tgw'})&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(n:node{cat: 'ppart'})
+          where w.lemma = 'hebben' or w.lemma = 'zijn'
+          with w.sentid as sentid, w.id as id
+          return count(distinct(sentid)) as zinnen, count(*) as items
+        </item>
+      </item>
+      <item id="spod-vvt" lbl="Voltooid verleden tijd">
+        <item id="spod-vvt-zin" lbl="zinnen">
+          match (w:word{pvtijd: 'verl'})&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(n:node{cat: 'ppart'})
+          optional match (n)-[:rel{rel:'hd'}]-&gt;(w2)
+          with w, w2
+          where w.lemma = 'hebben' or w.lemma = 'zijn'
+          return w, w2
+        </item>
+        <item id="spod-vvt-tel" lbl="telling">
+          match (w:word{pvtijd: 'verl'})&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(n:node{cat: 'ppart'})
+          where w.lemma = 'hebben' or w.lemma = 'zijn'
+          with w.sentid as sentid, w.id as id
+          return count(distinct(sentid)) as zinnen, count(*) as items
+        </item>
+      </item>
+    </item>
+
+    <item id="spod-wwvolgorde" lbl="Volgorde van werkwoordstijden">
+      <item id="spod-wwvolgorde-info" lbl="Info" class="info">
+        Deze queries onderscheiden finiete zinnen die zelf een finiet
+        zinscomplement bevatten. Hierbij kijken we naar de combinaties van de
+        (onvoltooide) werkwoordstijd van de persoonsvorm in de dominerende zin
+        en de (onvoltooide) werkwoordstijd van de persoonsvorm in de zin die
+        als complement optreedt. De combinaties zijn dan tegenwoordige tijd
+        met tegenwoordige tijd (1), tegenwoordige tijd met verleden tijd (2),
+        verleden tijd met tegenwoordige tijd (3) en verleden tijd met verleden
+        tijd (4).
+
+        |      |    |
+        | ---: | -- |
+        | (1)  | De minister verklaart dat de economie blijft groeien |
+        |      | &amp;nbsp; |
+        | (2)  | De minister verklaart dat hij het dossier in de trein liet liggen |
+        |      | &amp;nbsp; |
+        | (3)  | De minister verklaarde dat de economie blijft groeien |
+        |      | &amp;nbsp; |
+        | (4)  | De minister verklaarde dat hij het dossier in de trein liet liggen |
+      </item>
+      <item id="spod-ottott" lbl="ott, ott: &quot;hij zegt dat hij komt&quot;">
+        <item id="spod-ottott-zin" lbl="zinnen">
+          match (w1:word{pvtijd: 'tgw'})&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;()-[:rel{rel: 'body'}]-&gt;()-[:rel{rel: 'hd'}]-&gt;(w2:word{pvtijd: 'tgw'})
+          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
+            and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
+          return w1, w2
+        </item>
+        <item id="spod-ottott-tel" lbl="telling">
+          match (w1:word{pvtijd: 'tgw'})&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;()-[:rel{rel: 'body'}]-&gt;()-[:rel{rel: 'hd'}]-&gt;(w2:word{pvtijd: 'tgw'})
+          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
+            and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
+          with w1.sentid as sentid, w1.id as id
+          return count(distinct(sentid)) as zinnen, count(*) as items
+        </item>
+      </item>
+      <item id="spod-ottovt" lbl="ott, ovt: &quot;hij zegt dat hij kwam&quot;">
+        <item id="spod-ottovt-zin" lbl="zinnen">
+          match (w1:word{pvtijd: 'tgw'})&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;()-[:rel{rel: 'body'}]-&gt;()-[:rel{rel: 'hd'}]-&gt;(w2:word{pvtijd: 'verl'})
+          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
+            and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
+          return w1, w2
+        </item>
+        <item id="spod-ottovt-tel" lbl="telling">
+          match (w1:word{pvtijd: 'tgw'})&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;()-[:rel{rel: 'body'}]-&gt;()-[:rel{rel: 'hd'}]-&gt;(w2:word{pvtijd: 'verl'})
+          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
+            and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
+          with w1.sentid as sentid, w1.id as id
+          return count(distinct(sentid)) as zinnen, count(*) as items
+        </item>
+      </item>
+      <item id="spod-ovtott" lbl="ovt, ott: &quot;hij zei dat hij komt&quot;">
+        <item id="spod-ovtott-zin" lbl="zinnen">
+          match (w1:word{pvtijd: 'verl'})&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;()-[:rel{rel: 'body'}]-&gt;()-[:rel{rel: 'hd'}]-&gt;(w2:word{pvtijd: 'tgw'})
+          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
+            and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
+          return w1, w2
+        </item>
+        <item id="spod-ovtott-tel" lbl="telling">
+          match (w1:word{pvtijd: 'verl'})&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;()-[:rel{rel: 'body'}]-&gt;()-[:rel{rel: 'hd'}]-&gt;(w2:word{pvtijd: 'tgw'})
+          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
+            and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
+          with w1.sentid as sentid, w1.id as id
+          return count(distinct(sentid)) as zinnen, count(*) as items
+        </item>
+      </item>
+      <item id="spod-ovtovt" lbl="ovt, ovt: &quot;hij zei dat hij kwam&quot;">
+        <item id="spod-ovtovt-zin" lbl="zinnen">
+          match (w1:word{pvtijd: 'verl'})&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;()-[:rel{rel: 'body'}]-&gt;()-[:rel{rel: 'hd'}]-&gt;(w2:word{pvtijd: 'verl'})
+          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
+            and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
+          return w1, w2
+        </item>
+        <item id="spod-ovtovt-tel" lbl="telling">
+          match (w1:word{pvtijd: 'verl'})&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;()-[:rel{rel: 'body'}]-&gt;()-[:rel{rel: 'hd'}]-&gt;(w2:word{pvtijd: 'verl'})
+          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
+            and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)&lt;-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]-&gt;(:node{cat: 'ppart'})))
+          with w1.sentid as sentid, w1.id as id
+          return count(distinct(sentid)) as zinnen, count(*) as items
+        </item>
+      </item>
+    </item>
+
     <item id="spod-inb" lbl="Inbedding">
       <item id="spod-inb-info" lbl="Info" class="info">
         Bij deze queries wordt gekeken naar de complexiteit van de zinnen in termen
