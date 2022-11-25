@@ -108,7 +108,7 @@
         -- Het attribuut '_cp' van een 'word' bevat de compound parts van het lemma
 
         match (w:word)
-        where length(w._cp) > 1
+        where length(w._cp) &gt; 1
         return w.lemma, count(*)
         order by count desc, lemma
       </item>
@@ -1233,13 +1233,13 @@
         <item id="spod-crd2p-zin" lbl="zinnen">
           match (n:node{cat: 'conj'})-[:rel{rel: 'crd'}]->()
           with n, count(*) as cnt
-          where cnt > 2
+          where cnt &gt; 2
           return n.sentid, n.id
         </item>
         <item id="spod-crd2p-tel" lbl="telling">
           match (n:node{cat: 'conj'})-[:rel{rel: 'crd'}]->()
           with n, count(*) as cnt
-          where cnt > 2
+          where cnt &gt; 2
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         </item>
@@ -1385,13 +1385,13 @@
         <item id="spod-cnj6p-zin" lbl="zinnen">
           match (n:node{cat: 'conj'})-[:rel{rel: 'cnj'}]->()
           with n, count(*) as cnt
-          where cnt > 6
+          where cnt &gt; 6
           return n.sentid, n.id
         </item>
         <item id="spod-cnj6p-tel" lbl="telling">
           match (n:node{cat: 'conj'})-[:rel{rel: 'cnj'}]->()
           with n, count(*) as cnt
-          where cnt > 6
+          where cnt &gt; 6
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         </item>
@@ -1770,6 +1770,166 @@
       </item>
     </item>
 
+    <item id="spod-aj" lbl="Adjectiefgroepen">
+      <item id="spod-aj-info" lbl="Info" class="info">
+        Adjectiefgroepen worden onderscheiden naar grammaticale functie en naar
+        interne structuur. Adjectiefgroepen kunnen optreden als bepaling bij nomina (1), (2),
+        traditioneel "bijvoegelijke bepaling" genoemd, en bij werkwoorden of andere bijvoeglijke
+        naamwoorden (3), (4), traditioneel bijwoordelijke bepaling genoemd. Adjectiefgroepen kunnen
+        ook optreden met als relatie "predm", en dat zijn gevallen die traditionaal bekend staan als
+        bepaling van gesteldheid (5) (6). Ten slotte kan een adjectiefgroep optreden als predicatief
+        complement (naamwoordelijk deel van het gezegde), zoals in (7), (8).
+
+        | | |
+        | ---: | -- |
+        | (1) | De *aardige* buurman |
+        | (2) | De *nogal vervelende* vergadering |
+        |  | &amp;nbsp; |
+        | (3) | Hij trapte de bal *hard* over het doel |
+        | (4) | De dienst is *volledig* kosteloos |
+        |  | &amp;nbsp; |
+        | (5) | Hij kwam *ziek* binnen |
+        | (6) | Hij liet het knipsel *dol van trots* aan iedereen zien |
+        |  | &amp;nbsp; |
+        | (7) | Ik vind dat *idioot* |
+        | (8) | De dienst is *volledig kosteloos* |
+        |  | &amp;nbsp; |
+        | (9) | Het boek is *beschikbaar via de uitgever* |
+        |  | &amp;nbsp; |
+        | (10) | Het boek werd *tien jaar later* gepubliceerd |
+        | (11) | De *mij onbekende* schrijver bleek een natuurtalent |
+        |  | &amp;nbsp; |
+        | (12) | De schat is *afkomstig uit Japan* |
+        | (13) | Ron is *bang dat dit iets te maken heeft met Sirius Zwarts* |
+
+        Adjectiefgroepen kunnen ook onderverdeel worden aan de hand van hun interne structuur.
+        We onderscheiden adjectieven die hun eentje optreden (1), (3), (4), (5), (7); adjectieven die voorkomen
+        met een bepaling ter linkerzijde (2), (8); adjectieven die voorkomen met een bepaling rechts van
+        het adjectief (9); adjectieven die voorkomen met een complement, links van het adjectief (10), (11) en
+        ten slotte de gevallen waarbij het adjectief optreedt met een complement ter rechterzijde (12), (13).
+      </item>
+      <item id="spod-ajbepn" lbl="grammaticale functie, bijvoegelijke bepaling (bepaling bij zelfstandig naamwoord)">
+        <item id="spod-ajbepn-zin" lbl="zinnen">
+          match (n)&lt;-[:rel*0..1{rel: 'cnj'}]-()&lt;-[:rel{rel: 'mod'}]-({cat: 'np'})
+          where n.cat = 'ap' or n.pt = 'adj'
+          return n.sentid, n.id
+        </item>
+        <item id="spod-ajbepn-tel" lbl="telling">
+          match (n)&lt;-[:rel*0..1{rel: 'cnj'}]-()&lt;-[:rel{rel: 'mod'}]-({cat: 'np'})
+          where n.cat = 'ap' or n.pt = 'adj'
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(*) as items
+        </item>
+      </item>
+      <item id="spod-ajbepva" lbl="grammaticale functie, bijwoordelijke bepaling (bepaling bij werkwoord, adjectief, ...)">
+        <item id="spod-ajbepva-zin" lbl="zinnen">
+          match (n)&lt;-[:rel*0..1{rel: 'cnj'}]-()&lt;-[:rel{rel: 'mod'}]-(n2:node)
+          where n2.cat != 'np' and (n.cat = 'ap' or n.pt = 'adj')
+          return n.sentid, n.id
+        </item>
+        <item id="spod-ajbepva-tel" lbl="telling">
+          match (n)&lt;-[:rel*0..1{rel: 'cnj'}]-()&lt;-[:rel{rel: 'mod'}]-(n2:node)
+          where n2.cat != 'np' and (n.cat = 'ap' or n.pt = 'adj')
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(*) as items
+        </item>
+      </item>
+      <item id="spod-ajpredm" lbl="grammaticale functie, bepaling van gesteldheid etc.">
+        <item id="spod-ajpredm-zin" lbl="zinnen">
+          match (n)&lt;-[:rel*0..1{rel: 'cnj'}]-()&lt;-[:rel{rel: 'predm'}]-()
+          where n.cat = 'ap' or n.pt = 'adj'
+          return n.sentid, n.id
+        </item>
+        <item id="spod-ajpredm-tel" lbl="telling">
+          match (n)&lt;-[:rel*0..1{rel: 'cnj'}]-()&lt;-[:rel{rel: 'predm'}]-()
+          where n.cat = 'ap' or n.pt = 'adj'
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(*) as items
+        </item>
+      </item>
+      <item id="spod-ajpredc" lbl="grammaticale functie, predicatief complement">
+        <item id="spod-ajpredc-zin" lbl="zinnen">
+          match (n)&lt;-[:rel*0..1{rel: 'cnj'}]-()&lt;-[:rel{rel: 'predc'}]-()
+          where n.cat = 'ap' or n.pt = 'adj'
+          return n.sentid, n.id
+        </item>
+        <item id="spod-ajpredc-tel" lbl="telling">
+          match (n)&lt;-[:rel*0..1{rel: 'cnj'}]-()&lt;-[:rel{rel: 'predc'}]-()
+          where n.cat = 'ap' or n.pt = 'adj'
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(*) as items
+        </item>
+      </item>
+      <item id="spod-ajaj" lbl="interne structuur, ADJ">
+        <item id="spod-ajaj-zin" lbl="zinnen">
+          match (n:word{pt: 'adj'})&lt;-[r:rel]-()
+          where r.rel != 'hd'
+          return n.sentid, n.id
+        </item>
+        <item id="spod-ajaj-tel" lbl="telling">
+          match (n:word{pt: 'adj'})&lt;-[r:rel]-()
+          where r.rel != 'hd'
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(*) as items
+        </item>
+      </item>
+      <item id="spod-ajmodaj" lbl="interne structuur, MOD ADJ">
+        <item id="spod-ajmodaj-zin" lbl="zinnen">
+          match (n1)&lt;-[:rel{rel: 'mod'}]-(n{cat: 'ap'})-[:rel{rel: 'hd'}]->(n2)
+          where n1.begin &lt; n2.begin
+          return n.sentid, n.id
+        </item>
+        <item id="spod-ajmodaj-tel" lbl="telling">
+          match (n1)&lt;-[:rel{rel: 'mod'}]-(n{cat: 'ap'})-[:rel{rel: 'hd'}]->(n2)
+          where n1.begin &lt; n2.begin
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(*) as items
+        </item>
+      </item>
+      <item id="spod-ajcaj" lbl="interne structuur|, COMPL ADJ">
+        <item id="spod-ajcaj-zin" lbl="zinnen">
+          match (n1)&lt;-[r:rel]-(n{cat: 'ap'})-[:rel{rel: 'hd'}]->(n2)
+          optional match (n1)-[:rel*0]->(n1v{_vorfeld: true})
+          with n, n1, n2, n1v, r
+          where any(x in ['predc','obj1','obj2','pc','me','vc'] where x = r.rel)
+            and n1v is null
+            and n1.begin &lt; n2.begin
+          return n.sentid, n.id
+        </item>
+        <item id="spod-ajcaj-tel" lbl="telling">
+          match (n1)&lt;-[r:rel]-(n{cat: 'ap'})-[:rel{rel: 'hd'}]->(n2)
+          optional match (n1)-[:rel*0]->(n1v{_vorfeld: true})
+          with n, n1, n2, n1v, r
+          where any(x in ['predc','obj1','obj2','pc','me','vc'] where x = r.rel)
+            and n1v is null
+            and n1.begin &lt; n2.begin
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(*) as items
+        </item>
+      </item>
+      <item id="spod-ajajmod" lbl="interne structuur, ADJ MOD">
+        <item id="spod-ajajmod-zin" lbl="zinnen">
+          match (n1)&lt;-[:rel{rel: 'mod'}]-(n{cat: 'ap'})-[:rel{rel: 'hd'}]->(n2)
+          where n1.begin &gt; n2.begin
+          return n.sentid, n.id
+        </item>
+        <item id="spod-ajajmod-tel" lbl="telling">
+          match (n1)&lt;-[:rel{rel: 'mod'}]-(n{cat: 'ap'})-[:rel{rel: 'hd'}]->(n2)
+          where n1.begin &gt; n2.begin
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(*) as items
+        </item>
+      </item>
+      <item id="spod-ajajc" lbl="interne structuur, ADJ COMPL">
+        <item id="spod-ajajc-zin" lbl="zinnen">
+          -- nog niet beschikbaar
+        </item>
+        <item id="spod-ajajc-tel" lbl="telling">
+          -- nog niet beschikbaar
+        </item>
+      </item>
+    </item>
+
     <item id="spod-ww" lbl="Werkwoorden">
       <item id="spod-ww-info" lbl="Info" class="info">
         Onder het kopje werkwoorden worden de vaste werkwoordelijke uitdrukkingen geteld (1).
@@ -1865,7 +2025,7 @@
           optional match (n)&lt;-[:rel]-()&lt;-[:rel]-(n2:node{cat: 'smain'})
           optional match (n)&lt;-[:rel]-()&lt;-[:rel]-(n3:node{cat: 'sv1'})
           with n, n2, n3, w
-          where n.begin > w.begin
+          where n.begin &gt; w.begin
             and n2 is null
             and n3 is null
           return n.sentid, n.id
@@ -1875,7 +2035,7 @@
           optional match (n)&lt;-[:rel]-()&lt;-[:rel]-(n2:node{cat: 'smain'})
           optional match (n)&lt;-[:rel]-()&lt;-[:rel]-(n3:node{cat: 'sv1'})
           with n, n2, n3, w
-          where n.begin > w.begin
+          where n.begin &gt; w.begin
             and n2 is null
             and n3 is null
           with distinct n.sentid as sentid, n.id as id
@@ -2648,14 +2808,14 @@
           -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence)
-          where s.cats > 3
+          where s.cats &gt; 3
           return s
         </item>
         <item id="spod-cats4-tel" lbl="telling">
           -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence)
-          where s.cats > 3
+          where s.cats &gt; 3
           return count(*) as zinnen
         </item>
       </item>
@@ -2728,14 +2888,14 @@
           -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence)
-          where s.skips > 3
+          where s.skips &gt; 3
           return s
         </item>
         <item id="spod-skips4-tel" lbl="telling">
           -- alleen voor automatisch verwerkte corpora
 
           match (s:sentence)
-          where s.skips > 3
+          where s.skips &gt; 3
           return count(*) as zinnen
         </item>
       </item>
