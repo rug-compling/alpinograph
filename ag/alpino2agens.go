@@ -64,6 +64,7 @@ type Node struct {
 	rels        []string
 	vorfeld     map[int]bool
 	vorfeldSkip map[int]bool
+	nachfeld    bool
 
 	Aform        string `xml:"aform,attr"`
 	Begin        int    `xml:"begin,attr"`
@@ -240,6 +241,24 @@ var (
 	}
 	nattrMap = make(map[string][2]string)
 	rattrMap = make(map[string][2]string)
+
+	vpCat = map[string]bool{
+		"inf":   true,
+		"ti":    true,
+		"ssub":  true,
+		"oti":   true,
+		"ppart": true,
+	}
+	rHead = map[string]bool{
+		"hd":   true,
+		"cmp":  true,
+		"mwp":  true,
+		"crd":  true,
+		"rhd":  true,
+		"whd":  true,
+		"nucl": true,
+		"dp":   true,
+	}
 )
 
 func usage() {
@@ -369,6 +388,13 @@ LOOP:
 		prepare(alpino.Node0, 0)
 		prepareRels(alpino.Node0)
 		prepareVorfeld(alpino.Node0)
+		if alpino.Sentence.SentId == "cdb1139" {
+			debug = true
+		}
+		prepareNachfeld(alpino.Node0)
+		if alpino.Sentence.SentId == "cdb1139" {
+			debug = false
+		}
 		addIndexParents(alpino.Node0)
 		wordcount(alpino.Node0)
 
@@ -682,6 +708,7 @@ create property index on word("_cp");
 create property index on word("_deste");
 create property index on word("_np");
 create property index on word("_vorfeld");
+create property index on word("_nachfeld");
 create property index on node("cat");
 create property index on node("graad");
 create property index on node("id");
@@ -699,6 +726,7 @@ create property index on node("_cp");
 create property index on node("_deste");
 create property index on node("_np");
 create property index on node("_vorfeld");
+create property index on node("_nachfeld");
 create property index on rel("id");
 create property index on rel("primary");
 create property index on rel("rel");
@@ -796,11 +824,15 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 		if isVorfeld(node) {
 			vorfeld = `, "_vorfeld": true`
 		}
+		nachfeld := ""
+		if node.nachfeld {
+			nachfeld = `, "_nachfeld": true`
+		}
 		deste := ""
 		if isDeste(node) {
 			deste = `, "_deste": true`
 		}
-		jsn := fmt.Sprintf("{\"sentid\": %s, \"id\": %d, \"begin\": %d, \"end\": %d, \"_n_words\": %d%s%s%s%s%s%s}",
+		jsn := fmt.Sprintf("{\"sentid\": %s, \"id\": %d, \"begin\": %d, \"end\": %d, \"_n_words\": %d%s%s%s%s%s%s%s}",
 			q(sentid),
 			node.Id,
 			node.Begin,
@@ -811,6 +843,7 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 			lvl,
 			np,
 			vorfeld,
+			nachfeld,
 			deste)
 		fmt.Fprintf(fpNode, "%s\t%s\n", node.aid, jsn)
 		featureCount("node", jsn)
@@ -851,7 +884,11 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 		if isVorfeld(node) {
 			vorfeld = `, "_vorfeld": true`
 		}
-		jsn := fmt.Sprintf("{\"sentid\": %s, \"id\": %d, \"begin\": %d, \"end\": %d, \"_n_words\": %d%s%s%s%s, \"_cp\": [%s]}",
+		nachfeld := ""
+		if node.nachfeld {
+			nachfeld = `, "_nachfeld": true`
+		}
+		jsn := fmt.Sprintf("{\"sentid\": %s, \"id\": %d, \"begin\": %d, \"end\": %d, \"_n_words\": %d%s%s%s%s%s, \"_cp\": [%s]}",
 			q(sentid),
 			node.Id,
 			node.Begin,
@@ -861,9 +898,85 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 			feats[node.Begin],
 			np,
 			vorfeld,
+			nachfeld,
 			compound(node.Lemma, node.Word))
 		fmt.Fprintf(fpWord, "%s\t%s\n", node.aid, jsn)
 		featureCount("word", jsn)
+	}
+}
+
+func findNachfeld(node *Node) {
+	if !vpCat[node.Cat] {
+		return
+	}
+
+	if node.NodeList == nil || len(node.NodeList) == 0 {
+		return
+	}
+
+	// zoek begin van head
+	headBegin := -1
+	for _, n := range node.NodeList {
+		if n.Index != "" {
+			n = refnodes[n.index]
+		}
+		if n.Rel == "hd" {
+			headBegin = n.Begin
+			break
+		}
+	}
+	if headBegin < 0 {
+		return
+	}
+
+	// zoek nachfeld
+	for _, n := range node.NodeList {
+		if n.Index != "" {
+			n = refnodes[n.index]
+		}
+		if n.Rel != "hd" {
+			setNachfeld(n, headBegin)
+		}
+	}
+}
+
+func setNachfeld(node *Node, begin int) {
+	if node.Rel != "hd" && node.Rel != "svp" && node.Cat != "inf" && node.Cat != "ppart" {
+		var n2 *Node
+		if node.NodeList != nil {
+			for _, nn2 := range node.NodeList {
+				if nn2.Index != "" {
+					nn2 = refnodes[nn2.index]
+				}
+				if rHead[nn2.Rel] {
+					n2 = nn2
+					break
+				}
+			}
+		}
+		if n2 == nil {
+			if begin < node.Begin {
+				node.nachfeld = true
+				return
+			}
+		} else {
+			if begin < n2.Begin {
+				node.nachfeld = true
+				return
+			}
+		}
+	}
+	if vpCat[node.Cat] {
+		return
+	}
+	if node.NodeList == nil {
+		return
+	}
+	for _, n := range node.NodeList {
+		if n.Index != "" {
+			n = refnodes[n.index]
+		}
+		setNachfeld(n, begin)
 	}
 }
 
@@ -1655,6 +1768,15 @@ func prepareRels(node *Node) {
 	if node.NodeList != nil {
 		for _, n := range node.NodeList {
 			prepareRels(n)
+		}
+	}
+}
+
+func prepareNachfeld(node *Node) {
+	findNachfeld(node)
+	if node.NodeList != nil {
+		for _, n := range node.NodeList {
+			prepareNachfeld(n)
 		}
 	}
 }
