@@ -1,3 +1,10 @@
+Versie 10
+=========
+
+[:rel{primary}] hernoemd naar [:rel{prime}]
+
+'primary' is een gereserveerd woord in nieuwere versie van AgensGraph
+
 Versie 9
 ========
 

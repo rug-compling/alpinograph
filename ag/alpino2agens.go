@@ -75,6 +75,8 @@ type Node struct {
 	Conjtype     string `xml:"conjtype,attr"`
 	Def          string `xml:"def,attr"`
 	Dial         string `xml:"dial,attr"`
+	DroppedAgr   string `xml:"dropped_agr,attr"`
+	DroppedPrs   string `xml:"dropped_prs,attr"`
 	Dscmanual    string `xml:"dscmanual,attr"`
 	Dscsense     string `xml:"dscsense,attr"`
 	End          int    `xml:"end,attr"`
@@ -103,6 +105,9 @@ type Node struct {
 	Iets         string `xml:"iets,attr"`
 	Index        string `xml:"index,attr"`
 	index        int
+	IsNachfeld   string `xml:"is_nachfeld,attr"`
+	IsNp         string `xml:"is_np,attr"`
+	IsVorfeld    string `xml:"is_vorfeld,attr"`
 	Infl         string `xml:"infl,attr"`
 	Lcat         string `xml:"lcat,attr"`
 	Lemma        string `xml:"lemma,attr"`
@@ -142,6 +147,7 @@ type Node struct {
 	Status       string `xml:"status,attr"`
 	Stype        string `xml:"stype,attr"`
 	Tense        string `xml:"tense,attr"`
+	VPer         string `xml:"v_per,attr"`
 	Vform        string `xml:"vform,attr"`
 	Vwtype       string `xml:"vwtype,attr"`
 	Vztype       string `xml:"vztype,attr"`
@@ -388,13 +394,7 @@ LOOP:
 		prepare(alpino.Node0, 0)
 		prepareRels(alpino.Node0)
 		prepareVorfeld(alpino.Node0)
-		if alpino.Sentence.SentId == "cdb1139" {
-			debug = true
-		}
 		prepareNachfeld(alpino.Node0)
-		if alpino.Sentence.SentId == "cdb1139" {
-			debug = false
-		}
 		addIndexParents(alpino.Node0)
 		wordcount(alpino.Node0)
 
@@ -492,14 +492,14 @@ LOOP:
 			q(sentid), q(alpino.Sentence.Sent), alpino.Node0.End, buf.String())
 
 		nRel++
-		fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"primary\": true%s}\n",
+		fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"prime\": true%s}\n",
 			idRel, nRel,
 			lblSentence,
 			alpino.Node0.aid,
 			q(alpino.Node0.Rel),
 			relExtra(alpino.Node0))
 		featureMap["rel"]["rel"] = featureMap["rel"]["rel"] + 1
-		featureMap["rel"]["primary"] = featureMap["rel"]["primary"] + 1
+		featureMap["rel"]["prime"] = featureMap["rel"]["prime"] + 1
 
 		doNode1(sentid, alpino.Node0, alpino.Node0.End, feats)
 
@@ -541,7 +541,7 @@ LOOP:
 					for _, n := range node.NodeList {
 						if n.Index != "" && n.Word == "" && n.Cat == "" {
 							nRel++
-							fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"primary\": false, \"id\": %d%s}\n",
+							fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"prime\": false, \"id\": %d%s}\n",
 								idRel, nRel,
 								node.aid,
 								indexen[n.Index],
@@ -549,7 +549,7 @@ LOOP:
 								n.Id,
 								relExtra(n))
 							featureMap["rel"]["rel"] = featureMap["rel"]["rel"] + 1
-							featureMap["rel"]["primary"] = featureMap["rel"]["primary"] + 1
+							featureMap["rel"]["prime"] = featureMap["rel"]["prime"] + 1
 							featureMap["rel"]["id"] = featureMap["rel"]["id"] + 1
 						}
 						f(n)
@@ -728,7 +728,7 @@ create property index on node("_np");
 create property index on node("_vorfeld");
 create property index on node("_nachfeld");
 create property index on rel("id");
-create property index on rel("primary");
+create property index on rel("prime");
 create property index on rel("rel");
 create property index on pair("rel");
 create property index on ud("rel");
@@ -935,33 +935,70 @@ func findNachfeld(node *Node) {
 			n = refnodes[n.index]
 		}
 		if n.Rel != "hd" {
-			setNachfeld(n, headBegin)
+			setNachfeld(n, headBegin, node)
 		}
 	}
 }
 
-func setNachfeld(node *Node, begin int) {
+func setNachfeld(node *Node, begin int, vp *Node) {
 	if node.Rel != "hd" && node.Rel != "svp" && node.Cat != "inf" && node.Cat != "ppart" {
-		var n2 *Node
+
+		var skip func(*Node, int) bool
+		skip = func(current *Node, state int) bool {
+			if current.Index != "" {
+				current = refnodes[current.index]
+			}
+			if current == node {
+				return state == 2
+			}
+			switch state {
+			case 0:
+				state = 1
+			case 1:
+				if vpCat[current.Cat] {
+					state = 2
+				}
+			}
+			if current.NodeList != nil {
+				for _, n := range current.NodeList {
+					if skip(n, state) {
+						return true
+					}
+				}
+			}
+			return false
+		}
+
+		n2 := make([]*Node, 0)
 		if node.NodeList != nil {
 			for _, nn2 := range node.NodeList {
 				if nn2.Index != "" {
 					nn2 = refnodes[nn2.index]
 				}
 				if rHead[nn2.Rel] {
-					n2 = nn2
-					break
+					n2 = append(n2, nn2)
 				}
 			}
 		}
-		if n2 == nil {
+		if len(n2) == 0 {
 			if begin < node.Begin {
-				node.nachfeld = true
+				if !skip(vp, 0) {
+					node.nachfeld = true
+				}
 				return
 			}
 		} else {
-			if begin < n2.Begin {
-				node.nachfeld = true
+			ok := true
+			for _, nn2 := range n2 {
+				if begin >= nn2.Begin {
+					ok = false
+					break
+				}
+			}
+			if ok {
+				if !skip(vp, 0) {
+					node.nachfeld = true
+				}
 				return
 			}
 		}
@@ -976,7 +1013,7 @@ func setNachfeld(node *Node, begin int) {
 		if n.Index != "" {
 			n = refnodes[n.index]
 		}
-		setNachfeld(n, begin)
+		setNachfeld(n, begin, vp)
 	}
 }
 
@@ -993,27 +1030,27 @@ func doNode2(node *Node) {
 	for _, n := range node.NodeList {
 		if n.Cat != "" {
 			nRel++
-			fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"primary\": true%s}\n",
+			fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"prime\": true%s}\n",
 				idRel, nRel,
 				node.aid,
 				n.aid,
 				q(n.Rel),
 				relExtra(n))
 			featureMap["rel"]["rel"] = featureMap["rel"]["rel"] + 1
-			featureMap["rel"]["primary"] = featureMap["rel"]["primary"] + 1
+			featureMap["rel"]["prime"] = featureMap["rel"]["prime"] + 1
 			doNode2(n)
 			continue
 		}
 		if n.Word != "" {
 			nRel++
-			fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"primary\": true%s}\n",
+			fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"prime\": true%s}\n",
 				idRel, nRel,
 				node.aid,
 				n.aid,
 				q(n.Rel),
 				relExtra(n))
 			featureMap["rel"]["rel"] = featureMap["rel"]["rel"] + 1
-			featureMap["rel"]["primary"] = featureMap["rel"]["primary"] + 1
+			featureMap["rel"]["prime"] = featureMap["rel"]["prime"] + 1
 		}
 	}
 }
@@ -1028,6 +1065,8 @@ var NodeTags = []string{
 	"conjtype",
 	"def",
 	"dial",
+	"dropped_agr",
+	"dropped_prs",
 	"dscmanual",
 	"dscsense",
 	// "end", // al gedaan
@@ -1095,6 +1134,7 @@ var NodeTags = []string{
 	"status",
 	"stype",
 	"tense",
+	"v_per",
 	"vform",
 	"vwtype",
 	"vztype",
@@ -1122,6 +1162,10 @@ func getAttr(attr string, n *Node) string {
 		return n.Def
 	case "dial":
 		return n.Dial
+	case "dropped_agr":
+		return n.DroppedAgr
+	case "dropped_prs":
+		return n.DroppedPrs
 	case "dscmanual":
 		return n.Dscmanual
 	case "dscsense":
@@ -1246,6 +1290,8 @@ func getAttr(attr string, n *Node) string {
 		return n.Stype
 	case "tense":
 		return n.Tense
+	case "v_per":
+		return n.VPer
 	case "vform":
 		return n.Vform
 	case "vwtype":
@@ -1356,6 +1402,9 @@ func prepare(node *Node, level int) {
 	node.vorfeld = make(map[int]bool)
 	node.vorfeldSkip = make(map[int]bool)
 	node.rels = []string{node.Rel}
+	node.IsNp = ""
+	node.IsVorfeld = ""
+	node.IsNachfeld = ""
 	if node.Cat == "smain" || node.Cat == "sv1" || node.Cat == "ssub" {
 		level++
 		node.level = level
