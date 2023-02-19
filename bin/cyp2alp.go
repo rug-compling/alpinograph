@@ -54,6 +54,8 @@ type NodeT struct {
 	Conjtype     string `xml:"conjtype,attr,omitempty" json:"conjtype,attr"`
 	Def          string `xml:"def,attr,omitempty" json:"def,attr"`
 	Dial         string `xml:"dial,attr,omitempty" json:"dial,attr"`
+	DroppedAgr   string `xml:"dropped_agr,attr,omitempty" json:"dropped_agr,attr"`
+	DroppedPrs   string `xml:"dropped_prs,attr,omitempty" json:"dropped_prs,attr"`
 	Dscmanual    string `xml:"dscmanual,attr,omitempty" json:"dscmanual,attr"`
 	Dscsense     string `xml:"dscsense,attr,omitempty" json:"dscsense,attr"`
 	End          int    `xml:"end,attr" json:"end,attr"`
@@ -116,6 +118,7 @@ type NodeT struct {
 	Status       string `xml:"status,attr,omitempty" json:"status,attr"`
 	Stype        string `xml:"stype,attr,omitempty" json:"stype,attr"`
 	Tense        string `xml:"tense,attr,omitempty" json:"tense,attr"`
+	VPer         string `xml:"v_per,attr,omitempty" json:"v_per,attr"`
 	Vform        string `xml:"vform,attr,omitempty" json:"vform,attr"`
 	Vwtype       string `xml:"vwtype,attr,omitempty" json:"vwtype,attr"`
 	Vztype       string `xml:"vztype,attr,omitempty" json:"vztype,attr"`

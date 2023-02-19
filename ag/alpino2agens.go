@@ -4,6 +4,7 @@ import (
 	"github.com/pebbe/compactcorpus"
 	"github.com/pebbe/dbxml"
 	"github.com/pebbe/util"
+	"github.com/rug-compling/alpinods"
 	"github.com/rug-compling/alud/v2"
 
 	"archive/tar"
@@ -56,15 +57,12 @@ type SentType struct {
 }
 
 type Node struct {
-	used        bool
-	aid         string
-	wordcount   int
-	level       int
-	parents     []*Node `xml:"node"`
-	rels        []string
-	vorfeld     map[int]bool
-	vorfeldSkip map[int]bool
-	nachfeld    bool
+	used      bool
+	aid       string
+	wordcount int
+	level     int
+	parents   []*Node
+	rels      []string
 
 	Aform        string `xml:"aform,attr"`
 	Begin        int    `xml:"begin,attr"`
@@ -247,24 +245,6 @@ var (
 	}
 	nattrMap = make(map[string][2]string)
 	rattrMap = make(map[string][2]string)
-
-	vpCat = map[string]bool{
-		"inf":   true,
-		"ti":    true,
-		"ssub":  true,
-		"oti":   true,
-		"ppart": true,
-	}
-	rHead = map[string]bool{
-		"hd":   true,
-		"cmp":  true,
-		"mwp":  true,
-		"crd":  true,
-		"rhd":  true,
-		"whd":  true,
-		"nucl": true,
-		"dp":   true,
-	}
 )
 
 func usage() {
@@ -382,6 +362,12 @@ LOOP:
 
 		fmt.Fprintf(os.Stderr, "  %d:%d %s                \r", idx, count, doc.name)
 
+		var a alpinods.AlpinoDS
+		x(xml.Unmarshal(doc.data, &a))
+		a.Enhance(alpinods.Fall)
+		doc.data, err = xml.Marshal(a)
+		x(err)
+
 		var alpino Alpino_ds
 		x(xml.Unmarshal(doc.data, &alpino))
 
@@ -393,8 +379,6 @@ LOOP:
 		refnodes = make([]*Node, len(strings.Fields(alpino.Sentence.Sent)))
 		prepare(alpino.Node0, 0)
 		prepareRels(alpino.Node0)
-		prepareVorfeld(alpino.Node0)
-		prepareNachfeld(alpino.Node0)
 		addIndexParents(alpino.Node0)
 		wordcount(alpino.Node0)
 
@@ -492,14 +476,14 @@ LOOP:
 			q(sentid), q(alpino.Sentence.Sent), alpino.Node0.End, buf.String())
 
 		nRel++
-		fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"prime\": true%s}\n",
+		fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"primary\": true%s}\n",
 			idRel, nRel,
 			lblSentence,
 			alpino.Node0.aid,
 			q(alpino.Node0.Rel),
 			relExtra(alpino.Node0))
 		featureMap["rel"]["rel"] = featureMap["rel"]["rel"] + 1
-		featureMap["rel"]["prime"] = featureMap["rel"]["prime"] + 1
+		featureMap["rel"]["primary"] = featureMap["rel"]["primary"] + 1
 
 		doNode1(sentid, alpino.Node0, alpino.Node0.End, feats)
 
@@ -541,7 +525,7 @@ LOOP:
 					for _, n := range node.NodeList {
 						if n.Index != "" && n.Word == "" && n.Cat == "" {
 							nRel++
-							fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"prime\": false, \"id\": %d%s}\n",
+							fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"primary\": false, \"id\": %d%s}\n",
 								idRel, nRel,
 								node.aid,
 								indexen[n.Index],
@@ -549,7 +533,7 @@ LOOP:
 								n.Id,
 								relExtra(n))
 							featureMap["rel"]["rel"] = featureMap["rel"]["rel"] + 1
-							featureMap["rel"]["prime"] = featureMap["rel"]["prime"] + 1
+							featureMap["rel"]["primary"] = featureMap["rel"]["primary"] + 1
 							featureMap["rel"]["id"] = featureMap["rel"]["id"] + 1
 						}
 						f(n)
@@ -728,7 +712,7 @@ create property index on node("_np");
 create property index on node("_vorfeld");
 create property index on node("_nachfeld");
 create property index on rel("id");
-create property index on rel("prime");
+create property index on rel("primary");
 create property index on rel("rel");
 create property index on pair("rel");
 create property index on ud("rel");
@@ -817,15 +801,15 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 			lvl = fmt.Sprintf(`, "_clause": true, "_clause_lvl": %d`, node.level)
 		}
 		np := ""
-		if isNP(node) {
+		if node.IsNp == "true" {
 			np = `, "_np": true`
 		}
 		vorfeld := ""
-		if isVorfeld(node) {
+		if node.IsVorfeld == "true" {
 			vorfeld = `, "_vorfeld": true`
 		}
 		nachfeld := ""
-		if node.nachfeld {
+		if node.IsNachfeld == "true" {
 			nachfeld = `, "_nachfeld": true`
 		}
 		deste := ""
@@ -877,15 +861,15 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 			fmt.Fprint(&buf, ", \"last\": true")
 		}
 		np := ""
-		if isNP(node) {
+		if node.IsNp == "true" {
 			np = `, "_np": true`
 		}
 		vorfeld := ""
-		if isVorfeld(node) {
+		if node.IsVorfeld == "true" {
 			vorfeld = `, "_vorfeld": true`
 		}
 		nachfeld := ""
-		if node.nachfeld {
+		if node.IsNachfeld == "true" {
 			nachfeld = `, "_nachfeld": true`
 		}
 		jsn := fmt.Sprintf("{\"sentid\": %s, \"id\": %d, \"begin\": %d, \"end\": %d, \"_n_words\": %d%s%s%s%s%s, \"_cp\": [%s]}",
@@ -905,152 +889,31 @@ func doNode1(sentid string, node *Node, last int, feats []string) {
 	}
 }
 
-func findNachfeld(node *Node) {
-	if !vpCat[node.Cat] {
-		return
-	}
-
-	if node.NodeList == nil || len(node.NodeList) == 0 {
-		return
-	}
-
-	// zoek begin van head
-	headBegin := -1
-	for _, n := range node.NodeList {
-		if n.Index != "" {
-			n = refnodes[n.index]
-		}
-		if n.Rel == "hd" {
-			headBegin = n.Begin
-			break
-		}
-	}
-	if headBegin < 0 {
-		return
-	}
-
-	// zoek nachfeld
-	for _, n := range node.NodeList {
-		if n.Index != "" {
-			n = refnodes[n.index]
-		}
-		if n.Rel != "hd" {
-			setNachfeld(n, headBegin, node)
-		}
-	}
-}
-
-func setNachfeld(node *Node, begin int, vp *Node) {
-	if node.Rel != "hd" && node.Rel != "svp" && node.Cat != "inf" && node.Cat != "ppart" {
-
-		var skip func(*Node, int) bool
-		skip = func(current *Node, state int) bool {
-			if current.Index != "" {
-				current = refnodes[current.index]
-			}
-			if current == node {
-				return state == 2
-			}
-			switch state {
-			case 0:
-				state = 1
-			case 1:
-				if vpCat[current.Cat] {
-					state = 2
-				}
-			}
-			if current.NodeList != nil {
-				for _, n := range current.NodeList {
-					if skip(n, state) {
-						return true
-					}
-				}
-			}
-			return false
-		}
-
-		n2 := make([]*Node, 0)
-		if node.NodeList != nil {
-			for _, nn2 := range node.NodeList {
-				if nn2.Index != "" {
-					nn2 = refnodes[nn2.index]
-				}
-				if rHead[nn2.Rel] {
-					n2 = append(n2, nn2)
-				}
-			}
-		}
-		if len(n2) == 0 {
-			if begin < node.Begin {
-				if !skip(vp, 0) {
-					node.nachfeld = true
-				}
-				return
-			}
-		} else {
-			ok := true
-			for _, nn2 := range n2 {
-				if begin >= nn2.Begin {
-					ok = false
-					break
-				}
-			}
-			if ok {
-				if !skip(vp, 0) {
-					node.nachfeld = true
-				}
-				return
-			}
-		}
-	}
-	if vpCat[node.Cat] {
-		return
-	}
-	if node.NodeList == nil {
-		return
-	}
-	for _, n := range node.NodeList {
-		if n.Index != "" {
-			n = refnodes[n.index]
-		}
-		setNachfeld(n, begin, vp)
-	}
-}
-
-func isVorfeld(node *Node) bool {
-	for id := range node.vorfeld {
-		if !node.vorfeldSkip[id] {
-			return true
-		}
-	}
-	return false
-}
-
 func doNode2(node *Node) {
 	for _, n := range node.NodeList {
 		if n.Cat != "" {
 			nRel++
-			fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"prime\": true%s}\n",
+			fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"primary\": true%s}\n",
 				idRel, nRel,
 				node.aid,
 				n.aid,
 				q(n.Rel),
 				relExtra(n))
 			featureMap["rel"]["rel"] = featureMap["rel"]["rel"] + 1
-			featureMap["rel"]["prime"] = featureMap["rel"]["prime"] + 1
+			featureMap["rel"]["primary"] = featureMap["rel"]["primary"] + 1
 			doNode2(n)
 			continue
 		}
 		if n.Word != "" {
 			nRel++
-			fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"prime\": true%s}\n",
+			fmt.Fprintf(fpRel, "%d.%d\t%s\t%s\t{\"rel\": %s, \"primary\": true%s}\n",
 				idRel, nRel,
 				node.aid,
 				n.aid,
 				q(n.Rel),
 				relExtra(n))
 			featureMap["rel"]["rel"] = featureMap["rel"]["rel"] + 1
-			featureMap["rel"]["prime"] = featureMap["rel"]["prime"] + 1
+			featureMap["rel"]["primary"] = featureMap["rel"]["primary"] + 1
 		}
 	}
 }
@@ -1399,12 +1262,7 @@ func mwu(node *Node) {
 // Zoek alle referenties. Dit zijn nodes met een attribuut "index".
 // Sla deze op in een tabel 'refnames': index -> *Node
 func prepare(node *Node, level int) {
-	node.vorfeld = make(map[int]bool)
-	node.vorfeldSkip = make(map[int]bool)
 	node.rels = []string{node.Rel}
-	node.IsNp = ""
-	node.IsVorfeld = ""
-	node.IsNachfeld = ""
 	if node.Cat == "smain" || node.Cat == "sv1" || node.Cat == "ssub" {
 		level++
 		node.level = level
@@ -1770,45 +1628,6 @@ func validMwu(node *Node) bool {
 	return true
 }
 
-func isNP(node *Node) bool {
-
-	if node.Cat == "np" {
-		return true
-	}
-
-	if node.Lcat == "np" && otherString(node.rels, "hd", "mwp") {
-		return true
-	}
-
-	if node.Pt == "n" && otherString(node.rels, "hd") {
-		return true
-	}
-
-	if node.Pt == "vnw" && node.Pdtype == "pron" && otherString(node.rels, "hd") {
-		return true
-	}
-
-	if node.Cat == "mwu" && hasString(node.rels, "su", "obj1", "obj2", "app") {
-		return true
-	}
-
-	if node.NodeList != nil {
-		for _, n := range node.NodeList {
-			if n.Rel != "cnj" {
-				continue
-			}
-			if n.index > 0 {
-				n = refnodes[n.index]
-			}
-			if isNP(n) {
-				return true
-			}
-		}
-	}
-
-	return false
-}
-
 func prepareRels(node *Node) {
 	if node.index > 0 && node.Word == "" && (node.NodeList == nil || len(node.NodeList) == 0) {
 		n := refnodes[node.index]
@@ -1819,151 +1638,6 @@ func prepareRels(node *Node) {
 			prepareRels(n)
 		}
 	}
-}
-
-func prepareNachfeld(node *Node) {
-	findNachfeld(node)
-	if node.NodeList != nil {
-		for _, n := range node.NodeList {
-			prepareNachfeld(n)
-		}
-	}
-}
-
-func prepareVorfeld(node *Node) {
-	if node.Cat == "smain" {
-		smainVorfeld(node)
-	} else if node.Cat == "whq" {
-		whqVorfeld(node)
-	}
-	if node.NodeList != nil {
-		for _, n := range node.NodeList {
-			prepareVorfeld(n)
-		}
-	}
-}
-
-func smainVorfeld(node *Node) {
-	if node.NodeList != nil {
-		for _, n := range node.NodeList {
-			if n.Rel == "hd" {
-				// NIET alleen primary links
-				if n.index > 0 {
-					n = refnodes[n.index]
-				}
-				if n.Word != "" {
-					for _, topic := range findTopic(node, n.Begin, false) {
-						if checkTopic(topic, node, n.Begin) {
-							topic.vorfeld[node.Id] = true
-						} else {
-							topic.vorfeldSkip[node.Id] = true
-						}
-					}
-				}
-			}
-		}
-	}
-}
-
-func whqVorfeld(node *Node) {
-	if node.NodeList != nil {
-		for _, n := range node.NodeList {
-			// NIET alleen primary links
-			rel := n.Rel
-			if n.index > 0 {
-				n = refnodes[n.index]
-			}
-			if rel == "body" && n.Cat == "sv1" {
-				for _, n2 := range n.NodeList {
-					if n2.Rel == "hd" {
-						// NIET alleen primary links
-						if n2.index > 0 {
-							n2 = refnodes[n2.index]
-						}
-						if n2.Word != "" {
-							for _, topic := range findTopic(node, n2.Begin, true) {
-								if checkTopic(topic, node, n2.Begin) {
-									topic.vorfeld[node.Id] = true
-								} else {
-									topic.vorfeldSkip[node.Id] = true
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-}
-
-func findTopic(node *Node, begin int, needWhd bool) []*Node {
-	topics := make([]*Node, 0)
-
-	// hier: inclusief topnode
-	//if isTopic(node, begin) {
-	//	topics = append(topics, node)
-	//}
-
-	if node.NodeList != nil {
-		for _, n := range node.NodeList {
-
-			if needWhd && n.Rel != "whd" {
-				continue
-			}
-
-			// hier: exclusief topnode
-			if isTopic(n, begin) {
-				topics = append(topics, n)
-			}
-
-			// ALLEEN primary links
-			for _, topic := range findTopic(n, begin, false) {
-				topics = append(topics, topic)
-			}
-		}
-	}
-	return topics
-}
-
-func isTopic(node *Node, begin int) bool {
-	if node.Begin < begin && node.End <= begin {
-		return true
-	}
-	if node.Lemma != "" || node.Cat == "mwu" {
-		if node.Begin < begin {
-			return true
-		}
-		return false
-	}
-
-	if node.NodeList != nil {
-		for _, n := range node.NodeList {
-			if n.Rel == "hd" || n.Rel == "cmp" || n.Rel == "crd" {
-				// NIET alleen primary links
-				if n.index > 0 {
-					n = refnodes[n.index]
-				}
-				if (n.Lemma != "" || n.Cat == "mwu") && n.Begin < begin {
-					return true
-				}
-			}
-		}
-	}
-	return false
-}
-
-func checkTopic(topic, node *Node, begin int) bool {
-	// alle nodes tussen node (exclusief) en topic (exclusief)
-	nodes := make(map[*Node]bool)
-	nodePath(node, topic, nodes)
-
-	for n := range nodes {
-		if isTopic(n, begin) {
-			return false
-		}
-	}
-
-	return true
 }
 
 func nodePath(top, bottom *Node, nodes map[*Node]bool) bool {
