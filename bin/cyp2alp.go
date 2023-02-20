@@ -84,6 +84,9 @@ type NodeT struct {
 	Iets         string `xml:"iets,attr,omitempty" json:"iets,attr"`
 	Index        string `xml:"index,attr,omitempty" json:"index,attr"`
 	Infl         string `xml:"infl,attr,omitempty" json:"infl,attr"`
+	IsNachfeld   bool   `xml:"is_nachfeld,attr,omitempty" json:"_nachfeld,attr"`
+	IsNp         bool   `xml:"is_np,attr,omitempty" json:"_np,attr"`
+	IsVorfeld    bool   `xml:"is_vorfeld,attr,omitempty" json:"_vorfeld,attr"`
 	Lcat         string `xml:"lcat,attr,omitempty" json:"lcat,attr"`
 	Lemma        string `xml:"lemma,attr,omitempty" json:"lemma,attr"`
 	Lwtype       string `xml:"lwtype,attr,omitempty" json:"lwtype,attr"`
@@ -232,7 +235,7 @@ func cyp2alp(sentid string) string {
 	}
 
 	alpino := &Alpino_ds{
-		Version: "1.11",
+		Version: "1.16",
 		Sentence: &SentType{
 			SentId: sentid,
 			Sent:   sentence.Tokens,
