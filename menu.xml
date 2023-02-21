@@ -1957,10 +1957,23 @@
       </item>
       <item id="spod-ajajc" lbl="interne structuur, ADJ COMPL">
         <item id="spod-ajajc-zin" lbl="zinnen">
-          -- nog niet beschikbaar
+          match (n1)&lt;-[r:rel]-(n{cat: 'ap'})-[:rel{rel: 'hd'}]-&gt;(n2)
+          optional match (n1)-[:rel*0]-&gt;(n1v{_nachfeld: true})
+          with n, n1, n2, n1v, r
+          where any(x in ['predc','obj1','obj2','pc','me','vc'] where x = r.rel)
+          and n1v is null
+          and n1.begin &gt; n2.begin
+          return n.sentid, n.id
         </item>
         <item id="spod-ajajc-tel" lbl="telling">
-          -- nog niet beschikbaar
+          match (n1)&lt;-[r:rel]-(n{cat: 'ap'})-[:rel{rel: 'hd'}]-&gt;(n2)
+          optional match (n1)-[:rel*0]-&gt;(n1v{_nachfeld: true})
+          with n, n1, n2, n1v, r
+          where any(x in ['predc','obj1','obj2','pc','me','vc'] where x = r.rel)
+          and n1v is null
+          and n1.begin &gt; n2.begin
+          with distinct n.sentid as sentid, n.id as id
+          return count(distinct(sentid)) as zinnen, count(*) as items
         </item>
       </item>
     </item>
