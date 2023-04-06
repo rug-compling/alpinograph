@@ -12,8 +12,8 @@
         <https://w3id.org/nwo-research-fields#SoftwareForHumanities> ;
     schema:author ( _:pkleiweg ) ;
     schema:codeRepository <https://github.com/rug-compling/alpinograph.git> ;
-    schema:dateCreated ""^^schema:Date ;
-    schema:dateModified ""^^schema:Date ;
+    schema:dateCreated "2020-03-25"^^schema:Date ;
+    schema:dateModified "2023-04-06"^^schema:Date ;
     schema:description "AlpinoGraph is een tool om syntactisch geannoteerde corpora te doorzoeken. De tool maakt gebruik van AgensGraph. AgensGraph combineert databasetechnologie (PostgreSQL) en Cypher, de standaard zoektaal voor grafen. De zoek-queries die je in AlpinoGraph kunt gebruiken zijn daarom een mix van SQL en Cypher. Daar voegt AlpinoGraph nog enkele extra uitbreidingen aan toe, zoals een eenvoudig maar handig systeem van macro's, en visualisatie van de resultaten." ;
     schema:downloadUrl <https://github.com/rug-compling/alpinograph/archive/refs/heads/master.zip> ;
     schema:keywords "Alpino",

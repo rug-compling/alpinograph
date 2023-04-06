@@ -17,8 +17,8 @@
       </rdf:Description>
     </schema:author>
     <schema:codeRepository rdf:resource="https://github.com/rug-compling/alpinograph.git"/>
-    <schema:dateCreated rdf:datatype="http://schema.org/Date"></schema:dateCreated>
-    <schema:dateModified rdf:datatype="http://schema.org/Date"></schema:dateModified>
+    <schema:dateCreated rdf:datatype="http://schema.org/Date">2020-03-25</schema:dateCreated>
+    <schema:dateModified rdf:datatype="http://schema.org/Date">2023-04-06</schema:dateModified>
     <schema:description>AlpinoGraph is een tool om syntactisch geannoteerde corpora te doorzoeken. De tool maakt gebruik van AgensGraph. AgensGraph combineert databasetechnologie (PostgreSQL) en Cypher, de standaard zoektaal voor grafen. De zoek-queries die je in AlpinoGraph kunt gebruiken zijn daarom een mix van SQL en Cypher. Daar voegt AlpinoGraph nog enkele extra uitbreidingen aan toe, zoals een eenvoudig maar handig systeem van macro's, en visualisatie van de resultaten.</schema:description>
     <schema:downloadUrl rdf:resource="https://github.com/rug-compling/alpinograph/archive/refs/heads/master.zip"/>
     <schema:keywords>Alpino</schema:keywords>

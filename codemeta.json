@@ -78,8 +78,8 @@
       }
     }
   },
-  "dateCreated": "",
-  "dateModified": "",
+  "dateCreated": "2020-03-25",
+  "dateModified": "2023-04-06",
   "version": "1.0.1",
   "releaseNotes": "https://github.com/rug-compling/alpinograph/blob/master/Changes.txt",
   "readme": "https://github.com/rug-compling/alpinograph/blob/master/README.md",
@@ -116,10 +116,7 @@
     "@type": "ScholarlyArticle",
     "sameAs": "https://research.rug.nl/en/publications/alpinograph-a-graph-based-search-engine-for-flexible-and-efficien",
     "name": "AlpinoGraph: A Graph-based Search Engine for Flexible and Efficient Treebank Search",
-    "author": [
-      "Peter Kleiweg",
-      "Gertjan van Noord"
-    ],
+    "author": ["Peter Kleiweg", "Gertjan van Noord"],
     "pageStart": "151",
     "pageEnd": "161",
     "isPartOf": {
