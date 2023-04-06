@@ -45,13 +45,14 @@
             schema:author ( "Peter Kleiweg" "Gertjan van Noord" ) ;
             schema:isPartOf [ a schema:PublicationIssue ;
                     schema:datePublished "2020"^^schema:Date ;
-                    schema:location "" ;
+                    schema:location "Düsseldorf, Germany" ;
                     schema:name "Proceedings of the 19th International Workshop on Treebanks and Linguistic Theories" ] ;
             schema:name "AlpinoGraph: A Graph-based Search Engine for Flexible and Efficient Treebank Search" ;
             schema:pageEnd "161" ;
             schema:pageStart "151" ;
-            schema:sameAs <https://research.rug.nl/en/publications/alpinograph-a-graph-based-search-engine-for-flexible-and-efficien> ;
-            schema:url <https://research.rug.nl/files/190345221/2020.tlt_1.13.pdf> ] .
+            schema:sameAs <http://dx.doi.org/10.18653/v1/2020.tlt-1.13>,
+                <https://research.rug.nl/en/publications/alpinograph-a-graph-based-search-engine-for-flexible-and-efficien> ;
+            schema:url <https://aclanthology.org/2020.tlt-1.13> ] .
 
 _:grnNL a schema:PostalAddress ;
     schema:addressCountry "NL" ;

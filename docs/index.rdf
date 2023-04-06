@@ -68,15 +68,16 @@
         <schema:isPartOf>
           <schema:PublicationIssue>
             <schema:datePublished rdf:datatype="http://schema.org/Date">2020</schema:datePublished>
-            <schema:location></schema:location>
+            <schema:location>Düsseldorf, Germany</schema:location>
             <schema:name>Proceedings of the 19th International Workshop on Treebanks and Linguistic Theories</schema:name>
           </schema:PublicationIssue>
         </schema:isPartOf>
         <schema:name>AlpinoGraph: A Graph-based Search Engine for Flexible and Efficient Treebank Search</schema:name>
         <schema:pageEnd>161</schema:pageEnd>
         <schema:pageStart>151</schema:pageStart>
+        <schema:sameAs rdf:resource="http://dx.doi.org/10.18653/v1/2020.tlt-1.13"/>
         <schema:sameAs rdf:resource="https://research.rug.nl/en/publications/alpinograph-a-graph-based-search-engine-for-flexible-and-efficien"/>
-        <schema:url rdf:resource="https://research.rug.nl/files/190345221/2020.tlt_1.13.pdf"/>
+        <schema:url rdf:resource="https://aclanthology.org/2020.tlt-1.13"/>
       </schema:ScholarlyArticle>
     </codemeta:referencePublication>
   </schema:SoftwareSourceCode>

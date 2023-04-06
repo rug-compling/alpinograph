@@ -114,7 +114,10 @@
   },
   "referencePublication": {
     "@type": "ScholarlyArticle",
-    "sameAs": "https://research.rug.nl/en/publications/alpinograph-a-graph-based-search-engine-for-flexible-and-efficien",
+    "sameAs": [
+      "http://dx.doi.org/10.18653/v1/2020.tlt-1.13",
+      "https://research.rug.nl/en/publications/alpinograph-a-graph-based-search-engine-for-flexible-and-efficien"
+    ],
     "name": "AlpinoGraph: A Graph-based Search Engine for Flexible and Efficient Treebank Search",
     "author": ["Peter Kleiweg", "Gertjan van Noord"],
     "pageStart": "151",
@@ -123,9 +126,9 @@
       "@type": "PublicationIssue",
       "datePublished": "2020",
       "name": "Proceedings of the 19th International Workshop on Treebanks and Linguistic Theories",
-      "location": ""
+      "location": "Düsseldorf, Germany"
     },
-    "url": "https://research.rug.nl/files/190345221/2020.tlt_1.13.pdf"
+    "url": "https://aclanthology.org/2020.tlt-1.13"
   },
   "targetProduct": {
     "@type": "WebApplication",
