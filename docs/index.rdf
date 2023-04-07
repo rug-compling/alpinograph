@@ -7,7 +7,7 @@
     <dct:relation rdf:resource="https://rug-compling.github.io/paqu/"/>
     <dct:relation rdf:resource="https://tools.clariah.nl/gretel"/>
     <schema:applicationCategory rdf:resource="https://vocabs.dariah.eu/tadirah/structuralAnalysis"/>
-    <schema:applicationCategory rdf:resource="https://w3id.org/nwo-research-fields#ComputationalLinguisticsAndPhilology"/>
+    <schema:applicationCategory rdf:resource="https://w3id.org/nwo-research-fields#ComputationalLinguisticsandPhilology"/>
     <schema:applicationCategory rdf:resource="https://w3id.org/nwo-research-fields#Linguistics"/>
     <schema:applicationCategory rdf:resource="https://w3id.org/nwo-research-fields#SoftwareForHumanities"/>
     <schema:author>

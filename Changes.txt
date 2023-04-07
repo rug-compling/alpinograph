@@ -1,4 +1,7 @@
-Head
+Version 1.0.2
+2023-04-07
+
+ * codemeta.json: typo
 
 
 Version 1.0.1
