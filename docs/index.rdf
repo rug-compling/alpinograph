@@ -18,7 +18,7 @@
     </schema:author>
     <schema:codeRepository rdf:resource="https://github.com/rug-compling/alpinograph.git"/>
     <schema:dateCreated rdf:datatype="http://schema.org/Date">2020-03-25</schema:dateCreated>
-    <schema:dateModified rdf:datatype="http://schema.org/Date">2023-04-06</schema:dateModified>
+    <schema:dateModified rdf:datatype="http://schema.org/Date">2023-04-07</schema:dateModified>
     <schema:description>AlpinoGraph is een tool om syntactisch geannoteerde corpora te doorzoeken. De tool maakt gebruik van AgensGraph. AgensGraph combineert databasetechnologie (PostgreSQL) en Cypher, de standaard zoektaal voor grafen. De zoek-queries die je in AlpinoGraph kunt gebruiken zijn daarom een mix van SQL en Cypher. Daar voegt AlpinoGraph nog enkele extra uitbreidingen aan toe, zoals een eenvoudig maar handig systeem van macro's, en visualisatie van de resultaten.</schema:description>
     <schema:downloadUrl rdf:resource="https://github.com/rug-compling/alpinograph/archive/refs/heads/master.zip"/>
     <schema:keywords>Alpino</schema:keywords>
@@ -33,6 +33,7 @@
     <schema:producer rdf:nodeID="cl"/>
     <schema:programmingLanguage>Go</schema:programmingLanguage>
     <schema:releaseNotes rdf:resource="https://github.com/rug-compling/alpinograph/blob/master/Changes.txt"/>
+    <schema:sameAs rdf:resource="https://tools.clariah.nl/alpinograph"/>
     <schema:softwareHelp>
       <schema:WebSite>
         <schema:name>AlpinoGraph</schema:name>
@@ -46,7 +47,7 @@
         <schema:url rdf:resource="https://urd2.let.rug.nl/~kleiweg/alpinograph/"/>
       </schema:WebApplication>
     </schema:targetProduct>
-    <schema:version>1.0.1</schema:version>
+    <schema:version>1.0.2</schema:version>
     <codemeta:developmentStatus rdf:resource="https://w3id.org/research-technology-readiness-levels#Stage4Complete"/>
     <codemeta:developmentStatus rdf:resource="https://www.repostatus.org/#active"/>
     <codemeta:issueTracker rdf:resource="https://github.com/rug-compling/alpinograph/issues"/>

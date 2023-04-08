@@ -13,7 +13,7 @@
     schema:author ( _:pkleiweg ) ;
     schema:codeRepository <https://github.com/rug-compling/alpinograph.git> ;
     schema:dateCreated "2020-03-25"^^schema:Date ;
-    schema:dateModified "2023-04-06"^^schema:Date ;
+    schema:dateModified "2023-04-07"^^schema:Date ;
     schema:description "AlpinoGraph is een tool om syntactisch geannoteerde corpora te doorzoeken. De tool maakt gebruik van AgensGraph. AgensGraph combineert databasetechnologie (PostgreSQL) en Cypher, de standaard zoektaal voor grafen. De zoek-queries die je in AlpinoGraph kunt gebruiken zijn daarom een mix van SQL en Cypher. Daar voegt AlpinoGraph nog enkele extra uitbreidingen aan toe, zoals een eenvoudig maar handig systeem van macro's, en visualisatie van de resultaten." ;
     schema:downloadUrl <https://github.com/rug-compling/alpinograph/archive/refs/heads/master.zip> ;
     schema:keywords "Alpino",
@@ -28,6 +28,7 @@
     schema:producer _:cl ;
     schema:programmingLanguage "Go" ;
     schema:releaseNotes <https://github.com/rug-compling/alpinograph/blob/master/Changes.txt> ;
+    schema:sameAs <https://tools.clariah.nl/alpinograph> ;
     schema:softwareHelp [ a schema:WebSite ;
             schema:name "AlpinoGraph" ;
             schema:url <https://urd2.let.rug.nl/~kleiweg/alpinograph-docs/> ] ;
@@ -35,7 +36,7 @@
             schema:name "AlpinoGraph" ;
             schema:provider _:cl ;
             schema:url <https://urd2.let.rug.nl/~kleiweg/alpinograph/> ] ;
-    schema:version "1.0.1" ;
+    schema:version "1.0.2" ;
     codemeta:developmentStatus <https://w3id.org/research-technology-readiness-levels#Stage4Complete>,
         <https://www.repostatus.org/#active> ;
     codemeta:issueTracker <https://github.com/rug-compling/alpinograph/issues> ;
