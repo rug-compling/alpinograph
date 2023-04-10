@@ -10,17 +10,17 @@
       }
     }
   ],
-  "@id": "https://www.let.rug.nl/alfa/rdf/alpinograph/",
+  "@id": "https://www.let.rug.nl/alfa/rdf/alpinograph",
   "@type": "SoftwareSourceCode",
   "relation": [
-    "https://rug-compling.github.io/paqu/",
+    "https://www.let.rug.nl/alfa/rdf/paqu",
     "https://tools.clariah.nl/gretel"
   ],
   "name": "AlpinoGraph",
   "description": "AlpinoGraph is een tool om syntactisch geannoteerde corpora te doorzoeken. De tool maakt gebruik van AgensGraph. AgensGraph combineert databasetechnologie (PostgreSQL) en Cypher, de standaard zoektaal voor grafen. De zoek-queries die je in AlpinoGraph kunt gebruiken zijn daarom een mix van SQL en Cypher. Daar voegt AlpinoGraph nog enkele extra uitbreidingen aan toe, zoals een eenvoudig maar handig systeem van macro's, en visualisatie van de resultaten.",
   "dateCreated": "2020-03-25",
   "dateModified": "2023-04-10",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "sameAs": "https://tools.clariah.nl/alpinograph",
   "codeRepository": "https://github.com/rug-compling/alpinograph.git",
   "issueTracker": "https://github.com/rug-compling/alpinograph/issues",
