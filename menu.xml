@@ -2602,10 +2602,10 @@
         </item>
       </item>
     </item>
-    <item id="spod-inb" lbl="Inbedding">
+    <item id="spod-inb" lbl="Inbedding in finiete zinnen">
       <item id="spod-inb-info" lbl="Info" class="info">
         Bij deze queries wordt gekeken naar de complexiteit van de zinnen in termen
-        van de inbedding van finitie bijzinnen. Een hoofdzin zonder finiete bijzin
+        van de inbedding van finiete bijzinnen. Een hoofdzin zonder finiete bijzin
         geldt dan als "geen inbedding". Een hoofdzin met een finiete bijzin geldt als
         "minstens 1 finiete zinsinbedding. Indien de finiete bijzin zelf ook een finiete
         bijzin bevat is er sprake van minstens 2 finiete zinsinbeddingen. En zo verder.
@@ -2618,7 +2618,7 @@
         return n._clause_lvl - 1 as niveau, count(*) as aantal
         order by niveau
       </item>
-      <item id="spod-inb0" lbl="geen inbedding">
+      <item id="spod-inb0" lbl="finiete zinnen zonder inbedding">
         match (n:node{_clause_lvl: 1})
         optional match (n)-[:rel*1..]-&gt;(n2:node{sentid:n.sentid, _clause: true})
         with n, n2
