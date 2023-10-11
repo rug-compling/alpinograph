@@ -363,6 +363,10 @@
         opgenomen, maar dit attribuut wordt niet langer onderhouden, is ook
         niet gedocumenteerd en wordt ook niet gecorrigeerd in de handmatig
         geannoteerde corpora.
+
+        Ook geven we hier een overzicht van de categorie van de uiting (de &quot;zin&quot;)
+        als geheel. Dat zijn immers niet altijd zinnen, maar soms ook
+        naamwoordgroepen of nog andere categorieën.
       </item>
       <item id="spod-pos" lbl="pos">
         match (w:word)
@@ -378,6 +382,11 @@
         match (w:word)
         return w.pt as pt, count(*) as aantal
         order by pt
+      </item>
+      <item id="spod-toptag" lbl="categorie van de gehele uiting">
+        match (:node{cat: 'top'})-[:rel]->(n:node)
+        return n.cat as cat, count(*) as aantal
+        order by cat
       </item>
     </item>
     <item id="spod-sents" lbl="Hoofdzinnen">
