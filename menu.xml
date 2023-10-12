@@ -116,7 +116,7 @@
 
         match (w:word)
         where 'fiets' in w._cp
-        or 'fietsen' in w._cp
+           or 'fietsen' in w._cp
         return w.word, count(*)
         order by count desc, word
       ]]></item>
@@ -143,7 +143,7 @@
       <item id="tut-pair-obj12" lbl="Werkwoorden met lijdend voorwerp en meewerkend voorwerp"><![CDATA[
         match (w1:nw)<-[:pair{rel:'obj1'}]-(w:word{pt:'ww'})-[:pair{rel:'obj2'}]->(w2:nw)
         where w1.pt in ['n', 'mwu']
-        and w2.pt in ['n', 'mwu']
+          and w2.pt in ['n', 'mwu']
         return w.lemma as werkwoord, w1.word as "lijdend voorwerp", w2.word as "meewerkend voorwerp"
       ]]></item>
     </item>
@@ -268,29 +268,29 @@
         -- Dit voorbeeld werk alleen met het Corpus Gesproken Nederlands
 
         match (w:word),
-        (m:meta{sentid: w.sentid, name: 'country'})
+              (m:meta{sentid: w.sentid, name: 'country'})
         return m.value as land, count(*) as "aantal woorden"
       ]]></item>
       <item id="tut-meta-gij" lbl="Waar wordt &#39;gij&#39; gebruikt?"><![CDATA[
         -- Dit voorbeeld werk alleen met het Corpus Gesproken Nederlands
 
         match (w:word{lemma: 'gij'}),
-        (m:meta{sentid: w.sentid, name: 'country'})
+              (m:meta{sentid: w.sentid, name: 'country'})
         return m.value as land, count(*) as aantal
       ]]></item>
       <item id="tut-meta-gij-perc" lbl="Genormaliseerd gebruik van &#39;gij&#39;"><![CDATA[
         -- Dit voorbeeld werk alleen met het Corpus Gesproken Nederlands
 
-        select land,
-        case when land ? 'BE' then aantal::text::numeric / 379916 -- aantal woorden in BE
-        when land ? 'NL' then aantal::text::numeric / 753845 -- aantal woorden in NL
-        else 0
-        end as "per woord"
-        from
-        (
-        match (w:word{lemma: 'gij'}),
-        (m:meta{sentid: w.sentid, name: 'country'})
-        return m.value as land, count(*) as aantal
+        select
+          land,
+          case when land ? 'BE' then aantal::text::numeric / 379916 -- aantal woorden in BE
+               when land ? 'NL' then aantal::text::numeric / 753845 -- aantal woorden in NL
+               else 0
+          end as "per woord"
+        from (
+          match (w:word{lemma: 'gij'}),
+                (m:meta{sentid: w.sentid, name: 'country'})
+          return m.value as land, count(*) as aantal
         ) as foo
       ]]></item>
     </item>
@@ -332,21 +332,20 @@
       waarmee een profiel van een corpus kan worden opgesteld. SPOD is
       ontwikkeld in [PaQu](https://www.let.rug.nl/alfa/paqu/spod), en maakt
       gebruik van query's in XPath. Zie paper:
+
       > Gertjan van Noord, Jack Hoeksema, Peter Kleiweg, and Gosse Bouma. 2020. <br>
-      > [SPOD: Syntactic profiler of Dutch.](https://www.clinjournal.org/clinj/article/view/110)
-      <br>
-      > *Computational Linguistics in the Netherlands Journal*, 10, pages 129--145. <br>
+      > [SPOD: Syntactic profiler of Dutch.](https://www.clinjournal.org/clinj/article/view/110) <br>
+      > *Computational Linguistics in the Netherlands Journal*, 10, pages 129--145.
 
       Voor AlpinoGraph zijn al de SPOD-query's herschreven in Cypher. De
       resultaten die je krijgt met deze nieuwe versies zijn niet altijd gelijk aan
       de resultaten die je kreeg in PaQu, voornamelijk vanwege de technische
       beperkingen van de oorspronkelijke query's in XPath. Zie paper:
+
       > Peter Kleiweg and Gertjan van Noord. 2020. <br>
-      > [AlpinoGraph: A Graph-based search engine for flexible and efficient treebank
-      search.](https://www.aclweb.org/anthology/2020.tlt-1.13/) <br>
+      > [AlpinoGraph: A Graph-based search engine for flexible and efficient treebank search.](https://www.aclweb.org/anthology/2020.tlt-1.13/) <br>
       > In *Proceedings of the 19th International Workshop on Treebanks and Linguistic Theories*,
-      > pages 151--161, Düsseldorf, Germany, 27--28 October. Association for Computational
-      Linguistics. <br>
+      > pages 151--161, Düsseldorf, Germany, 27--28 October. Association for Computational Linguistics.
     ]]></item>
     <item id="spod-attrib" lbl="Attributen">
       <item id="spod-attrib-info" lbl="Info" class="info"><![CDATA[
@@ -437,22 +436,22 @@
       <item id="spod-janee" lbl="ja/nee vragen">
         <item id="spod-janee-zin" lbl="zinnen"><![CDATA[
           match (w:word{word: '?'}) ,
-          (n:node{sentid:w.sentid,cat: 'sv1'})<-[r:rel]-()
+                (n:node{sentid:w.sentid,cat: 'sv1'})<-[r:rel]-()
           optional match (n)-[:rel{rel: 'hd'}]->(n1)
           with w, r, n, n1
           where not r.rel = 'body'
-          and n.end < w.end
-          and (n1 is null or n1.stype is null or n1.stype = 'ynquestion')
+            and n.end < w.end
+            and (n1 is null or n1.stype is null or n1.stype = 'ynquestion')
           return n.sentid, n.id
         ]]></item>
         <item id="spod-janee-tel" lbl="telling"><![CDATA[
           match (w:word{word: '?'}) ,
-          (n:node{sentid:w.sentid,cat: 'sv1'})<-[r:rel]-()
+                (n:node{sentid:w.sentid,cat: 'sv1'})<-[r:rel]-()
           optional match (n)-[:rel{rel: 'hd'}]->(n1)
           with w, r, n, n1
           where not r.rel = 'body'
-          and n.end < w.end
-          and (n1 is null or n1.stype is null or n1.stype = 'ynquestion')
+            and n.end < w.end
+            and (n1 is null or n1.stype is null or n1.stype = 'ynquestion')
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
@@ -464,13 +463,12 @@
           optional match (n)-[:rel{rel: 'hd'}]->(x2)
           with n, x1, x2
           where x1 is null
-          and not (x2.stype is not null and not x2.stype = 'imparative')
-          and not ((x2.tense is not null and x2.tense = 'past') or
-          (x2.pvagr is not null and x2.pvagr in ['mv','met-t']) or
-          (x2.pvtijd is not null and x2.pvtijd = 'verl') or
-          (x2.lemma is not null and x2.lemma in
-          ['zijn','kunnen','willen','moeten','mogen','zullen','denken','geloven','vinden','hebben'])
-          )
+            and not (x2.stype is not null and not x2.stype = 'imparative')
+            and not ((x2.tense is not null and x2.tense = 'past') or
+                     (x2.pvagr is not null and x2.pvagr in ['mv','met-t']) or
+                     (x2.pvtijd is not null and x2.pvtijd = 'verl') or
+                     (x2.lemma is not null and x2.lemma in
+                       ['zijn','kunnen','willen','moeten','mogen','zullen','denken','geloven','vinden','hebben']))
           return n.sentid, n.id
         ]]></item>
         <item id="spod-imp-tel" lbl="telling"><![CDATA[
@@ -479,13 +477,12 @@
           optional match (n)-[:rel{rel: 'hd'}]->(x2)
           with n, x1, x2
           where x1 is null
-          and not (x2.stype is not null and not x2.stype = 'imparative')
-          and not ((x2.tense is not null and x2.tense = 'past') or
-          (x2.pvagr is not null and x2.pvagr in ['mv','met-t']) or
-          (x2.pvtijd is not null and x2.pvtijd = 'verl') or
-          (x2.lemma is not null and x2.lemma in
-          ['zijn','kunnen','willen','moeten','mogen','zullen','denken','geloven','vinden','hebben'])
-          )
+            and not (x2.stype is not null and not x2.stype = 'imparative')
+            and not ((x2.tense is not null and x2.tense = 'past') or
+                     (x2.pvagr is not null and x2.pvagr in ['mv','met-t']) or
+                     (x2.pvtijd is not null and x2.pvtijd = 'verl') or
+                     (x2.lemma is not null and x2.lemma in
+                       ['zijn','kunnen','willen','moeten','mogen','zullen','denken','geloven','vinden','hebben']))
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
@@ -542,15 +539,15 @@
         <item id="spod-whsub-zin" lbl="zinnen"><![CDATA[
           match (n:node{cat: 'whsub'})-[:rel*1..2]->(n2:node{cat: 'ssub'})
           where exists ((n)-[:rel{rel: 'body'}]->(n2))
-          or exists ((n)-[:rel{rel: 'body'}]->(:node{cat: 'conj'})-[:rel{rel: 'cnj'}]->(n2))
-          or exists ((n)-[:rel{rel: 'body'}]->(:node{cat: 'du'})-[:rel]->(n2))
+             or exists ((n)-[:rel{rel: 'body'}]->(:node{cat: 'conj'})-[:rel{rel: 'cnj'}]->(n2))
+             or exists ((n)-[:rel{rel: 'body'}]->(:node{cat: 'du'})-[:rel]->(n2))
           return n.sentid, n.id, n2.id
         ]]></item>
         <item id="spod-whsub-tel" lbl="telling"><![CDATA[
           match (n:node{cat: 'whsub'})-[:rel*1..2]->(n2:node{cat: 'ssub'})
           where exists ((n)-[:rel{rel: 'body'}]->(n2))
-          or exists ((n)-[:rel{rel: 'body'}]->(:node{cat: 'conj'})-[:rel{rel: 'cnj'}]->(n2))
-          or exists ((n)-[:rel{rel: 'body'}]->(:node{cat: 'du'})-[:rel]->(n2))
+             or exists ((n)-[:rel{rel: 'body'}]->(:node{cat: 'conj'})-[:rel{rel: 'cnj'}]->(n2))
+             or exists ((n)-[:rel{rel: 'body'}]->(:node{cat: 'du'})-[:rel]->(n2))
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
@@ -568,40 +565,34 @@
       </item>
       <item id="spod-ssubdat" lbl="finiete bijzinnen met &#34;dat&#34;">
         <item id="spod-ssubdat-zin" lbl="zinnen"><![CDATA[
-          match (n1:word{lemma: 'dat'})<-[:rel{rel: 'cmp'}]-(n:node{cat: 'cp'})-[:rel{rel:
-          'body'}]->(n2:node{cat: 'ssub'})
+          match (n1:word{lemma: 'dat'})<-[:rel{rel: 'cmp'}]-(n:node{cat: 'cp'})-[:rel{rel: 'body'}]->(n2:node{cat: 'ssub'})
           return n.sentid, n.id, n1.id, n2.id
         ]]></item>
         <item id="spod-ssubdat-tel" lbl="telling"><![CDATA[
-          match (:word{lemma: 'dat'})<-[:rel{rel: 'cmp'}]-(n:node{cat: 'cp'})-[:rel{rel:
-          'body'}]->(:node{cat: 'ssub'})
+          match (:word{lemma: 'dat'})<-[:rel{rel: 'cmp'}]-(n:node{cat: 'cp'})-[:rel{rel: 'body'}]->(:node{cat: 'ssub'})
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
       <item id="spod-ssubof" lbl="finiete bijzinnen met &#34;of&#34;">
         <item id="spod-ssubof-zin" lbl="zinnen"><![CDATA[
-          match (w:word{lemma: 'of'})<-[:rel{rel: 'cmp'}]-(n:node{cat: 'cp'})-[:rel{rel:
-          'body'}]->(n2:node{cat: 'ssub'})
+          match (w:word{lemma: 'of'})<-[:rel{rel: 'cmp'}]-(n:node{cat: 'cp'})-[:rel{rel: 'body'}]->(n2:node{cat: 'ssub'})
           return n.sentid, n.id, w.id, n2.id
         ]]></item>
         <item id="spod-ssubof-tel" lbl="telling"><![CDATA[
-          match (:word{lemma: 'of'})<-[:rel{rel: 'cmp'}]-(n:node{cat: 'cp'})-[:rel{rel:
-          'body'}]->(:node{cat: 'ssub'})
+          match (:word{lemma: 'of'})<-[:rel{rel: 'cmp'}]-(n:node{cat: 'cp'})-[:rel{rel: 'body'}]->(:node{cat: 'ssub'})
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
       <item id="spod-ssubcmp" lbl="finiete bijzinnen met andere voegwoorden">
         <item id="spod-ssubcmp-zin" lbl="zinnen"><![CDATA[
-          match (w:nw)<-[:rel{rel: 'cmp'}]-(n:node{cat: 'cp'})-[:rel{rel: 'body'}]->(n2:node{cat:
-          'ssub'})
+          match (w:nw)<-[:rel{rel: 'cmp'}]-(n:node{cat: 'cp'})-[:rel{rel: 'body'}]->(n2:node{cat: 'ssub'})
           where not (w.lemma is not null and w.lemma in ['of','dat'])
           return n.sentid, n.id, w.id, n2.id
         ]]></item>
         <item id="spod-ssubcmp-tel" lbl="telling"><![CDATA[
-          match (w:nw)<-[:rel{rel: 'cmp'}]-(n:node{cat: 'cp'})-[:rel{rel: 'body'}]->(:node{cat:
-          'ssub'})
+          match (w:nw)<-[:rel{rel: 'cmp'}]-(n:node{cat: 'cp'})-[:rel{rel: 'body'}]->(:node{cat: 'ssub'})
           where not (w.lemma is not null and w.lemma in ['of','dat'])
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
@@ -640,7 +631,8 @@
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
-      <item id="spod-otiww" lbl="infiniete bijzinnen met &#34;om&#34; die als bepaling bij een werkwoord optreden">
+      <item id="spod-otiww"
+        lbl="infiniete bijzinnen met &#34;om&#34; die als bepaling bij een werkwoord optreden">
         <item id="spod-otiww-zin" lbl="zinnen"><![CDATA[
           match (n:node{cat: 'oti'})<-[:rel]-()-[:rel{rel: 'hd'}]->(w:word{pt: 'ww'})
           return n.sentid, n.id, w.id
@@ -651,7 +643,8 @@
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
-      <item id="spod-otin" lbl="infiniete bijzinnen met &#34;om&#34; die als bepaling bij een zelfstandig naamwoord optreden">
+      <item id="spod-otin"
+        lbl="infiniete bijzinnen met &#34;om&#34; die als bepaling bij een zelfstandig naamwoord optreden">
         <item id="spod-otin-zin" lbl="zinnen"><![CDATA[
           match (n:node{cat: 'oti'})<-[:rel]-()-[:rel{rel: 'hd'}]->(w:word)
           where w.pt in ['n','vnw']
@@ -686,7 +679,8 @@
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
-      <item id="spod-otiobc" lbl="infiniete bijzinnen met &#34;om&#34; die optreden met combinaties zoals &#34;te ADJ; zo ADJ; genoeg ADJ; voldoende N&#34;">
+      <item id="spod-otiobc"
+        lbl="infiniete bijzinnen met &#34;om&#34; die optreden met combinaties zoals &#34;te ADJ; zo ADJ; genoeg ADJ; voldoende N&#34;">
         <item id="spod-otiobc-zin" lbl="zinnen"><![CDATA[
           match (n:node{cat: 'oti'})<-[:rel{rel: 'obcomp'}]-(n2)
           return n.sentid, n.id, n2.id
@@ -723,19 +717,17 @@
       </item>
       <item id="spod-relssub" lbl="relatieve bijzinnen">
         <item id="spod-relssub-zin" lbl="zinnen"><![CDATA[
-          match (n:node{cat: 'rel'})-[:rel{rel: 'body'}]->(n1:node)-[r:rel*0..1]->(n2:node{cat:
-          'ssub'})
+          match (n:node{cat: 'rel'})-[:rel{rel: 'body'}]->(n1:node)-[r:rel*0..1]->(n2:node{cat: 'ssub'})
           where length(r) = 0
-          or n1.cat = 'conj' and r[0].rel = 'cnj'
-          or n1.cat = 'du'
+             or n1.cat = 'conj' and r[0].rel = 'cnj'
+             or n1.cat = 'du'
           return n.sentid, n.id, n2.id
         ]]></item>
         <item id="spod-relssub-tel" lbl="telling"><![CDATA[
-          match (n:node{cat: 'rel'})-[:rel{rel: 'body'}]->(n1:node)-[r:rel*0..1]->(n2:node{cat:
-          'ssub'})
+          match (n:node{cat: 'rel'})-[:rel{rel: 'body'}]->(n1:node)-[r:rel*0..1]->(n2:node{cat: 'ssub'})
           where length(r) = 0
-          or n1.cat = 'conj' and r[0].rel = 'cnj'
-          or n1.cat = 'du'
+             or n1.cat = 'conj' and r[0].rel = 'cnj'
+             or n1.cat = 'du'
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
@@ -744,17 +736,17 @@
         <item id="spod-whrel-zin" lbl="zinnen"><![CDATA[
           match (n:node{cat: 'whrel'})-[:rel{rel: 'body'}]->(n2:node)
           where not exists( (:node)-[:rel{rel: 'mod'}]->(n) )
-          and (n2.cat = 'ssub'
-          or n2.cat = 'conj' and exists( (n2)-[:rel{rel: 'cnj'}]->(:node{cat: 'ssub'}) )
-          or n2.cat = 'du' and exists( (n2)-[:rel]->(:node{cat: 'ssub'}) ) )
+            and (n2.cat = 'ssub'
+                 or n2.cat = 'conj' and exists( (n2)-[:rel{rel: 'cnj'}]->(:node{cat: 'ssub'}) )
+                 or n2.cat = 'du' and exists( (n2)-[:rel]->(:node{cat: 'ssub'}) ) )
           return n.sentid, n.id, n2.id
         ]]></item>
         <item id="spod-whrel-tel" lbl="telling"><![CDATA[
           match (n:node{cat: 'whrel'})-[:rel{rel: 'body'}]->(n2:node)
           where not exists( (:node)-[:rel{rel: 'mod'}]->(n) )
-          and (n2.cat = 'ssub'
-          or n2.cat = 'conj' and exists( (n2)-[:rel{rel: 'cnj'}]->(:node{cat: 'ssub'}) )
-          or n2.cat = 'du' and exists( (n2)-[:rel]->(:node{cat: 'ssub'}) ) )
+            and (n2.cat = 'ssub'
+                 or n2.cat = 'conj' and exists( (n2)-[:rel{rel: 'cnj'}]->(:node{cat: 'ssub'}) )
+                 or n2.cat = 'du' and exists( (n2)-[:rel]->(:node{cat: 'ssub'}) ) )
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
@@ -771,13 +763,12 @@
         | (2) | Hoe langer hij wordt, des te meer hij last van zijn rug krijgt |
       ]]></item>
       <item id="spod-corc-zin" lbl="zinnen"><![CDATA[
-        match p1 = (n1:node{_deste: true})<-[:rel*0..]-(n0:node)<-[:rel*0..]-(n:node{cat:
-        'du'})
+        match p1 = (n1:node{_deste: true})<-[:rel*0..]-(n0:node)<-[:rel*0..]-(n:node{cat: 'du'})
         match p2 = (n1)<-[:rel*0..]-(n0)-[:rel*0..]->(n2:node{_deste: true})
         optional match p = (n0)<-[:rel*0..]-(:node{cat:'du'})<-[:rel*1..]-(n)
         with n1, n2, p, p1, p2
         where n1.id < n2.id
-        and p is null
+          and p is null
         return p1, p2
       ]]></item>
       <item id="spod-corc-tel" lbl="telling"><![CDATA[
@@ -786,7 +777,7 @@
         optional match p = (n0)<-[:rel*0..]-(:node{cat:'du'})<-[:rel*1..]-(n)
         with n, n1, n2, p
         where n1.id < n2.id
-        and p is null
+          and p is null
         with distinct n.sentid as sentid, n.id as id
         return count(distinct(sentid)) as zinnen, count(*) as items
       ]]></item>
@@ -861,75 +852,65 @@
       </item>
       <item id="spod-ccca" lbl="met als hoofd comparatief adjectief">
         <item id="spod-ccca-zin" lbl="zinnen"><![CDATA[
-          match (n:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel:
-          'obcomp'}]->(n2)
+          match (n:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->(n2)
           return n.sentid, n.id, n2.id
         ]]></item>
         <item id="spod-ccca-tel" lbl="telling"><![CDATA[
-          match (n:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel:
-          'obcomp'}]->()
+          match (n:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
       <item id="spod-ccdannp" lbl="met als hoofd comparatief adjectief, gevolgd door NP">
         <item id="spod-ccdannp-zin" lbl="zinnen"><![CDATA[
-          match (w:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel:
-          'obcomp'}]->(n2)-[:rel{rel: 'body'}]->(x{_np:true})
+          match (w:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->(n2)-[:rel{rel: 'body'}]->(x{_np:true})
           return w.sentid, w.id, n2.id, x.id
         ]]></item>
         <item id="spod-ccdannp-tel" lbl="telling"><![CDATA[
-          match (w:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel:
-          'obcomp'}]->()-[:rel{rel: 'body'}]->(x{_np:true})
+          match (w:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x{_np:true})
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
       <item id="spod-ccdanvs" lbl="met als hoofd comparatief adjectief, gevolgd door VP of S">
         <item id="spod-ccdanvs-zin" lbl="zinnen"><![CDATA[
-          match (w:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-(n2)-[:rel{rel:
-          'obcomp'}]->()-[:rel]->(x:nw)
+          match (w:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-(n2)-[:rel{rel: 'obcomp'}]->()-[:rel]->(x:nw)
           where (x.cat is not null and x.cat in
-          ['inf','ti','ssub','oti','ppart','smain','sv1','cp'])
-          or (x.pt is not null and x.pt = 'ww')
+                   ['inf','ti','ssub','oti','ppart','smain','sv1','cp'])
+             or (x.pt is not null and x.pt = 'ww')
           return distinct w.sentid, w.id, n2.id, x.id
         ]]></item>
         <item id="spod-ccdanvs-tel" lbl="telling"><![CDATA[
-          match (w:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel:
-          'obcomp'}]->()-[:rel]->(x:nw)
+          match (w:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel]->(x:nw)
           where (x.cat is not null and x.cat in
-          ['inf','ti','ssub','oti','ppart','smain','sv1','cp'])
-          or (x.pt is not null and x.pt = 'ww')
+                   ['inf','ti','ssub','oti','ppart','smain','sv1','cp'])
+             or (x.pt is not null and x.pt = 'ww')
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
       <item id="spod-ccdanpp" lbl="met als hoofd comparatief adjectief, gevolgd door PP">
         <item id="spod-ccdanpp-zin" lbl="zinnen"><![CDATA[
-          match (w:word{pt: 'adj',graad: 'comp'})<-[:rel{rel: 'hd'}]-(:node)-[:rel{rel:
-          'obcomp'}]->(:node)-[:rel{rel: 'body'}]->(n2:node{cat: 'pp'})
+          match (w:word{pt: 'adj',graad: 'comp'})<-[:rel{rel: 'hd'}]-(:node)-[:rel{rel: 'obcomp'}]->(:node)-[:rel{rel: 'body'}]->(n2:node{cat: 'pp'})
           return w.sentid, w.id, n2.id
         ]]></item>
         <item id="spod-ccdanpp-tel" lbl="telling"><![CDATA[
-          match (w:word{pt: 'adj',graad: 'comp'})<-[:rel{rel: 'hd'}]-(:node)-[:rel{rel:
-          'obcomp'}]->(:node)-[:rel{rel: 'body'}]->(:node{cat: 'pp'})
+          match (w:word{pt: 'adj',graad: 'comp'})<-[:rel{rel: 'hd'}]-(:node)-[:rel{rel: 'obcomp'}]->(:node)-[:rel{rel: 'body'}]->(:node{cat: 'pp'})
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
       <item id="spod-ccdanav" lbl="met als hoofd comparatief adjectief, gevolgd door A of ADV">
         <item id="spod-ccdanav-zin" lbl="zinnen"><![CDATA[
-          match (w:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel:
-          'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)
+          match (w:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)
           where (x.cat is not null and x.cat in ['advp','ap'])
-          or (x.pt is not null and x.pt in ['adj','bw'])
+             or (x.pt is not null and x.pt in ['adj','bw'])
           return w.sentid, w.id, x.id
         ]]></item>
         <item id="spod-ccdanav-tel" lbl="telling"><![CDATA[
-          match (w:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel:
-          'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)
+          match (w:word{pt: 'adj', graad: 'comp'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)
           where (x.cat is not null and x.cat in ['advp','ap'])
-          or (x.pt is not null and x.pt in ['adj','bw'])
+             or (x.pt is not null and x.pt in ['adj','bw'])
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
@@ -949,69 +930,64 @@
       </item>
       <item id="spod-ccmdnp" lbl="met als hoofd &#34;meer&#34;, &#34;minder&#34;, gevolgd door NP">
         <item id="spod-ccmdnp-zin" lbl="zinnen"><![CDATA[
-          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel:
-          'body'}]->(x:nw{_np: true})
+          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw{_np: true})
           where w.lemma in ['veel', 'minder', 'weinig']
           return w.sentid, w.id, x.id
         ]]></item>
         <item id="spod-ccmdnp-tel" lbl="telling"><![CDATA[
-          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel:
-          'body'}]->(:nw{_np: true})
+          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(:nw{_np: true})
           where w.lemma in ['veel', 'minder', 'weinig']
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
-      <item id="spod-ccmdvs" lbl="met als hoofd &#34;meer&#34;, &#34;minder&#34;, gevolgd door VP of S">
+      <item id="spod-ccmdvs"
+        lbl="met als hoofd &#34;meer&#34;, &#34;minder&#34;, gevolgd door VP of S">
         <item id="spod-ccmdvs-zin" lbl="zinnen"><![CDATA[
-          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel:
-          'body'}]->(x:nw)
+          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)
           where w.lemma in ['veel', 'minder', 'weinig']
-          and (x.cat in ['inf','ti','ssub','oti','ppart','smain','sv1','cp'] or x.pt = 'ww')
+            and (x.cat in ['inf','ti','ssub','oti','ppart','smain','sv1','cp'] or x.pt = 'ww')
           return w.sentid, w.id, x.id
         ]]></item>
         <item id="spod-ccmdvs-tel" lbl="telling"><![CDATA[
-          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel:
-          'body'}]->(x:nw)
+          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)
           where w.lemma in ['veel', 'minder', 'weinig']
-          and (x.cat in ['inf','ti','ssub','oti','ppart','smain','sv1','cp'] or x.pt = 'ww')
+            and (x.cat in ['inf','ti','ssub','oti','ppart','smain','sv1','cp'] or x.pt = 'ww')
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
       <item id="spod-ccmdpp" lbl="met als hoofd &#34;meer&#34;, &#34;minder&#34;, gevolgd door PP">
         <item id="spod-ccmdpp-zin" lbl="zinnen"><![CDATA[
-          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel:
-          'body'}]->(n2:node{cat: 'pp'})
+          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(n2:node{cat: 'pp'})
           where w.lemma in ['veel', 'minder', 'weinig']
           return distinct w.sentid, w.id, n2.id
         ]]></item>
         <item id="spod-ccmdpp-tel" lbl="telling"><![CDATA[
-          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel:
-          'body'}]->(:node{cat: 'pp'})
+          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(:node{cat: 'pp'})
           where w.lemma in ['veel', 'minder', 'weinig']
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
-      <item id="spod-ccmdav" lbl="met als hoofd &#34;meer&#34;, &#34;minder&#34;, gevolgd door A of ADV">
+      <item id="spod-ccmdav"
+        lbl="met als hoofd &#34;meer&#34;, &#34;minder&#34;, gevolgd door A of ADV">
         <item id="spod-ccmdav-zin" lbl="zinnen"><![CDATA[
-          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel:
-          'body'}]->(x:nw)
+          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)
           where w.lemma in ['veel', 'minder', 'weinig']
-          and (x.cat in ['advp', 'ap'] or x.pt in ['adj', 'bw'])
+            and (x.cat in ['advp', 'ap'] or x.pt in ['adj', 'bw'])
           return distinct w.sentid, w.id, x.id
         ]]></item>
         <item id="spod-ccmdav-tel" lbl="telling"><![CDATA[
-          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel:
-          'body'}]->(x:nw)
+          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)
           where w.lemma in ['veel', 'minder', 'weinig']
-          and (x.cat in ['advp', 'ap'] or x.pt in ['adj', 'bw'])
+            and (x.cat in ['advp', 'ap'] or x.pt in ['adj', 'bw'])
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
-      <item id="spod-ccnn" lbl="met als hoofd &#34;niet&#34;, &#34;niets&#34;, &#34;ander&#34;, &#34;anders&#34;">
+      <item id="spod-ccnn"
+        lbl="met als hoofd &#34;niet&#34;, &#34;niets&#34;, &#34;ander&#34;, &#34;anders&#34;">
         <item id="spod-ccnn-zin" lbl="zinnen"><![CDATA[
           match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->(n2)
           where w.lemma in ['niet', 'niets', 'ander', 'anders']
@@ -1024,66 +1000,62 @@
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
-      <item id="spod-ccndnp" lbl="met als hoofd &#34;niet&#34;, &#34;niets&#34;, &#34;ander&#34;, &#34;anders&#34;, gevolgd door NP">
+      <item id="spod-ccndnp"
+        lbl="met als hoofd &#34;niet&#34;, &#34;niets&#34;, &#34;ander&#34;, &#34;anders&#34;, gevolgd door NP">
         <item id="spod-ccndnp-zin" lbl="zinnen"><![CDATA[
-          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel:
-          'body'}]->(n2:nw{_np: true})
+          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(n2:nw{_np: true})
           where w.lemma in ['niet', 'niets', 'ander', 'anders']
           return w.sentid, w.id, n2.id
         ]]></item>
         <item id="spod-ccndnp-tel" lbl="telling"><![CDATA[
-          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel:
-          'body'}]->(:nw{_np: true})
+          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(:nw{_np: true})
           where w.lemma in ['niet', 'niets', 'ander', 'anders']
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
-      <item id="spod-ccndvs" lbl="met als hoofd &#34;niet&#34;, &#34;niets&#34;, &#34;ander&#34;, &#34;anders&#34;, gevolgd door VP of S">
+      <item id="spod-ccndvs"
+        lbl="met als hoofd &#34;niet&#34;, &#34;niets&#34;, &#34;ander&#34;, &#34;anders&#34;, gevolgd door VP of S">
         <item id="spod-ccndvs-zin" lbl="zinnen"><![CDATA[
-          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel:
-          'body'}]->(x:nw)
+          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)
           where w.lemma in ['niet', 'niets', 'ander', 'anders']
-          and (x.cat in ['inf','ti','ssub','oti','ppart','smain','sv1','cp'] or x.pt = 'ww')
+            and (x.cat in ['inf','ti','ssub','oti','ppart','smain','sv1','cp'] or x.pt = 'ww')
           return distinct w.sentid, w.id, x.id
         ]]></item>
         <item id="spod-ccndvs-tel" lbl="telling"><![CDATA[
-          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel:
-          'body'}]->(x:nw)
+          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)
           where w.lemma in ['niet', 'niets', 'ander', 'anders']
-          and (x.cat in ['inf','ti','ssub','oti','ppart','smain','sv1','cp'] or x.pt = 'ww')
+            and (x.cat in ['inf','ti','ssub','oti','ppart','smain','sv1','cp'] or x.pt = 'ww')
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
-      <item id="spod-ccndpp" lbl="met als hoofd &#34;niet&#34;, &#34;niets&#34;, &#34;ander&#34;, &#34;anders&#34;, gevolgd door PP">
+      <item id="spod-ccndpp"
+        lbl="met als hoofd &#34;niet&#34;, &#34;niets&#34;, &#34;ander&#34;, &#34;anders&#34;, gevolgd door PP">
         <item id="spod-ccndpp-zin" lbl="zinnen"><![CDATA[
-          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel:
-          'body'}]->(n2:node{cat: 'pp'})
+          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(n2:node{cat: 'pp'})
           where w.lemma in ['niet', 'niets', 'ander', 'anders']
           return w.sentid, w.id, n2.id
         ]]></item>
         <item id="spod-ccndpp-tel" lbl="telling"><![CDATA[
-          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel:
-          'body'}]->(:node{cat: 'pp'})
+          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(:node{cat: 'pp'})
           where w.lemma in ['niet', 'niets', 'ander', 'anders']
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
-      <item id="spod-ccndav" lbl="met als hoofd &#34;niet&#34;, &#34;niets&#34;, &#34;ander&#34;, &#34;anders&#34;, gevolgd door A of ADV">
+      <item id="spod-ccndav"
+        lbl="met als hoofd &#34;niet&#34;, &#34;niets&#34;, &#34;ander&#34;, &#34;anders&#34;, gevolgd door A of ADV">
         <item id="spod-ccndav-zin" lbl="zinnen"><![CDATA[
-          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel:
-          'body'}]->(x:nw)
+          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)
           where w.lemma in ['niet', 'niets', 'ander', 'anders']
-          and (x.cat in ['advp', 'ap'] or x.pt in ['adj', 'bw'])
+            and (x.cat in ['advp', 'ap'] or x.pt in ['adj', 'bw'])
           return w.sentid, w.id, x.id
         ]]></item>
         <item id="spod-ccndav-tel" lbl="telling"><![CDATA[
-          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel:
-          'body'}]->(x:nw)
+          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'obcomp'}]->()-[:rel{rel: 'body'}]->(x:nw)
           where w.lemma in ['niet', 'niets', 'ander', 'anders']
-          and (x.cat in ['advp', 'ap'] or x.pt in ['adj', 'bw'])
+            and (x.cat in ['advp', 'ap'] or x.pt in ['adj', 'bw'])
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
@@ -1148,9 +1120,9 @@
       <item id="spod-crdcount" lbl="nevenschikkingen met aantal coördinatoren (minimaal 1)"><![CDATA[
         select crd, count(*) as aantal
         from (
-        match (n:node{cat: 'conj'})-[:rel{rel: 'crd'}]->()
-        with n, count(*) as crd
-        return crd
+          match (n:node{cat: 'conj'})-[:rel{rel: 'crd'}]->()
+          with n, count(*) as crd
+          return crd
         ) as foo
         group by crd
         order by crd
@@ -1238,7 +1210,8 @@
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
-      <item id="spod-crd1enz" lbl="nevenschikkingen met 1 coördinator, en de coordinator sluit de nevenschikking af (&#34;enzovoorts&#34;)">
+      <item id="spod-crd1enz"
+        lbl="nevenschikkingen met 1 coördinator, en de coordinator sluit de nevenschikking af (&#34;enzovoorts&#34;)">
         <item id="spod-crd1enz-zin" lbl="zinnen"><![CDATA[
           match (n:node{cat: 'conj'})-[:rel{rel: 'crd'}]->()
           optional match (n)-[:rel{rel: 'crd'}]->(x:nw)
@@ -1292,15 +1265,13 @@
           match (n1:nw)<-[:rel{rel:'crd'}]-(n:node{cat: 'conj'})-[:rel{rel: 'crd'}]->(n3:nw)
           match (n2:nw{sentid: n.sentid})<-[:rel{rel:'cnj'}]-(n)-[:rel{rel: 'cnj'}]->(n4:nw)
           where n1.id = n.id + 1
-          and (
-          n1.id < n2.id
-          and n2.id < n3.id
-          and n3.id < n4.id
-          or
-          n1.begin < n2.begin
-          and n2.begin < n3.begin
-          and n3.begin < n4.begin
-          )
+            and (n1.id < n2.id
+                 and n2.id < n3.id
+                 and n3.id < n4.id
+                  or
+                 n1.begin < n2.begin
+                 and n2.begin < n3.begin
+                 and n3.begin < n4.begin)
           return n
         ]]></item>
         <item id="spod-crd22-tel" lbl="telling"><![CDATA[
@@ -1309,15 +1280,13 @@
           match (n1:nw)<-[:rel{rel:'crd'}]-(n:node{cat: 'conj'})-[:rel{rel: 'crd'}]->(n3:nw)
           match (n2:nw{sentid: n.sentid})<-[:rel{rel:'cnj'}]-(n)-[:rel{rel: 'cnj'}]->(n4:nw)
           where n1.id = n.id + 1
-          and (
-          n1.id < n2.id
-          and n2.id < n3.id
-          and n3.id < n4.id
-          or
-          n1.begin < n2.begin
-          and n2.begin < n3.begin
-          and n3.begin < n4.begin
-          )
+          and (n1.id < n2.id
+               and n2.id < n3.id
+               and n3.id < n4.id
+                or
+               n1.begin < n2.begin
+               and n2.begin < n3.begin
+               and n3.begin < n4.begin)
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
@@ -1325,9 +1294,9 @@
       <item id="spod-cnjcount" lbl="nevenschikkingen met aantal conjuncten (minimaal 1)"><![CDATA[
         select cnj, count(*) as aantal
         from (
-        match (n:node{cat: 'conj'})-[:rel{rel: 'cnj'}]->()
-        with n, count(*) as cnj
-        return cnj
+          match (n:node{cat: 'conj'})-[:rel{rel: 'cnj'}]->()
+          with n, count(*) as cnj
+          return cnj
         ) as foo
         group by cnj
         order by cnj
@@ -1441,7 +1410,7 @@
         <item id="spod-cnjnp-zin" lbl="zinnen"><![CDATA[
           match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{_np: true})
           return n.sentid, n.id
-          except
+            except
           match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
           where n2._np is null
           return n.sentid, n.id
@@ -1449,12 +1418,12 @@
         <item id="spod-cnjnp-tel" lbl="telling"><![CDATA[
           select count(distinct(sentid)) as zinnen, count(*) as items
           from (
-          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{_np: true})
-          return n.sentid, n.id
-          except
-          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
-          where n2._np is null
-          return n.sentid, n.id
+            match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{_np: true})
+            return n.sentid, n.id
+             except
+            match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
+            where n2._np is null
+            return n.sentid, n.id
           ) as foo
         ]]></item>
       </item>
@@ -1462,7 +1431,7 @@
         <item id="spod-cnjpp-zin" lbl="zinnen"><![CDATA[
           match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{cat: 'pp'})
           return n.sentid, n.id
-          except
+            except
           match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
           where n2.cat is null or n2.cat != 'pp'
           return n.sentid, n.id
@@ -1470,12 +1439,12 @@
         <item id="spod-cnjpp-tel" lbl="telling"><![CDATA[
           select count(distinct(sentid)) as zinnen, count(*) as items
           from (
-          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{cat: 'pp'})
-          return n.sentid, n.id
-          except
-          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
-          where n2.cat is null or n2.cat != 'pp'
-          return n.sentid, n.id
+            match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{cat: 'pp'})
+            return n.sentid, n.id
+              except
+            match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
+            where n2.cat is null or n2.cat != 'pp'
+            return n.sentid, n.id
           ) as foo
         ]]></item>
       </item>
@@ -1483,7 +1452,7 @@
         <item id="spod-cnjmain-zin" lbl="zinnen"><![CDATA[
           match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{cat: 'smain'})
           return n.sentid, n.id
-          except
+            except
           match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
           where n2.cat is null or n2.cat != 'smain'
           return n.sentid, n.id
@@ -1491,12 +1460,12 @@
         <item id="spod-cnjmain-tel" lbl="telling"><![CDATA[
           select count(distinct(sentid)) as zinnen, count(*) as items
           from (
-          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{cat: 'smain'})
-          return n.sentid, n.id
-          except
-          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
-          where n2.cat is null or n2.cat != 'smain'
-          return n.sentid, n.id
+            match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{cat: 'smain'})
+            return n.sentid, n.id
+              except
+            match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
+            where n2.cat is null or n2.cat != 'smain'
+            return n.sentid, n.id
           ) as foo
         ]]></item>
       </item>
@@ -1504,26 +1473,26 @@
         <item id="spod-cnjvp-zin" lbl="zinnen"><![CDATA[
           match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n1:nw)
           where n1.cat in ['ssub','ti','ppart','inf']
-          or n1.pt = 'ww'
+             or n1.pt = 'ww'
           return n.sentid, n.id
-          except
+            except
           match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
           where not ( n2.cat is not null and n2.cat in ['ssub','ti','ppart','inf']
-          or n2.pt is not null and n2.pt = 'ww' )
+             or n2.pt is not null and n2.pt = 'ww' )
           return n.sentid, n.id
         ]]></item>
         <item id="spod-cnjvp-tel" lbl="telling"><![CDATA[
           select count(distinct(sentid)) as zinnen, count(*) as items
           from (
-          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n1:nw)
-          where n1.cat in ['ssub','ti','ppart','inf']
-          or n1.pt = 'ww'
-          return n.sentid, n.id
-          except
-          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
-          where not ( n2.cat is not null and n2.cat in ['ssub','ti','ppart','inf']
-          or n2.pt is not null and n2.pt = 'ww' )
-          return n.sentid, n.id
+            match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n1:nw)
+            where n1.cat in ['ssub','ti','ppart','inf']
+               or n1.pt = 'ww'
+            return n.sentid, n.id
+              except
+            match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
+            where not ( n2.cat is not null and n2.cat in ['ssub','ti','ppart','inf']
+               or n2.pt is not null and n2.pt = 'ww' )
+            return n.sentid, n.id
           ) as foo
         ]]></item>
       </item>
@@ -1531,7 +1500,7 @@
         <item id="spod-cnjcp-zin" lbl="zinnen"><![CDATA[
           match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{cat: 'cp'})
           return n.sentid, n.id
-          except
+            except
           match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
           where n2.cat is null or n2.cat != 'cp'
           return n.sentid, n.id
@@ -1539,12 +1508,12 @@
         <item id="spod-cnjcp-tel" lbl="telling"><![CDATA[
           select count(distinct(sentid)) as zinnen, count(*) as items
           from (
-          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{cat: 'cp'})
-          return n.sentid, n.id
-          except
-          match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
-          where n2.cat is null or n2.cat != 'cp'
-          return n.sentid, n.id
+            match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (:nw{cat: 'cp'})
+            return n.sentid, n.id
+              except
+            match (n:node{cat: 'conj'}) -[:rel{rel: 'cnj'}]-> (n2:nw)
+            where n2.cat is null or n2.cat != 'cp'
+            return n.sentid, n.id
           ) as foo
         ]]></item>
       </item>
@@ -1591,15 +1560,15 @@
         <item id="spod-ap-zin" lbl="zinnen"><![CDATA[
           match (x:nw)<-[r:rel]-()
           where (x.cat is not null and x.cat = 'ap')
-          or (x.pt is not null and x.pt = 'adj')
-          and r.rel != 'hd'
+             or (x.pt is not null and x.pt = 'adj')
+                and r.rel != 'hd'
           return x.sentid, x.id
         ]]></item>
         <item id="spod-ap-tel" lbl="telling"><![CDATA[
           match (x:nw)<-[r:rel]-()
           where (x.cat is not null and x.cat = 'ap')
-          or (x.pt is not null and x.pt = 'adj')
-          and r.rel != 'hd'
+             or (x.pt is not null and x.pt = 'adj')
+                and r.rel != 'hd'
           with distinct x.sentid as sentid, x.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
@@ -1608,15 +1577,15 @@
         <item id="spod-advp-zin" lbl="zinnen"><![CDATA[
           match (x:nw)<-[r:rel]-()
           where (x.cat is not null and x.cat = 'advp')
-          or (x.pt is not null and x.pt = 'bw')
-          and r.rel != 'hd'
+             or (x.pt is not null and x.pt = 'bw')
+                and r.rel != 'hd'
           return x.sentid, x.id
         ]]></item>
         <item id="spod-advp-tel" lbl="telling"><![CDATA[
           match (x:nw)<-[r:rel]-()
           where (x.cat is not null and x.cat = 'advp')
-          or (x.pt is not null and x.pt = 'bw')
-          and r.rel != 'hd'
+             or (x.pt is not null and x.pt = 'bw')
+                and r.rel != 'hd'
           with distinct x.sentid as sentid, x.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
@@ -1678,28 +1647,29 @@
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
-      <item id="spod-ppap" lbl="grammaticale functie, bepalingen bij adjectieven (en als adjectief gebruikte deelwoorden)">
+      <item id="spod-ppap"
+        lbl="grammaticale functie, bepalingen bij adjectieven (en als adjectief gebruikte deelwoorden)">
         <item id="spod-ppap-zin" lbl="zinnen"><![CDATA[
           match (n:node{cat: 'pp'})<-[:rel{rel: 'mod'}]-(n2:node{cat:'ap'})
           return n.sentid, n.id
-          union
+            union
           match (n:node{cat: 'pp'})<-[:rel{rel: 'mod'}]-(n2:node)
           where n2.cat in ['ppart','ppres']
-          and not exists((n2)<-[:rel{rel: 'vc'}]-())
-          and not exists((n2)<-[:rel{rel: 'cnj'}]-()<-[:rel{rel: 'vc'}]-())
+            and not exists((n2)<-[:rel{rel: 'vc'}]-())
+            and not exists((n2)<-[:rel{rel: 'cnj'}]-()<-[:rel{rel: 'vc'}]-())
           return n.sentid, n.id
         ]]></item>
         <item id="spod-ppap-tel" lbl="telling"><![CDATA[
           select count(distinct(sentid)) as zinnen, count(*) as items
           from (
-          match (n:node{cat: 'pp'})<-[:rel{rel: 'mod'}]-(n2:node{cat:'ap'})
-          return distinct n.sentid, n.id
-          union
-          match (n:node{cat: 'pp'})<-[:rel{rel: 'mod'}]-(n2:node)
-          where n2.cat in ['ppart','ppres']
-          and not exists((n2)<-[:rel{rel: 'vc'}]-())
-          and not exists((n2)<-[:rel{rel: 'cnj'}]-()<-[:rel{rel: 'vc'}]-())
-          return distinct n.sentid, n.id
+            match (n:node{cat: 'pp'})<-[:rel{rel: 'mod'}]-(n2:node{cat:'ap'})
+            return distinct n.sentid, n.id
+              union
+            match (n:node{cat: 'pp'})<-[:rel{rel: 'mod'}]-(n2:node)
+            where n2.cat in ['ppart','ppres']
+              and not exists((n2)<-[:rel{rel: 'vc'}]-())
+              and not exists((n2)<-[:rel{rel: 'cnj'}]-()<-[:rel{rel: 'vc'}]-())
+            return distinct n.sentid, n.id
           ) as foo
         ]]></item>
       </item>
@@ -1740,31 +1710,19 @@
         <item id="spod-ppbep-zin" lbl="zinnen"><![CDATA[
           match (n:node{cat: 'pp'})<-[:rel{rel: 'mod'}]-(n1)<-[r:rel]-(n2)
           where n1.cat in ['smain','sv1','whq','ssub','inf']
-          or (
-          n1.cat = 'ppart'
-          and (
-          r.rel = 'vc'
-          or (
-          r.rel = 'cnj'
-          and exists((n2)<-[:rel{rel: 'vc'}]-())
-          )
-          )
-          )
+             or (n1.cat = 'ppart'
+                 and (r.rel = 'vc'
+                      or (r.rel = 'cnj'
+                          and exists((n2)<-[:rel{rel: 'vc'}]-()))))
           return n.sentid, n.id
         ]]></item>
         <item id="spod-ppbep-tel" lbl="telling"><![CDATA[
           match (n:node{cat: 'pp'})<-[:rel{rel: 'mod'}]-(n1)<-[r:rel]-(n2)
           where n1.cat in ['smain','sv1','whq','ssub','inf']
-          or (
-          n1.cat = 'ppart'
-          and (
-          r.rel = 'vc'
-          or (
-          r.rel = 'cnj'
-          and exists((n2)<-[:rel{rel: 'vc'}]-())
-          )
-          )
-          )
+             or (n1.cat = 'ppart'
+                 and (r.rel = 'vc'
+                      or (r.rel = 'cnj'
+                          and exists((n2)<-[:rel{rel: 'vc'}]-()))))
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
@@ -1784,14 +1742,12 @@
       </item>
       <item id="spod-ppirp" lbl="interne structuur, +R-pronomen + P">
         <item id="spod-ppirp-zin" lbl="zinnen"><![CDATA[
-          match (n1)<-[:rel{rel: 'hd'}]-(n:node{cat: 'pp'})-[:rel{rel: 'obj1'}]->(w:word{pt:
-          'vnw'})
+          match (n1)<-[:rel{rel: 'hd'}]-(n:node{cat: 'pp'})-[:rel{rel: 'obj1'}]->(w:word{pt: 'vnw'})
           where w.begin = n.begin and n1.end = n.end
           return n.sentid, n.id
         ]]></item>
         <item id="spod-ppirp-tel" lbl="telling"><![CDATA[
-          match (n1)<-[:rel{rel: 'hd'}]-(n:node{cat: 'pp'})-[:rel{rel: 'obj1'}]->(w:word{pt:
-          'vnw'})
+          match (n1)<-[:rel{rel: 'hd'}]-(n:node{cat: 'pp'})-[:rel{rel: 'obj1'}]->(w:word{pt: 'vnw'})
           where w.begin = n.begin and n1.end = n.end
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
@@ -1851,7 +1807,8 @@
         ten slotte de gevallen waarbij het adjectief optreedt met een complement ter rechterzijde
         (12), (13).
       ]]></item>
-      <item id="spod-ajbepn" lbl="grammaticale functie, bijvoegelijke bepaling (bepaling bij zelfstandig naamwoord)">
+      <item id="spod-ajbepn"
+        lbl="grammaticale functie, bijvoegelijke bepaling (bepaling bij zelfstandig naamwoord)">
         <item id="spod-ajbepn-zin" lbl="zinnen"><![CDATA[
           match (n)<-[:rel*0..1{rel: 'cnj'}]-()<-[:rel{rel: 'mod'}]-({cat: 'np'})
           where n.cat = 'ap' or n.pt = 'adj'
@@ -1864,7 +1821,8 @@
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
-      <item id="spod-ajbepva" lbl="grammaticale functie, bijwoordelijke bepaling (bepaling bij werkwoord, adjectief, ...)">
+      <item id="spod-ajbepva"
+        lbl="grammaticale functie, bijwoordelijke bepaling (bepaling bij werkwoord, adjectief, ...)">
         <item id="spod-ajbepva-zin" lbl="zinnen"><![CDATA[
           match (n)<-[:rel*0..1{rel: 'cnj'}]-()<-[:rel{rel: 'mod'}]-(n2:node)
           where n2.cat != 'np' and (n.cat = 'ap' or n.pt = 'adj')
@@ -1935,8 +1893,8 @@
           optional match (n1)-[:rel*0]->(n1v{_vorfeld: true})
           with n, n1, n2, n1v, r
           where any(x in ['predc','obj1','obj2','pc','me','vc'] where x = r.rel)
-          and n1v is null
-          and n1.begin < n2.begin
+            and n1v is null
+            and n1.begin < n2.begin
           return n.sentid, n.id
         ]]></item>
         <item id="spod-ajcaj-tel" lbl="telling"><![CDATA[
@@ -1944,8 +1902,8 @@
           optional match (n1)-[:rel*0]->(n1v{_vorfeld: true})
           with n, n1, n2, n1v, r
           where any(x in ['predc','obj1','obj2','pc','me','vc'] where x = r.rel)
-          and n1v is null
-          and n1.begin < n2.begin
+            and n1v is null
+            and n1.begin < n2.begin
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
@@ -1969,8 +1927,8 @@
           optional match (n1)-[:rel*0]->(n1v{_nachfeld: true})
           with n, n1, n2, n1v, r
           where any(x in ['predc','obj1','obj2','pc','me','vc'] where x = r.rel)
-          and n1v is null
-          and n1.begin > n2.begin
+            and n1v is null
+            and n1.begin > n2.begin
           return n.sentid, n.id
         ]]></item>
         <item id="spod-ajajc-tel" lbl="telling"><![CDATA[
@@ -1978,8 +1936,8 @@
           optional match (n1)-[:rel*0]->(n1v{_nachfeld: true})
           with n, n1, n2, n1v, r
           where any(x in ['predc','obj1','obj2','pc','me','vc'] where x = r.rel)
-          and n1v is null
-          and n1.begin > n2.begin
+            and n1v is null
+            and n1.begin > n2.begin
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
@@ -2059,63 +2017,57 @@
       </item>
       <item id="spod-groen" lbl="groene werkwoordsvolgorde">
         <item id="spod-groen-zin" lbl="zinnen"><![CDATA[
-          match (w:word{wvorm: 'vd'})<-[:rel{rel: 'hd'}]-(:node)<-[:rel{rel:
-          'vc'}]-(:node)-[:rel{rel: 'hd'}]->(x)
+          match (w:word{wvorm: 'vd'})<-[:rel{rel: 'hd'}]-(:node)<-[:rel{rel: 'vc'}]-(:node)-[:rel{rel: 'hd'}]->(x)
           where w.begin < x.begin
-          and not exists( (w)<-[:rel*2]-(:node{sentid: w.sentid, cat: 'smain'}) )
-          and not exists( (w)<-[:rel*2]-(:node{sentid: w.sentid, cat: 'sv1'}) )
+            and not exists( (w)<-[:rel*2]-(:node{sentid: w.sentid, cat: 'smain'}) )
+            and not exists( (w)<-[:rel*2]-(:node{sentid: w.sentid, cat: 'sv1'}) )
           return w.sentid, w.id
         ]]></item>
         <item id="spod-groen-tel" lbl="telling"><![CDATA[
-          match (w:word{wvorm: 'vd'})<-[:rel{rel: 'hd'}]-(:node)<-[:rel{rel:
-          'vc'}]-(:node)-[:rel{rel: 'hd'}]->(x)
+          match (w:word{wvorm: 'vd'})<-[:rel{rel: 'hd'}]-(:node)<-[:rel{rel: 'vc'}]-(:node)-[:rel{rel: 'hd'}]->(x)
           where w.begin < x.begin
-          and not exists( (w)<-[:rel*2]-(:node{sentid: w.sentid, cat: 'smain'}) )
-          and not exists( (w)<-[:rel*2]-(:node{sentid: w.sentid, cat: 'sv1'}) )
+            and not exists( (w)<-[:rel*2]-(:node{sentid: w.sentid, cat: 'smain'}) )
+            and not exists( (w)<-[:rel*2]-(:node{sentid: w.sentid, cat: 'sv1'}) )
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
       <item id="spod-rood" lbl="rode werkwoordsvolgorde">
         <item id="spod-rood-zin" lbl="zinnen"><![CDATA[
-          match (n:word{wvorm: 'vd'})<-[:rel{rel: 'hd'}]-()<-[:rel]-()-[:rel{rel:
-          'hd'}]->(w:word{pt: 'ww'})
+          match (n:word{wvorm: 'vd'})<-[:rel{rel: 'hd'}]-()<-[:rel]-()-[:rel{rel: 'hd'}]->(w:word{pt: 'ww'})
           optional match (n)<-[:rel]-()<-[:rel]-(n2:node{cat: 'smain'})
           optional match (n)<-[:rel]-()<-[:rel]-(n3:node{cat: 'sv1'})
           with n, n2, n3, w
           where n.begin > w.begin
-          and n2 is null
-          and n3 is null
+            and n2 is null
+            and n3 is null
           return n.sentid, n.id
         ]]></item>
         <item id="spod-rood-tel" lbl="telling"><![CDATA[
-          match (n:word{wvorm: 'vd'})<-[:rel{rel: 'hd'}]-()<-[:rel]-()-[:rel{rel:
-          'hd'}]->(w:word{pt: 'ww'})
+          match (n:word{wvorm: 'vd'})<-[:rel{rel: 'hd'}]-()<-[:rel]-()-[:rel{rel: 'hd'}]->(w:word{pt: 'ww'})
           optional match (n)<-[:rel]-()<-[:rel]-(n2:node{cat: 'smain'})
           optional match (n)<-[:rel]-()<-[:rel]-(n3:node{cat: 'sv1'})
           with n, n2, n3, w
           where n.begin > w.begin
-          and n2 is null
-          and n3 is null
+            and n2 is null
+            and n3 is null
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
       <item id="spod-wwclus" lbl="werkwoordsclusters">
         <item id="spod-wwclus-zin" lbl="zinnen"><![CDATA[
-          match (n1:nw)<-[:rel]-(n:node)<-[:rel{rel: 'vc'}]-(n0:node)-[:rel{rel:
-          'hd'}]->(n2:word{pt: 'ww'})
+          match (n1:nw)<-[:rel]-(n:node)<-[:rel{rel: 'vc'}]-(n0:node)-[:rel{rel: 'hd'}]->(n2:word{pt: 'ww'})
           where n.cat in ['ti','inf','ppart']
-          and not(n0.cat in ['smain','sv1']) -- dit hoeft niet per se n0 te zijn???
-          and n1.begin < n2.begin
+            and not(n0.cat in ['smain','sv1']) -- dit hoeft niet per se n0 te zijn???
+            and n1.begin < n2.begin
           return n.sentid, n.id
         ]]></item>
         <item id="spod-wwclus-tel" lbl="telling"><![CDATA[
-          match (n1:nw)<-[:rel]-(n:node)<-[:rel{rel: 'vc'}]-(n0:node)-[:rel{rel:
-          'hd'}]->(n2:word{pt: 'ww'})
+          match (n1:nw)<-[:rel]-(n:node)<-[:rel{rel: 'vc'}]-(n0:node)-[:rel{rel: 'hd'}]->(n2:word{pt: 'ww'})
           where n.cat in ['ti','inf','ppart']
-          and not(n0.cat in ['smain','sv1']) -- dit hoeft niet per se n0 te zijn???
-          and n1.begin < n2.begin
+            and not(n0.cat in ['smain','sv1']) -- dit hoeft niet per se n0 te zijn???
+            and n1.begin < n2.begin
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
@@ -2124,21 +2076,19 @@
         <item id="spod-accinf-zin" lbl="zinnen"><![CDATA[
           -- niet voor Corpus Gesproken Nederlands
 
-          match (x)<-[:rel]-(n:node{cat: 'inf'})<-[:rel{rel: 'vc'}]-(n1)-[:rel{rel:
-          'hd'}]->(w:word{pt: 'ww'})
+          match (x)<-[:rel]-(n:node{cat: 'inf'})<-[:rel{rel: 'vc'}]-(n1)-[:rel{rel: 'hd'}]->(w:word{pt: 'ww'})
           match (n)-[:rel{rel: 'su'}]->()<-[:rel{rel: 'obj1'}]-(n1)
           where not n1.cat in ['smain','sv1']
-          and x.begin < w.begin
+            and x.begin < w.begin
           return n.sentid, n.id
         ]]></item>
         <item id="spod-accinf-tel" lbl="telling"><![CDATA[
           -- niet voor Corpus Gesproken Nederlands
 
-          match (x)<-[:rel]-(n:node{cat: 'inf'})<-[:rel{rel: 'vc'}]-(n1)-[:rel{rel:
-          'hd'}]->(w:word{pt: 'ww'})
+          match (x)<-[:rel]-(n:node{cat: 'inf'})<-[:rel{rel: 'vc'}]-(n1)-[:rel{rel: 'hd'}]->(w:word{pt: 'ww'})
           match (n)-[:rel{rel: 'su'}]->()<-[:rel{rel: 'obj1'}]-(n1)
           where not n1.cat in ['smain','sv1']
-          and x.begin < w.begin
+            and x.begin < w.begin
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
@@ -2147,8 +2097,7 @@
         <item id="spod-passive-zin" lbl="zinnen"><![CDATA[
           -- niet voor Corpus Gesproken Nederlands
 
-          match (n1:nw)<-[:rel{rel: 'obj1'}]-()<-[r:rel*0..1]-(n:node)<-[:rel{rel:
-          'vc'}]-()<-[:rel]-(n0)
+          match (n1:nw)<-[:rel{rel: 'obj1'}]-()<-[r:rel*0..1]-(n:node)<-[:rel{rel: 'vc'}]-()<-[:rel]-(n0)
           match (n0)-[:rel{rel: 'su'}]->(n1)
           where (length(r) = 0 and n.cat = 'ppart' or length(r) = 1 and n.cat = 'ti')
           return n.sentid, n.id
@@ -2156,8 +2105,7 @@
         <item id="spod-passive-tel" lbl="telling"><![CDATA[
           -- niet voor Corpus Gesproken Nederlands
 
-          match (n1:nw)<-[:rel{rel: 'obj1'}]-()<-[r:rel*0..1]-(n:node)<-[:rel{rel:
-          'vc'}]-()<-[:rel]-(n0)
+          match (n1:nw)<-[:rel{rel: 'obj1'}]-()<-[r:rel*0..1]-(n:node)<-[:rel{rel: 'vc'}]-()<-[:rel]-(n0)
           match (n0)-[:rel{rel: 'su'}]->(n1)
           where (length(r) = 0 and n.cat = 'ppart' or length(r) = 1 and n.cat = 'ti')
           with distinct n.sentid as sentid, n.id as id
@@ -2176,40 +2124,32 @@
           optional match (pn)-[:rel{rel: 'hd'}]->(px2)
           with n, n1, n2, pn, px1, px2
           where (n1.sc in ['passive','te_passive']
-          or (n1.pt = 'ww'
-          and (
-          ( n.cat = 'ppart'
-          and not exists ((n)-[:rel{rel: 'obj1'}]->())
-          and not exists ((n)-[:rel{rel: 'su'}]->())
-          and not exists ((n)-[:rel{rel: 'vc'}]->())
-          and not exists ((n)-[:rel{rel: 'predc'}]->()) )
-          or ( n.cat = 'ti'
-          and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'obj1'}]->())
-          and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'su'}]->())
-          and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'vc'}]->())
-          and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'predc'}]->()) )
-          ))
-          ) and (
-          -- n2 is een parent van n
-          not exists((n2)-[:rel{rel: 'su'}]->())
-          and (
-          n2.cat in ['smain','ssub']
-          or (
-          n2.cat = 'sv1'
-          and not (
-          -- imperatief
-          pn is not null
-          and px1 is null
-          and not (px2.stype is not null and not px2.stype = 'imparative')
-          and not ((px2.tense is not null and px2.tense = 'past') or
-          (px2.pvagr is not null and px2.pvagr in ['mv','met-t']) or
-          (px2.pvtijd is not null and px2.pvtijd = 'verl') or
-          (px2.lemma is not null and px2.lemma in
-          ['zijn','kunnen','willen','moeten','mogen','zullen','denken','geloven','vinden','hebben'])
-          )
-          -- einde imperatief
-          )))
-          )
+                 or (n1.pt = 'ww'
+                     and (( n.cat = 'ppart'
+                            and not exists ((n)-[:rel{rel: 'obj1'}]->())
+                            and not exists ((n)-[:rel{rel: 'su'}]->())
+                            and not exists ((n)-[:rel{rel: 'vc'}]->())
+                            and not exists ((n)-[:rel{rel: 'predc'}]->()) )
+                          or ( n.cat = 'ti'
+                               and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'obj1'}]->())
+                               and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'su'}]->())
+                               and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'vc'}]->())
+                               and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'predc'}]->()) ))))
+            and (-- n2 is een parent van n
+                 not exists((n2)-[:rel{rel: 'su'}]->())
+                 and (n2.cat in ['smain','ssub']
+                      or (n2.cat = 'sv1'
+                          and not (-- imperatief
+                                   pn is not null
+                                   and px1 is null
+                                   and not (px2.stype is not null and not px2.stype = 'imparative')
+                                   and not ((px2.tense is not null and px2.tense = 'past') or
+                                            (px2.pvagr is not null and px2.pvagr in ['mv','met-t']) or
+                                            (px2.pvtijd is not null and px2.pvtijd = 'verl') or
+                                            (px2.lemma is not null and px2.lemma in
+                                              ['zijn','kunnen','willen','moeten','mogen','zullen','denken','geloven','vinden','hebben']))
+                                   -- einde imperatief
+                                  ))))
           return n.sentid, n.id
         ]]></item>
         <item id="spod-nppas-tel" lbl="telling"><![CDATA[
@@ -2223,40 +2163,32 @@
           optional match (pn)-[:rel{rel: 'hd'}]->(px2)
           with n, n1, n2, pn, px1, px2
           where (n1.sc in ['passive','te_passive']
-          or (n1.pt = 'ww'
-          and (
-          ( n.cat = 'ppart'
-          and not exists ((n)-[:rel{rel: 'obj1'}]->())
-          and not exists ((n)-[:rel{rel: 'su'}]->())
-          and not exists ((n)-[:rel{rel: 'vc'}]->())
-          and not exists ((n)-[:rel{rel: 'predc'}]->()) )
-          or ( n.cat = 'ti'
-          and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'obj1'}]->())
-          and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'su'}]->())
-          and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'vc'}]->())
-          and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'predc'}]->()) )
-          ))
-          ) and (
-          -- n2 is een parent van n
-          not exists((n2)-[:rel{rel: 'su'}]->())
-          and (
-          n2.cat in ['smain','ssub']
-          or (
-          n2.cat = 'sv1'
-          and not (
-          -- imperatief
-          pn is not null
-          and px1 is null
-          and not (px2.stype is not null and not px2.stype = 'imparative')
-          and not ((px2.tense is not null and px2.tense = 'past') or
-          (px2.pvagr is not null and px2.pvagr in ['mv','met-t']) or
-          (px2.pvtijd is not null and px2.pvtijd = 'verl') or
-          (px2.lemma is not null and px2.lemma in
-          ['zijn','kunnen','willen','moeten','mogen','zullen','denken','geloven','vinden','hebben'])
-          )
-          -- einde imperatief
-          )))
-          )
+                 or (n1.pt = 'ww'
+                     and (( n.cat = 'ppart'
+                            and not exists ((n)-[:rel{rel: 'obj1'}]->())
+                            and not exists ((n)-[:rel{rel: 'su'}]->())
+                            and not exists ((n)-[:rel{rel: 'vc'}]->())
+                            and not exists ((n)-[:rel{rel: 'predc'}]->()) )
+                          or ( n.cat = 'ti'
+                               and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'obj1'}]->())
+                               and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'su'}]->())
+                               and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'vc'}]->())
+                               and not exists ((n)-[:rel{rel: 'body'}]->()-[:rel{rel: 'predc'}]->()) ))))
+            and (-- n2 is een parent van n
+                 not exists((n2)-[:rel{rel: 'su'}]->())
+                 and (n2.cat in ['smain','ssub']
+                      or (n2.cat = 'sv1'
+                          and not (-- imperatief
+                                   pn is not null
+                                   and px1 is null
+                                   and not (px2.stype is not null and not px2.stype = 'imparative')
+                                   and not ((px2.tense is not null and px2.tense = 'past') or
+                                            (px2.pvagr is not null and px2.pvagr in ['mv','met-t']) or
+                                            (px2.pvtijd is not null and px2.pvtijd = 'verl') or
+                                            (px2.lemma is not null and px2.lemma in
+                                              ['zijn','kunnen','willen','moeten','mogen','zullen','denken','geloven','vinden','hebben']))
+                                   -- einde imperatief
+                                  ))))
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
@@ -2301,13 +2233,14 @@
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
-      <item id="spod-vpartex" lbl="Werkwoorden met een scheidbaar partikel, partikel gescheiden van het werkwoord">
+      <item id="spod-vpartex"
+        lbl="Werkwoorden met een scheidbaar partikel, partikel gescheiden van het werkwoord">
         <item id="spod-vpartex-zin" lbl="zinnen"><![CDATA[
           -- alleen voor automatisch verwerkte corpora
 
           match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)
           where w.sc starts with 'part_'
-          and w2.frame starts with 'particle'
+            and w2.frame starts with 'particle'
           return w.sentid, w.id
         ]]></item>
         <item id="spod-vpartex-tel" lbl="telling"><![CDATA[
@@ -2315,22 +2248,23 @@
 
           match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)
           where w.sc starts with 'part_'
-          and w2.frame starts with 'particle'
+            and w2.frame starts with 'particle'
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
-      <item id="spod-vpartin" lbl="Werkwoorden met een scheidbaar partikel, partikel geïncorporeerd in het werkwoord">
+      <item id="spod-vpartin"
+        lbl="Werkwoorden met een scheidbaar partikel, partikel geïncorporeerd in het werkwoord">
         <item id="spod-vpartin-zin" lbl="zinnen"><![CDATA[
           -- alleen voor automatisch verwerkte corpora
 
           match (w:word)
           where w.sc starts with 'part_'
           return w.sentid, w.id
-          except
+            except
           match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)
           where w.sc starts with 'part_'
-          and w2.frame starts with 'particle'
+            and w2.frame starts with 'particle'
           return w.sentid, w.id
         ]]></item>
         <item id="spod-vpartin-tel" lbl="telling"><![CDATA[
@@ -2338,14 +2272,14 @@
 
           select count(distinct(sentid)) as zinnen, count(*) as items
           from (
-          match (w:word)
-          where w.sc starts with 'part_'
-          return distinct w.sentid, w.id
-          except
-          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)
-          where w.sc starts with 'part_'
-          and w2.frame starts with 'particle'
-          return distinct w.sentid, w.id
+            match (w:word)
+            where w.sc starts with 'part_'
+            return distinct w.sentid, w.id
+              except
+            match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)
+            where w.sc starts with 'part_'
+              and w2.frame starts with 'particle'
+            return distinct w.sentid, w.id
           ) as foo
         ]]></item>
       </item>
@@ -2355,7 +2289,7 @@
 
           match (w:word)
           where w.sc starts with 'part_'
-          and (w.wvorm is null or w.wvorm != 'pv')
+            and (w.wvorm is null or w.wvorm != 'pv')
           return w.sentid, w.id
         ]]></item>
         <item id="spod-vprtn-tel" lbl="telling"><![CDATA[
@@ -2363,19 +2297,20 @@
 
           match (w:word)
           where w.sc starts with 'part_'
-          and (w.wvorm is null or w.wvorm != 'pv')
+            and (w.wvorm is null or w.wvorm != 'pv')
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
-      <item id="spod-vprtnex" lbl="Niet-finiete werkwoorden met een scheidbaar partikel, partikel gescheiden van het werkwoord">
+      <item id="spod-vprtnex"
+        lbl="Niet-finiete werkwoorden met een scheidbaar partikel, partikel gescheiden van het werkwoord">
         <item id="spod-vprtnex-zin" lbl="zinnen"><![CDATA[
           -- alleen voor automatisch verwerkte corpora
 
           match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)
           where w.sc starts with 'part_'
-          and (w.wvorm is null or w.wvorm != 'pv')
-          and w2.frame starts with 'particle'
+            and (w.wvorm is null or w.wvorm != 'pv')
+            and w2.frame starts with 'particle'
           return w.sentid, w.id
         ]]></item>
         <item id="spod-vprtnex-tel" lbl="telling"><![CDATA[
@@ -2383,25 +2318,26 @@
 
           match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)
           where w.sc starts with 'part_'
-          and (w.wvorm is null or w.wvorm != 'pv')
-          and w2.frame starts with 'particle'
+            and (w.wvorm is null or w.wvorm != 'pv')
+            and w2.frame starts with 'particle'
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
-      <item id="spod-vprtnin" lbl="Niet-finiete werkwoorden met een scheidbaar partikel, partikel geïncorporeerd in het werkwoord">
+      <item id="spod-vprtnin"
+        lbl="Niet-finiete werkwoorden met een scheidbaar partikel, partikel geïncorporeerd in het werkwoord">
         <item id="spod-vprtnin-zin" lbl="zinnen"><![CDATA[
           -- alleen voor automatisch verwerkte corpora
 
           match (w:word)
           where w.sc starts with 'part_'
-          and (w.wvorm is null or w.wvorm != 'pv')
+            and (w.wvorm is null or w.wvorm != 'pv')
           return w.sentid, w.id
-          except
+            except
           match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)
           where w.sc starts with 'part_'
-          and (w.wvorm is null or w.wvorm != 'pv')
-          and w2.frame starts with 'particle'
+            and (w.wvorm is null or w.wvorm != 'pv')
+            and w2.frame starts with 'particle'
           return w.sentid, w.id
         ]]></item>
         <item id="spod-vprtnin-tel" lbl="telling"><![CDATA[
@@ -2409,16 +2345,16 @@
 
           select count(distinct(sentid)) as zinnen, count(*) as items
           from (
-          match (w:word)
-          where w.sc starts with 'part_'
-          and (w.wvorm is null or w.wvorm != 'pv')
-          return distinct w.sentid, w.id
-          except
-          match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)
-          where w.sc starts with 'part_'
-          and (w.wvorm is null or w.wvorm != 'pv')
-          and w2.frame starts with 'particle'
-          return distinct w.sentid, w.id
+            match (w:word)
+            where w.sc starts with 'part_'
+              and (w.wvorm is null or w.wvorm != 'pv')
+            return distinct w.sentid, w.id
+              except
+            match (w:word)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'svp'}]->(w2)
+            where w.sc starts with 'part_'
+              and (w.wvorm is null or w.wvorm != 'pv')
+              and w2.frame starts with 'particle'
+            return distinct w.sentid, w.id
           ) as foo
         ]]></item>
       </item>
@@ -2442,14 +2378,12 @@
       <item id="spod-ott" lbl="Onvoltooid tegenwoordige tijd">
         <item id="spod-ott-zin" lbl="zinnen"><![CDATA[
           match (w:word{pvtijd: 'tgw'})
-          where w.lemma != 'hebben' and w.lemma != 'zijn' or not exists ((w)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'}))
+          where w.lemma != 'hebben' and w.lemma != 'zijn' or not exists ((w)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'}))
           return w
         ]]></item>
         <item id="spod-ott-tel" lbl="telling"><![CDATA[
           match (w:word{pvtijd: 'tgw'})
-          where w.lemma != 'hebben' and w.lemma != 'zijn' or not exists ((w)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'}))
+          where w.lemma != 'hebben' and w.lemma != 'zijn' or not exists ((w)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'}))
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
@@ -2457,30 +2391,26 @@
       <item id="spod-ovt" lbl="Onvoltooid verleden tijd">
         <item id="spod-ovt-zin" lbl="zinnen"><![CDATA[
           match (w:word{pvtijd: 'verl'})
-          where w.lemma != 'hebben' and w.lemma != 'zijn' or not exists ((w)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'}))
+          where w.lemma != 'hebben' and w.lemma != 'zijn' or not exists ((w)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'}))
           return w
         ]]></item>
         <item id="spod-ovt-tel" lbl="telling"><![CDATA[
           match (w:word{pvtijd: 'verl'})
-          where w.lemma != 'hebben' and w.lemma != 'zijn' or not exists ((w)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'}))
+          where w.lemma != 'hebben' and w.lemma != 'zijn' or not exists ((w)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'}))
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
       <item id="spod-vtt" lbl="Voltooid tegenwoordige tijd">
         <item id="spod-vtt-zin" lbl="zinnen"><![CDATA[
-          match (w:word{pvtijd: 'tgw'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(n:node{cat:
-          'ppart'})
+          match (w:word{pvtijd: 'tgw'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(n:node{cat: 'ppart'})
           optional match (n)-[:rel{rel:'hd'}]->(w2)
           with w, w2
           where w.lemma = 'hebben' or w.lemma = 'zijn'
           return w, w2
         ]]></item>
         <item id="spod-vtt-tel" lbl="telling"><![CDATA[
-          match (w:word{pvtijd: 'tgw'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(n:node{cat:
-          'ppart'})
+          match (w:word{pvtijd: 'tgw'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(n:node{cat: 'ppart'})
           where w.lemma = 'hebben' or w.lemma = 'zijn'
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
@@ -2488,16 +2418,14 @@
       </item>
       <item id="spod-vvt" lbl="Voltooid verleden tijd">
         <item id="spod-vvt-zin" lbl="zinnen"><![CDATA[
-          match (w:word{pvtijd: 'verl'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(n:node{cat:
-          'ppart'})
+          match (w:word{pvtijd: 'verl'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(n:node{cat: 'ppart'})
           optional match (n)-[:rel{rel:'hd'}]->(w2)
           with w, w2
           where w.lemma = 'hebben' or w.lemma = 'zijn'
           return w, w2
         ]]></item>
         <item id="spod-vvt-tel" lbl="telling"><![CDATA[
-          match (w:word{pvtijd: 'verl'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(n:node{cat:
-          'ppart'})
+          match (w:word{pvtijd: 'verl'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(n:node{cat: 'ppart'})
           where w.lemma = 'hebben' or w.lemma = 'zijn'
           with distinct w.sentid as sentid, w.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
@@ -2527,84 +2455,60 @@
       ]]></item>
       <item id="spod-ottott" lbl="ott, ott: &#34;hij zegt dat hij komt&#34;">
         <item id="spod-ottott-zin" lbl="zinnen"><![CDATA[
-          match (w1:word{pvtijd: 'tgw'})<-[:rel{rel: 'hd'}]-()-[:rel{rel:
-          'vc'}]->()-[:rel{rel: 'body'}]->()-[:rel{rel: 'hd'}]->(w2:word{pvtijd: 'tgw'})
-          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
-          and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
+          match (w1:word{pvtijd: 'tgw'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->()-[:rel{rel: 'body'}]->()-[:rel{rel: 'hd'}]->(w2:word{pvtijd: 'tgw'})
+          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
+            and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
           return w1, w2
         ]]></item>
         <item id="spod-ottott-tel" lbl="telling"><![CDATA[
-          match (w1:word{pvtijd: 'tgw'})<-[:rel{rel: 'hd'}]-()-[:rel{rel:
-          'vc'}]->()-[:rel{rel: 'body'}]->()-[:rel{rel: 'hd'}]->(w2:word{pvtijd: 'tgw'})
-          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
-          and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
+          match (w1:word{pvtijd: 'tgw'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->()-[:rel{rel: 'body'}]->()-[:rel{rel: 'hd'}]->(w2:word{pvtijd: 'tgw'})
+          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
+            and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
           with distinct w1.sentid as sentid, w1.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
       <item id="spod-ottovt" lbl="ott, ovt: &#34;hij zegt dat hij kwam&#34;">
         <item id="spod-ottovt-zin" lbl="zinnen"><![CDATA[
-          match (w1:word{pvtijd: 'tgw'})<-[:rel{rel: 'hd'}]-()-[:rel{rel:
-          'vc'}]->()-[:rel{rel: 'body'}]->()-[:rel{rel: 'hd'}]->(w2:word{pvtijd: 'verl'})
-          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
-          and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
+          match (w1:word{pvtijd: 'tgw'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->()-[:rel{rel: 'body'}]->()-[:rel{rel: 'hd'}]->(w2:word{pvtijd: 'verl'})
+          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
+            and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
           return w1, w2
         ]]></item>
         <item id="spod-ottovt-tel" lbl="telling"><![CDATA[
-          match (w1:word{pvtijd: 'tgw'})<-[:rel{rel: 'hd'}]-()-[:rel{rel:
-          'vc'}]->()-[:rel{rel: 'body'}]->()-[:rel{rel: 'hd'}]->(w2:word{pvtijd: 'verl'})
-          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
-          and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
+          match (w1:word{pvtijd: 'tgw'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->()-[:rel{rel: 'body'}]->()-[:rel{rel: 'hd'}]->(w2:word{pvtijd: 'verl'})
+          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
+            and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
           with distinct w1.sentid as sentid, w1.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
       <item id="spod-ovtott" lbl="ovt, ott: &#34;hij zei dat hij komt&#34;">
         <item id="spod-ovtott-zin" lbl="zinnen"><![CDATA[
-          match (w1:word{pvtijd: 'verl'})<-[:rel{rel: 'hd'}]-()-[:rel{rel:
-          'vc'}]->()-[:rel{rel: 'body'}]->()-[:rel{rel: 'hd'}]->(w2:word{pvtijd: 'tgw'})
-          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
-          and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
+          match (w1:word{pvtijd: 'verl'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->()-[:rel{rel: 'body'}]->()-[:rel{rel: 'hd'}]->(w2:word{pvtijd: 'tgw'})
+          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
+            and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
           return w1, w2
         ]]></item>
         <item id="spod-ovtott-tel" lbl="telling"><![CDATA[
-          match (w1:word{pvtijd: 'verl'})<-[:rel{rel: 'hd'}]-()-[:rel{rel:
-          'vc'}]->()-[:rel{rel: 'body'}]->()-[:rel{rel: 'hd'}]->(w2:word{pvtijd: 'tgw'})
-          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
-          and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
+          match (w1:word{pvtijd: 'verl'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->()-[:rel{rel: 'body'}]->()-[:rel{rel: 'hd'}]->(w2:word{pvtijd: 'tgw'})
+          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
+            and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
           with distinct w1.sentid as sentid, w1.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
       </item>
       <item id="spod-ovtovt" lbl="ovt, ovt: &#34;hij zei dat hij kwam&#34;">
         <item id="spod-ovtovt-zin" lbl="zinnen"><![CDATA[
-          match (w1:word{pvtijd: 'verl'})<-[:rel{rel: 'hd'}]-()-[:rel{rel:
-          'vc'}]->()-[:rel{rel: 'body'}]->()-[:rel{rel: 'hd'}]->(w2:word{pvtijd: 'verl'})
-          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
-          and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
+          match (w1:word{pvtijd: 'verl'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->()-[:rel{rel: 'body'}]->()-[:rel{rel: 'hd'}]->(w2:word{pvtijd: 'verl'})
+          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
+            and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
           return w1, w2
         ]]></item>
         <item id="spod-ovtovt-tel" lbl="telling"><![CDATA[
-          match (w1:word{pvtijd: 'verl'})<-[:rel{rel: 'hd'}]-()-[:rel{rel:
-          'vc'}]->()-[:rel{rel: 'body'}]->()-[:rel{rel: 'hd'}]->(w2:word{pvtijd: 'verl'})
-          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
-          and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)<-[:rel{rel:
-          'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
+          match (w1:word{pvtijd: 'verl'})<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->()-[:rel{rel: 'body'}]->()-[:rel{rel: 'hd'}]->(w2:word{pvtijd: 'verl'})
+          where (w1.lemma != 'hebben' and w1.lemma != 'zijn' or not exists ((w1)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
+            and (w2.lemma != 'hebben' and w2.lemma != 'zijn' or not exists ((w2)<-[:rel{rel: 'hd'}]-()-[:rel{rel: 'vc'}]->(:node{cat: 'ppart'})))
           with distinct w1.sentid as sentid, w1.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
@@ -2717,7 +2621,7 @@
           match (n:nw{_vorfeld: true, _np: true})<-[r:rel]-()
           where r.id is null
           return n.sentid, n.id
-          except
+            except
           match (n:nw{_vorfeld: true, _np: true})<-[r:rel]-()
           where r.id is null and r.rel in ['su','sup']
           return n.sentid, n.id
@@ -2725,13 +2629,13 @@
         <item id="spod-nptnsub-tel" lbl="telling"><![CDATA[
           select count(distinct(sentid)) as zinnen, count(*) as items
           from (
-          match (n:nw{_vorfeld: true, _np: true})<-[r:rel]-()
-          where r.id is null
-          return distinct n.sentid, n.id
-          except
-          match (n:nw{_vorfeld: true, _np: true})<-[r:rel]-()
-          where r.id is null and r.rel in ['su','sup']
-          return distinct n.sentid, n.id
+            match (n:nw{_vorfeld: true, _np: true})<-[r:rel]-()
+            where r.id is null
+            return distinct n.sentid, n.id
+              except
+            match (n:nw{_vorfeld: true, _np: true})<-[r:rel]-()
+            where r.id is null and r.rel in ['su','sup']
+            return distinct n.sentid, n.id
           ) as foo
         ]]></item>
       </item>
@@ -2740,25 +2644,23 @@
           match (n:node{cat: 'ssub'})-[r:rel]->()-[:rel*0..]->(:nw{_vorfeld: true})
           where r.id is null
           return n.sentid, n.id
-          except
+            except
           match (n:node{cat: 'ssub'})-[r:rel]->()-[:rel*0..]->(:nw{_vorfeld: true})
-          match (n)-[:rel*1..]->(n0:node{sentid: n.sentid})-[r2:rel]->()-[:rel*0..]->(:nw{sentid:
-          n.sentid, _vorfeld: true})
+          match (n)-[:rel*1..]->(n0:node{sentid: n.sentid})-[r2:rel]->()-[:rel*0..]->(:nw{sentid: n.sentid, _vorfeld: true})
           where r.id is null and r2.id is null and n0.cat in ['ssub','smain']
           return n.sentid, n.id
         ]]></item>
         <item id="spod-tnonloc-tel" lbl="telling"><![CDATA[
           select count(distinct(sentid)) as zinnen, count(*) as items
           from (
-          match (n:node{cat: 'ssub'})-[r:rel]->()-[:rel*0..]->(:nw{_vorfeld: true})
-          where r.id is null
-          return distinct n.sentid, n.id
-          except
-          match (n:node{cat: 'ssub'})-[r:rel]->()-[:rel*0..]->(:nw{_vorfeld: true})
-          match (n)-[:rel*1..]->(n0:node{sentid: n.sentid})-[r2:rel]->()-[:rel*0..]->(:nw{sentid:
-          n.sentid, _vorfeld: true})
-          where r.id is null and r2.id is null and n0.cat in ['ssub','smain']
-          return distinct n.sentid, n.id
+            match (n:node{cat: 'ssub'})-[r:rel]->()-[:rel*0..]->(:nw{_vorfeld: true})
+            where r.id is null
+            return distinct n.sentid, n.id
+              except
+            match (n:node{cat: 'ssub'})-[r:rel]->()-[:rel*0..]->(:nw{_vorfeld: true})
+            match (n)-[:rel*1..]->(n0:node{sentid: n.sentid})-[r2:rel]->()-[:rel*0..]->(:nw{sentid: n.sentid, _vorfeld: true})
+            where r.id is null and r2.id is null and n0.cat in ['ssub','smain']
+            return distinct n.sentid, n.id
           ) as foo
         ]]></item>
       </item>
@@ -2767,53 +2669,49 @@
           match (n:nw)<-[r:rel]-()
           where r.rel in ['whd','rhd']
           return n.sentid, n.id
-          except
+            except
           match (n:nw)<-[r:rel]-(nn)
-          match (nn)-[:rel*1..]->(:node{sentid:n.sentid, cat:'ssub'})-[:rel*1..]->(n0:node{sentid:
-          n.sentid, cat: 'ssub'})-[:rel*1..]->(n)
+          match (nn)-[:rel*1..]->(:node{sentid:n.sentid, cat:'ssub'})-[:rel*1..]->(n0:node{sentid: n.sentid, cat: 'ssub'})-[:rel*1..]->(n)
           optional match (n0)<-[:rel]-()<-[:rel{rel: 'obcomp'}]-(n2)
           with r, n, n0, n2
           where r.rel in ['whd','rhd']
-          and n2 is null
+            and n2 is null
           return n.sentid, n.id
         ]]></item>
         <item id="spod-locext-tel" lbl="telling"><![CDATA[
           select count(distinct(sentid)) as zinnen, count(*) as items
           from (
-          match (n:nw)<-[r:rel]-()
-          where r.rel in ['whd','rhd']
-          return distinct n.sentid, n.id
-          except
-          match (n:nw)<-[r:rel]-(nn)
-          match (nn)-[:rel*1..]->(:node{sentid:n.sentid, cat:'ssub'})-[:rel*1..]->(n0:node{sentid:
-          n.sentid, cat: 'ssub'})-[:rel*1..]->(n)
-          optional match (n0)<-[:rel]-()<-[:rel{rel: 'obcomp'}]-(n2)
-          with r, n, n0, n2
-          where r.rel in ['whd','rhd']
-          and n2 is null
-          return distinct n.sentid, n.id
+            match (n:nw)<-[r:rel]-()
+            where r.rel in ['whd','rhd']
+            return distinct n.sentid, n.id
+              except
+            match (n:nw)<-[r:rel]-(nn)
+            match (nn)-[:rel*1..]->(:node{sentid:n.sentid, cat:'ssub'})-[:rel*1..]->(n0:node{sentid: n.sentid, cat: 'ssub'})-[:rel*1..]->(n)
+            optional match (n0)<-[:rel]-()<-[:rel{rel: 'obcomp'}]-(n2)
+            with r, n, n0, n2
+            where r.rel in ['whd','rhd']
+              and n2 is null
+            return distinct n.sentid, n.id
           ) as foo
         ]]></item>
       </item>
       <item id="spod-nlocext" lbl="niet-lokale extractie">
         <item id="spod-nlocext-zin" lbl="zinnen"><![CDATA[
           match (n:nw)<-[r:rel]-(nn)
-          match (nn)-[:rel*1..]->(:node{sentid:n.sentid, cat:'ssub'})-[:rel*1..]->(n0:node{sentid:
-          n.sentid, cat: 'ssub'})-[:rel*1..]->(n)
+          match (nn)-[:rel*1..]->(:node{sentid:n.sentid, cat:'ssub'})-[:rel*1..]->(n0:node{sentid: n.sentid, cat: 'ssub'})-[:rel*1..]->(n)
           optional match (n0)<-[:rel]-()<-[:rel{rel: 'obcomp'}]-(n2)
           with r, n, n0, n2
           where r.rel in ['whd','rhd']
-          and n2 is null
+            and n2 is null
           return n.sentid, n.id
         ]]></item>
         <item id="spod-nlocext-tel" lbl="telling"><![CDATA[
           match (n:nw)<-[r:rel]-(nn)
-          match (nn)-[:rel*1..]->(:node{sentid:n.sentid, cat:'ssub'})-[:rel*1..]->(n0:node{sentid:
-          n.sentid, cat: 'ssub'})-[:rel*1..]->(n)
+          match (nn)-[:rel*1..]->(:node{sentid:n.sentid, cat:'ssub'})-[:rel*1..]->(n0:node{sentid: n.sentid, cat: 'ssub'})-[:rel*1..]->(n)
           optional match (n0)<-[:rel]-()<-[:rel{rel: 'obcomp'}]-(n2)
           with r, n, n0, n2
           where r.rel in ['whd','rhd']
-          and n2 is null
+            and n2 is null
           with distinct n.sentid as sentid, n.id as id
           return count(distinct(sentid)) as zinnen, count(*) as items
         ]]></item>
@@ -3024,7 +2922,7 @@
           where w.his is not null
           return w
 
-          except
+            except
 
           match (w:nw)-[:rel]->(w2:nw)
           where w.his is not null
@@ -3036,16 +2934,16 @@
 
           select count(*) as woorden
           from (
-          match (w:nw)
-          where w.his is not null
-          return w
+            match (w:nw)
+            where w.his is not null
+            return w
 
-          except
+              except
 
-          match (w:nw)-[:rel]->(w2:nw)
-          where w.his is not null
-          and w2.his is not null
-          return w
+            match (w:nw)-[:rel]->(w2:nw)
+            where w.his is not null
+              and w2.his is not null
+            return w
           ) as foo
         ]]></item>
       </item>
@@ -3056,7 +2954,7 @@
           match (w:nw{his: 'normal'})
           return w
 
-          except
+            except
 
           match (w:nw{his: 'normal'})-[:rel]->(w2:nw)
           where w2.his is not null
@@ -3066,14 +2964,14 @@
           -- alleen voor automatisch verwerkte corpora
           select count(*) as woorden
           from (
-          match (w:nw{his: 'normal'})
-          return w
+            match (w:nw{his: 'normal'})
+            return w
 
-          except
+              except
 
-          match (w:nw{his: 'normal'})-[:rel]->(w2:nw)
-          where w2.his is not null
-          return w
+            match (w:nw{his: 'normal'})-[:rel]->(w2:nw)
+            where w2.his is not null
+            return w
           ) as foo
         ]]></item>
       </item>
@@ -3083,14 +2981,14 @@
 
           match (w:nw)
           where w.his is not null
-          and not (w.his in ['normal','robust_skip','skip'])
+            and not (w.his in ['normal','robust_skip','skip'])
           return w
 
-          except
+            except
 
           match (w:nw)-[:rel]->(w2:nw)
           where w.his is not null
-          and w2.his is not null
+            and w2.his is not null
           return w
         ]]></item>
         <item id="spod-onbeken-tel" lbl="telling"><![CDATA[
@@ -3098,17 +2996,17 @@
 
           select count(*) as woorden
           from (
-          match (w:nw)
-          where w.his is not null
-          and not (w.his in ['normal','robust_skip','skip'])
-          return w
+            match (w:nw)
+            where w.his is not null
+              and not (w.his in ['normal','robust_skip','skip'])
+            return w
 
-          except
+              except
 
-          match (w:nw)-[:rel]->(w2:nw)
-          where w.his is not null
-          and w2.his is not null
-          return w
+            match (w:nw)-[:rel]->(w2:nw)
+            where w.his is not null
+              and w2.his is not null
+            return w
           ) as foo
         ]]></item>
       </item>
@@ -3119,7 +3017,7 @@
           match (w:nw{his: 'compound'})
           return w
 
-          except
+            except
 
           match (w:nw{his: 'compound'})-[:rel]->(w2:nw)
           where w2.his is not null
@@ -3130,14 +3028,14 @@
 
           select count(*) as woorden
           from (
-          match (w:nw{his: 'compound'})
-          return w
+            match (w:nw{his: 'compound'})
+            return w
 
-          except
+              except
 
-          match (w:nw{his: 'compound'})-[:rel]->(w2:nw)
-          where w2.his is not null
-          return w
+            match (w:nw{his: 'compound'})-[:rel]->(w2:nw)
+            where w2.his is not null
+            return w
           ) as foo
         ]]></item>
       </item>
@@ -3148,7 +3046,7 @@
           match (w:nw{his: 'name'})
           return w
 
-          except
+            except
 
           match (w:nw{his: 'name'})-[:rel]->(w2:nw)
           where w2.his is not null
@@ -3159,14 +3057,14 @@
 
           select count(*) as woorden
           from (
-          match (w:nw{his: 'name'})
-          return w
+            match (w:nw{his: 'name'})
+            return w
 
-          except
+              except
 
-          match (w:nw{his: 'name'})-[:rel]->(w2:nw)
-          where w2.his is not null
-          return w
+            match (w:nw{his: 'name'})-[:rel]->(w2:nw)
+            where w2.his is not null
+            return w
           ) as foo
         ]]></item>
       </item>
@@ -3176,14 +3074,14 @@
 
           match (w:nw)
           where w.his is not null
-          and not (w.his in ['normal','compound','name','robust_skip','skip'])
+            and not (w.his in ['normal','compound','name','robust_skip','skip'])
           return w
 
-          except
+            except
 
           match (w:nw)-[:rel]->(w2:nw)
           where w.his is not null
-          and w2.his is not null
+            and w2.his is not null
           return w
         ]]></item>
         <item id="spod-noun-tel" lbl="telling"><![CDATA[
@@ -3191,17 +3089,17 @@
 
           select count(*) as woorden
           from (
-          match (w:nw)
-          where w.his is not null
-          and not (w.his in ['normal','compound','name','robust_skip','skip'])
-          return w
+            match (w:nw)
+            where w.his is not null
+              and not (w.his in ['normal','compound','name','robust_skip','skip'])
+            return w
 
-          except
+              except
 
-          match (w:nw)-[:rel]->(w2:nw)
-          where w.his is not null
-          and w2.his is not null
-          return w
+            match (w:nw)-[:rel]->(w2:nw)
+            where w.his is not null
+              and w2.his is not null
+            return w
           ) as foo
         ]]></item>
       </item>
