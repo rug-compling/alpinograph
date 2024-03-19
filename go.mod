@@ -1,6 +1,6 @@
 module github.com/rug-compling/alpinograph
 
-go 1.16
+go 1.19
 
 require (
 	github.com/bitnine-oss/agensgraph-golang v0.1.0
