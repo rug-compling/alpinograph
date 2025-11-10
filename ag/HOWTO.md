@@ -2,9 +2,9 @@
 ## Globale settings, voor elke sessie
 
     PATH={PATH/TO}/opt/agensgraph/bin:$PATH
+    export AGDATA={PATH/TO}/db_cluster
     export PGPORT={PORTNUMBER}
-    export AGDATA={PATH/TO}/var/agensgraph/db_cluster
-
+    export PGHOST={PATH/TO}/db_cluster/tmp
 
 ## Eenmalig
 
@@ -12,9 +12,9 @@ Database aanmaken, gebruik **niet** je loginnaam:
 
     initdb -A md5 --locale=en_US.utf8 -U {ROOTUSERNAME} -W
 
-Poortnummer aanpassen in: {PATH/TO}/`var/agensgraph/db_cluster/postgresql.conf`
+Poortnummer aanpassen in: {PATH/TO}/`db_cluster/postgresql.conf`
 
-In {PATH/TO}/`var/agensgraph/db_cluster/pg_hba.conf` regels toevoegen
+In {PATH/TO}/`db_cluster/pg_hba.conf` regels toevoegen
 voor elke gebruiker die van buiten verbinding mag maken.
 
 Starten, en reguliere gebruiker aanmaken:
@@ -34,7 +34,7 @@ Starten database:
 
 Stoppen database:
 
-    ag_stl stop
+    ag_ctl stop
 
 
 ## Invoer corpus

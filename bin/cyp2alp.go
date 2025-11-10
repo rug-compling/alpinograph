@@ -235,7 +235,7 @@ func cyp2alp(sentid string) string {
 	}
 
 	alpino := &Alpino_ds{
-		Version: "1.16",
+		Version: "1.18",
 		Sentence: &SentType{
 			SentId: sentid,
 			Sent:   sentence.Tokens,
