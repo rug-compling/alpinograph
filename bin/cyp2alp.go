@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "github.com/lib/pq"
+	"github.com/rug-compling/alpinods"
 
 	"encoding/json"
 	"encoding/xml"
@@ -235,7 +236,7 @@ func cyp2alp(sentid string) string {
 	}
 
 	alpino := &Alpino_ds{
-		Version: "1.18",
+		Version: alpinods.DtdVersion,
 		Sentence: &SentType{
 			SentId: sentid,
 			Sent:   sentence.Tokens,
