@@ -1,3 +1,13 @@
+Version 1.0.7
+2025-11-18
+
+ * `alpino2agens_version` version 10 -> 11
+     * fix indexing sonar-attributes
+ * fix missing sonar-attributes for downloading as xml
+ * alpinods v1.18.0 -> v1.18.1
+ * alud v2.17.2 -> v2.17.3
+
+
 Version 1.0.6
 2025-11-10
 
