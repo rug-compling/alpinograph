@@ -64,6 +64,7 @@ type Node struct {
 	parents   []*Node
 	rels      []string
 
+	// DEP:ALPINODS:1.18
 	Aform        string `xml:"aform,attr"`
 	Begin        int    `xml:"begin,attr"`
 	Buiging      string `xml:"buiging,attr"`
@@ -672,6 +673,7 @@ LOOP:
 		}
 	}
 
+	// DEP:ALPINODS:1.18
 	fmt.Print(`create property index on sentence("sentid");
 create property index on sentence("cats");
 create property index on sentence("skips");
@@ -720,14 +722,14 @@ create property index on ud("main");
 create property index on eud("rel");
 create property index on eud("main");
 
-create property index on node("ne");
-create property index on node("ne_val");
-create property index on node("ne_begin");
-create property index on node("ne_end");
-create property index on word("ne");
-create property index on word("ne_val");
-create property index on word("ne_begin");
-create property index on word("ne_end");
+create property index on node("sonar_ne");
+create property index on node("sonar_ne_val");
+create property index on node("sonar_ne_begin");
+create property index on node("sonar_ne_end");
+create property index on word("sonar_ne");
+create property index on word("sonar_ne_val");
+create property index on word("sonar_ne_begin");
+create property index on word("sonar_ne_end");
 `)
 	if hasMeta {
 		fmt.Print(`
@@ -918,6 +920,7 @@ func doNode2(node *Node) {
 	}
 }
 
+// DEP:ALPINODS:1.18
 var NodeTags = []string{
 	"aform",
 	// "begin", // al gedaan
@@ -958,6 +961,9 @@ var NodeTags = []string{
 	"iets",
 	// "index", // al gedaan
 	"infl",
+	// "is_nachfeld", // al gedaan
+	// "is_np",       // al gedaan
+	// "is_vorfeld",  // al gedaan
 	"lcat",
 	"lemma",
 	"lwtype",
@@ -990,8 +996,8 @@ var NodeTags = []string{
 	"sense",
 	"sonar_ne",
 	"sonar_ne_class",
-	// "sonar_ne_begin", // speciaal geval
-	// "sonar_ne_end", // speciaal geval
+	// "sonar_ne_begin", // speciaal geval: string -> int
+	// "sonar_ne_end", // speciaal geval: string -> int
 	"special",
 	"spectype",
 	"status",
@@ -1007,7 +1013,16 @@ var NodeTags = []string{
 	"wvorm",
 }
 
+// DEP:ALPINODS:1.18
 func getAttr(attr string, n *Node) string {
+	// niet: begin
+	// niet: end
+	// niet: id
+	// niet: is_vorfeld
+	// niet: is_np
+	// niet: is_nachfeld
+	// niet: sonar_ne_begin
+	// niet: sonar_ne_end
 	switch attr {
 	case "aform":
 		return n.Aform
