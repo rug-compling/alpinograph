@@ -122,8 +122,8 @@ type NodeT struct {
 	SonarNeClass  string `xml:"sonar_ne_class,attr,omitempty" json:"sonar_ne_class,attr"`
 	SonarNeBegin  string `xml:"sonar_ne_begin,attr,omitempty"`
 	SonarNeEnd    string `xml:"sonar_ne_end,attr,omitempty"`
-	SonarNeBeginI int    `xml:"-" json:"sonar_ne_begin"`
-	SonarNeEndI   int    `xml:"-" json:"sonar_ne_end"`
+	SonarNeBeginI *int   `xml:"-" json:"sonar_ne_begin"`
+	SonarNeEndI   *int   `xml:"-" json:"sonar_ne_end"`
 	Special       string `xml:"special,attr,omitempty" json:"special,attr"`
 	Spectype      string `xml:"spectype,attr,omitempty" json:"spectype,attr"`
 	Status        string `xml:"status,attr,omitempty" json:"status,attr"`
@@ -457,10 +457,10 @@ func unmarshal(data []byte, v interface{}) error {
 }
 
 func doSonar(node *NodeT) {
-	// begin of end kan 0 zijn
-	// alleen als class niet "" is moeten er waardes voor begin en end zijn
-	if node.SonarNeClass != "" {
-		node.SonarNeBegin = fmt.Sprint(node.SonarNeBeginI)
-		node.SonarNeEnd = fmt.Sprint(node.SonarNeEndI)
+	if node.SonarNeBeginI != nil {
+		node.SonarNeBegin = fmt.Sprint(*node.SonarNeBeginI)
+	}
+	if node.SonarNeEndI != nil {
+		node.SonarNeEnd = fmt.Sprint(*node.SonarNeEndI)
 	}
 }
